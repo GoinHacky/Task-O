@@ -1,8 +1,12 @@
 'use server'
+import 'server-only'
 
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logActivity } from '@/lib/activities/actions'
+
+const supabaseAdmin = getSupabaseAdmin()
 
 export async function createTask(data: {
     title: string
@@ -15,6 +19,7 @@ export async function createTask(data: {
     team_id?: string
     assigned_to?: string
 }) {
+    const { createServerSupabaseClient } = require('@/lib/supabase/server')
     const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Unauthorized')
@@ -37,7 +42,7 @@ export async function createTask(data: {
             .select('team_id')
             .eq('user_id', user.id)
 
-        const leadTeamIds = leadTeams?.map(t => t.team_id) || []
+        const leadTeamIds = leadTeams?.map((t: any) => t.team_id) || []
 
         const { data: isTeamMember } = await supabase
             .from('team_members')
@@ -68,10 +73,10 @@ export async function createTask(data: {
 
     // 2. Send Notification if assigned
     if (data.assigned_to) {
-        await supabase.from('notifications').insert({
+        await supabaseAdmin.from('notifications').insert({
             user_id: data.assigned_to,
             type: 'task_assignment',
-            message: `MISSION_ASSIGNED: ${data.title}`,
+            message: `Assigned: ${data.title}`,
             related_id: task.id,
             read: false
         })
@@ -93,6 +98,7 @@ export async function createTask(data: {
 }
 
 export async function updateTask(taskId: string, data: any) {
+    const { createServerSupabaseClient } = require('@/lib/supabase/server')
     const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Unauthorized')
@@ -164,19 +170,46 @@ export async function updateTask(taskId: string, data: any) {
 
     if (error) throw error
 
-    // Notify creator if status changed
-    if (data.status && data.status !== originalTask.status) {
-        const statusLabel = data.status === 'in_progress' ? 'ACTIVE_DEPLOY' :
-            data.status === 'review' ? 'PENDING_REVIEW' :
-                data.status === 'completed' ? 'MISSION_COMPLETE' : 'PENDING'
-
-        await supabase.from('notifications').insert({
-            user_id: originalTask.created_by,
-            type: 'task_status_change',
-            message: `STATUS_ALERT: ${originalTask.title} is now ${statusLabel}`,
+    // Notify new assignee if changed
+    if (data.assigned_to && data.assigned_to !== originalTask.assigned_to && data.assigned_to !== user.id) {
+        await supabaseAdmin.from('notifications').insert({
+            user_id: data.assigned_to,
+            type: 'task_assignment',
+            message: `Assigned: ${originalTask.title}`,
             related_id: taskId,
             read: false
         })
+    }
+
+    // Notify creator and assignee if status changed
+    if (data.status && data.status !== originalTask.status) {
+        const statusLabel = data.status === 'in_progress' ? 'In Progress' :
+            data.status === 'review' ? 'Review' :
+                data.status === 'completed' ? 'Done' : 'Planning'
+
+        const notificationMessage = `Update: ${originalTask.title} is now ${statusLabel}`
+
+        // Notify creator
+        if (originalTask.created_by && originalTask.created_by !== user.id) {
+            await supabaseAdmin.from('notifications').insert({
+                user_id: originalTask.created_by,
+                type: 'task_status_change',
+                message: notificationMessage,
+                related_id: taskId,
+                read: false
+            })
+        }
+
+        // Notify assignee
+        if (originalTask.assigned_to && originalTask.assigned_to !== user.id && originalTask.assigned_to !== originalTask.created_by) {
+            await supabaseAdmin.from('notifications').insert({
+                user_id: originalTask.assigned_to,
+                type: 'task_status_change',
+                message: notificationMessage,
+                related_id: taskId,
+                read: false
+            })
+        }
 
         // Log status change activity
         await logActivity({
@@ -201,6 +234,7 @@ export async function updateTask(taskId: string, data: any) {
 }
 
 export async function deleteTask(taskId: string) {
+    const { createServerSupabaseClient } = require('@/lib/supabase/server')
     const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 

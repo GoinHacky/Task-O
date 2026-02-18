@@ -121,8 +121,10 @@ export default function CreateTaskModal({ isOpen, onClose, initialProjectId, ini
             }
         }
 
-        fetchData()
-    }, [projectId, selectedTeamId, userRole])
+        if (isOpen) {
+            fetchData()
+        }
+    }, [projectId, selectedTeamId, userRole, isOpen])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()

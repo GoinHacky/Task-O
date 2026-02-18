@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import UpdateRoleModal from './UpdateRoleModal'
 
@@ -25,6 +26,7 @@ export default function MemberDetailDrawer({
     ownerId,
     onClose
 }: MemberDetailDrawerProps) {
+    const router = useRouter()
     const [tasks, setTasks] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
@@ -55,6 +57,23 @@ export default function MemberDetailDrawer({
         if (!t.due_date) return false
         return new Date(t.due_date) < new Date()
     }).length
+
+    const handleRemove = async () => {
+        if (!confirm(`Are you sure you want to remove ${member.user.full_name || 'this member'}?`)) return
+
+        try {
+            const { error } = await supabase
+                .from('project_members')
+                .delete()
+                .eq('id', member.id)
+
+            if (error) throw error
+            onClose()
+            router.refresh()
+        } catch (error: any) {
+            alert(error.message)
+        }
+    }
 
     return (
         <div className="space-y-6">
@@ -192,10 +211,11 @@ export default function MemberDetailDrawer({
             {isAdmin && !isOwner && !isSelf && (
                 <div className="pt-6 border-t border-gray-50 dark:border-slate-800/50">
                     <button
+                        onClick={handleRemove}
                         className="w-full py-4 bg-red-50/50 dark:bg-red-500/5 hover:bg-red-50 dark:hover:bg-red-500/10 text-[10px] font-black text-red-500 uppercase tracking-widest rounded-2xl transition-all border border-transparent flex items-center justify-center gap-2 group"
                     >
                         <Trash2 size={14} className="group-hover:scale-110 transition-transform" />
-                        Revoke Access & Remove
+                        Remove
                     </button>
                 </div>
             )}

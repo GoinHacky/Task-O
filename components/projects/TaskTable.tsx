@@ -51,6 +51,20 @@ export default function TaskTable({ tasks, onTaskClick }: TaskTableProps) {
         }
     }
 
+    const formatLabel = (label: string) => {
+        if (!label) return ''
+        return label.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')
+    }
+
+    const getStatusLabel = (status: string) => {
+        switch (status) {
+            case 'pending': return 'To Do'
+            case 'in_progress': return 'Doing'
+            case 'completed': return 'Done'
+            default: return formatLabel(status)
+        }
+    }
+
     return (
         <div className="w-full overflow-hidden bg-white dark:bg-slate-950 rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-sm">
             <table className="w-full text-left border-collapse">
@@ -78,14 +92,14 @@ export default function TaskTable({ tasks, onTaskClick }: TaskTableProps) {
                                     <div className="flex items-center gap-2">
                                         <div className={`w-1.5 h-1.5 rounded-full ${getPriorityStyle(task.priority).replace('text', 'bg')}`} />
                                         <span className={`text-[9px] font-black uppercase tracking-widest ${getPriorityStyle(task.priority)}`}>
-                                            {task.priority}_priority
+                                            {formatLabel(task.priority)}
                                         </span>
                                     </div>
                                 </div>
                             </td>
                             <td className="px-6 py-4">
                                 <span className="text-[10px] font-black text-gray-500 dark:text-slate-400 uppercase tracking-widest">
-                                    {task.team?.name || 'CENTRAL_OPS'}
+                                    {formatLabel(task.team?.name || 'CENTRAL_OPS')}
                                 </span>
                             </td>
                             <td className="px-6 py-4">
@@ -94,13 +108,13 @@ export default function TaskTable({ tasks, onTaskClick }: TaskTableProps) {
                                         {task.assignee?.full_name?.[0] || 'U'}
                                     </div>
                                     <span className="text-[11px] font-bold text-gray-600 dark:text-slate-300">
-                                        {task.assignee?.full_name || 'UNASSIGNED'}
+                                        {task.assignee?.full_name?.toUpperCase() || 'UNASSIGNED'}
                                     </span>
                                 </div>
                             </td>
                             <td className="px-6 py-4">
                                 <span className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest ${getStatusStyle(task.status)}`}>
-                                    {task.status}
+                                    {getStatusLabel(task.status)}
                                 </span>
                             </td>
                             <td className="px-6 py-4">

@@ -1,9 +1,10 @@
 'use server'
 
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+
 import { revalidatePath } from 'next/cache'
 
 export async function clearAllNotifications() {
+    const { createServerSupabaseClient } = require('@/lib/supabase/server')
     const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -22,6 +23,7 @@ export async function clearAllNotifications() {
 }
 
 export async function markAllNotificationsAsRead() {
+    const { createServerSupabaseClient } = require('@/lib/supabase/server')
     const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -41,6 +43,7 @@ export async function markAllNotificationsAsRead() {
 }
 
 export async function markNotificationAsRead(id: string) {
+    const { createServerSupabaseClient } = require('@/lib/supabase/server')
     const supabase = await createServerSupabaseClient()
     const { error } = await supabase
         .from('notifications')
@@ -55,6 +58,7 @@ export async function markNotificationAsRead(id: string) {
 }
 
 export async function deleteNotification(id: string) {
+    const { createServerSupabaseClient } = require('@/lib/supabase/server')
     const supabase = await createServerSupabaseClient()
     const { error } = await supabase
         .from('notifications')

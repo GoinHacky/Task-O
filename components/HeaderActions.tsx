@@ -109,10 +109,15 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
     const clearAllNotifications = async () => {
         if (!currentUser?.id) return
         try {
+            // Optimistic update
+            setNotifications([])
+            setUnreadCount(0)
+
             await clearAllAction()
             fetchNotifications()
         } catch (error) {
             console.error('Failed to clear notifications:', error)
+            fetchNotifications() // Rollback
         }
     }
 

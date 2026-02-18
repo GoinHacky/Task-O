@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { Plus, MoreHorizontal, Calendar, AlertCircle, Layout, CheckCircle2 } from 'lucide-react'
 import { format } from 'date-fns'
-import CreateTaskModal from '@/components/projects/CreateTaskModal'
+import dynamic from 'next/dynamic'
+const CreateTaskModal = dynamic(() => import('@/components/projects/CreateTaskModal'), { ssr: false })
 // import CreateTeamModal from '@/components/teams/CreateTeamModal' // To be created
 
 export function DashboardActions() {

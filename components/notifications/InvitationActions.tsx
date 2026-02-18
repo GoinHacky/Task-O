@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import { Check, X } from 'lucide-react'
 import { respondToProjectInvitation } from '@/lib/projects/actions'
+import { useRouter } from 'next/navigation'
 
 export default function InvitationActions({ projectId }: { projectId: string }) {
+    const router = useRouter()
     const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle')
 
     const handleAction = async (accept: boolean) => {
@@ -12,6 +14,7 @@ export default function InvitationActions({ projectId }: { projectId: string }) 
         try {
             await respondToProjectInvitation(projectId, accept)
             setStatus('success')
+            router.refresh()
         } catch (error) {
             console.error(error)
             setStatus('idle')

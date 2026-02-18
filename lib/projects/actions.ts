@@ -1,9 +1,10 @@
 'use server'
 
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+
 import { revalidatePath } from 'next/cache'
 
 export async function inviteProjectMember(projectId: string, email: string, role: 'admin' | 'manager' | 'member') {
+    const { createServerSupabaseClient } = require('@/lib/supabase/server')
     const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -57,16 +58,19 @@ export async function inviteProjectMember(projectId: string, email: string, role
     await supabase.from('notifications').insert({
         user_id: targetUser.id,
         type: 'project_invite',
-        message: `You have been invited to join the project by ${user.email}`,
+        message: `Project invite: You have been invited to join this project.`,
         related_id: projectId,
         read: false
     })
 
+    revalidatePath('/dashboard')
+    revalidatePath('/projects')
     revalidatePath(`/projects/${projectId}`)
     revalidatePath(`/projects/${projectId}/teams`)
 }
 
 export async function respondToProjectInvitation(projectId: string, accept: boolean) {
+    const { createServerSupabaseClient } = require('@/lib/supabase/server')
     const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -99,6 +103,7 @@ export async function respondToProjectInvitation(projectId: string, accept: bool
         .eq('type', 'project_invite')
 
     revalidatePath('/dashboard')
+    revalidatePath('/projects')
     revalidatePath('/notifications')
     revalidatePath(`/projects/${projectId}`)
 }
@@ -110,6 +115,7 @@ export async function createProject(data: {
     start_date?: string
     end_date?: string
 }) {
+    const { createServerSupabaseClient } = require('@/lib/supabase/server')
     const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -142,6 +148,7 @@ export async function createProject(data: {
 }
 
 export async function updateProject(id: string, name: string, description: string) {
+    const { createServerSupabaseClient } = require('@/lib/supabase/server')
     const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -160,6 +167,7 @@ export async function updateProject(id: string, name: string, description: strin
 }
 
 export async function deleteProject(id: string) {
+    const { createServerSupabaseClient } = require('@/lib/supabase/server')
     const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 

@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+
 
 export async function logActivity({
     projectId,
@@ -15,6 +15,7 @@ export async function logActivity({
     message: string
     metadata?: any
 }) {
+    const { createServerSupabaseClient } = require('@/lib/supabase/server')
     const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 
