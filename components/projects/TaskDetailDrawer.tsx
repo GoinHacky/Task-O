@@ -28,9 +28,13 @@ export default function TaskDetailDrawer({ task, projectId, onClose, canManage =
 
     const [status, setStatus] = useState(task.status)
     const [priority, setPriority] = useState(task.priority)
+    const [userRole, setUserRole] = useState<string>('viewer')
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+    const [userTeams, setUserTeams] = useState<string[]>([])
     const [mentionSearch, setMentionSearch] = useState('')
     const [showMentions, setShowMentions] = useState(false)
     const [projectMembers, setProjectMembers] = useState<any[]>([])
+    const [teamInfo, setTeamInfo] = useState<any>(null)
 
     const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -38,16 +42,48 @@ export default function TaskDetailDrawer({ task, projectId, onClose, canManage =
         fetchActivities()
         fetchComments()
         fetchProjectMembers()
+        fetchUserRole()
+        if (task.team_id) fetchTeamInfo()
     }, [task.id])
 
+    const fetchTeamInfo = async () => {
+        const { data } = await supabase
+            .from('teams')
+            .select('name')
+            .eq('id', task.team_id)
+            .single()
+        setTeamInfo(data)
+    }
+
+    const fetchUserRole = async () => {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        setCurrentUserId(user.id)
+
+        const { data: member } = await supabase
+            .from('project_members')
+            .select('role')
+            .eq('project_id', projectId)
+            .eq('user_id', user.id)
+            .single()
+
+        setUserRole(member?.role || 'viewer')
+
+        const { data: teams } = await supabase
+            .from('team_members')
+            .select('team_id')
+            .eq('user_id', user.id)
+
+        setUserTeams(teams?.map(t => t.team_id) || [])
+    }
+
     const fetchActivities = async () => {
-        // Mocking activities for now until task_activity table is confirmed
-        // In a real app, this would be: 
-        // const { data } = await supabase.from('task_activity').select('*').eq('task_id', task.id).order('created_at', { ascending: false })
-        setActivities([
-            { id: '1', type: 'system', message: 'Task initialized by System', created_at: task.created_at, user: { full_name: 'System' } },
-            { id: '2', type: 'log', message: `Status changed to ${task.status}`, created_at: task.updated_at, user: { full_name: 'Technical Unit' } }
-        ])
+        const { data } = await supabase
+            .from('activities')
+            .select('*, user:user_id(full_name, avatar_url)')
+            .eq('task_id', task.id)
+            .order('created_at', { ascending: false })
+        setActivities(data || [])
     }
 
     const fetchComments = async () => {
@@ -68,7 +104,7 @@ export default function TaskDetailDrawer({ task, projectId, onClose, canManage =
     }
 
     const handleUpdate = async (updates: any) => {
-        if (!canManage) return
+        if (userRole === 'viewer') return
         setLoading(true)
         try {
             await updateTask(task.id, updates)
@@ -116,36 +152,22 @@ export default function TaskDetailDrawer({ task, projectId, onClose, canManage =
         return a.category === (activeTab === 'comments' ? 'comment' : 'log')
     })
 
+    const formatLabel = (label: string) => {
+        if (!label) return ''
+        return label.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')
+    }
+
+    const getStatusLabel = (status: string) => {
+        switch (status) {
+            case 'pending': return 'To Do'
+            case 'in_progress': return 'Doing'
+            case 'completed': return 'Done'
+            default: return formatLabel(status)
+        }
+    }
+
     return (
-        <div className="flex flex-col h-full bg-white dark:bg-slate-900 border-l border-gray-100 dark:border-slate-800 shadow-2xl animate-in slide-in-from-right duration-300">
-            {/* Header Section */}
-            <div className="p-6 border-b border-gray-50 dark:border-slate-800/50 space-y-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 px-2 py-1 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg">
-                        <Hash size={10} className="text-indigo-500" />
-                        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">{task.reference_code || task.id.slice(0, 8)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button className="p-2 text-gray-400 hover:text-indigo-500 transition-all"><MoreHorizontal size={16} /></button>
-                        <button onClick={onClose} className="p-2 text-gray-400 hover:text-rose-500 transition-all"><X size={16} /></button>
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <h1 className="text-xl font-black text-gray-900 dark:text-slate-50 uppercase tracking-tightest leading-tight">
-                        {task.title}
-                    </h1>
-                    <div className="flex flex-wrap gap-2">
-                        <span className="px-2 py-0.5 bg-gray-50 dark:bg-slate-800 text-[8px] font-black text-gray-400 uppercase tracking-widest rounded-md border border-gray-100 dark:border-slate-700">
-                            {task.task_type || 'General'}
-                        </span>
-                        <span className="px-2 py-0.5 bg-gray-50 dark:bg-slate-800 text-[8px] font-black text-gray-400 uppercase tracking-widest rounded-md border border-gray-100 dark:border-slate-700">
-                            {task.category || 'Maintenance'}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
+        <div className="flex flex-col h-full bg-white dark:bg-slate-900 animate-in slide-in-from-right duration-300">
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto scrollbar-hide">
                 <div className="p-6 space-y-8">
@@ -161,89 +183,81 @@ export default function TaskDetailDrawer({ task, projectId, onClose, canManage =
                         </div>
                     </div>
 
-                    {/* Operational Matrix */}
                     <div className="grid grid-cols-2 gap-4">
+                        {/* Team Section */}
                         <div className="space-y-2">
-                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Current Status</label>
-                            <div className="relative">
-                                <select
-                                    value={status}
-                                    onChange={(e) => {
-                                        setStatus(e.target.value)
-                                        handleUpdate({ status: e.target.value })
-                                    }}
-                                    className="w-full pl-4 pr-10 py-3 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm appearance-none focus:ring-4 focus:ring-indigo-500/5 transition-all cursor-pointer"
-                                >
-                                    <option value="pending">PENDING_QUEUE</option>
-                                    <option value="in_progress">ACTIVE_DEPLOY</option>
-                                    <option value="completed">MISSION_COMPLETE</option>
-                                </select>
-                                <ChevronRight className="absolute right-4 top-3.5 rotate-90 text-gray-300" size={14} />
+                            <label className="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Team</label>
+                            <div className="w-full px-5 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl text-xs font-bold text-gray-900 dark:text-slate-100">
+                                {formatLabel(teamInfo?.name || task.team?.name || 'CENTRAL_OPS')}
                             </div>
                         </div>
+
+                        {/* Assignee Section */}
                         <div className="space-y-2">
-                            <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Authority Level</label>
-                            <div className="relative">
-                                <select
-                                    value={priority}
-                                    onChange={(e) => {
-                                        setPriority(e.target.value)
-                                        handleUpdate({ priority: e.target.value })
-                                    }}
-                                    className="w-full pl-4 pr-10 py-3 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm appearance-none focus:ring-4 focus:ring-indigo-500/5 transition-all cursor-pointer"
-                                >
-                                    <option value="low">LOW_PRIORITY</option>
-                                    <option value="medium">MEDIUM_PRIORITY</option>
-                                    <option value="high">HIGH_PRIORITY</option>
-                                </select>
-                                <Flag className={`absolute right-4 top-3.5 ${priority === 'high' ? 'text-rose-500' : priority === 'medium' ? 'text-amber-500' : 'text-gray-300'}`} size={14} />
+                            <label className="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Assignee</label>
+                            <div className="w-full px-5 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-slate-100">
+                                <div className="w-5 h-5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-[10px] font-black text-indigo-500 shrink-0">
+                                    {task.assignee?.full_name?.[0] || 'U'}
+                                </div>
+                                <span className="truncate">{task.assignee?.full_name || 'Unassigned'}</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Meta Info */}
-                    <div className="grid grid-cols-2 gap-6 px-2 py-4 border-y border-gray-50 dark:border-slate-800/50">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500">
-                                <User size={18} />
-                            </div>
-                            <div>
-                                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Assignee</p>
-                                <p className="text-[11px] font-black text-gray-900 dark:text-slate-100">{task.assignee?.full_name || 'Unassigned'}</p>
+                    <div className="grid grid-cols-2 gap-4">
+                        {/* Status Section */}
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Status</label>
+                            <div className="w-full px-5 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-900 dark:text-slate-100">
+                                <span className="uppercase tracking-widest">{getStatusLabel(status)}</span>
+                                <div className={`w-2 h-2 rounded-full ${status === 'completed' ? 'bg-emerald-500' :
+                                        status === 'in_progress' ? 'bg-amber-500' :
+                                            'bg-indigo-400'
+                                    } shadow-[0_0_10px_-2px_rgba(0,0,0,0.1)]`} />
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                                <Calendar size={18} />
-                            </div>
-                            <div>
-                                <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Deadline</p>
-                                <p className="text-[11px] font-black text-gray-900 dark:text-slate-100">{task.due_date ? format(new Date(task.due_date), 'MMM dd, yyyy') : 'NO_LIMIT'}</p>
+
+                        {/* Priority Section */}
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Priority</label>
+                            <div className="w-full px-5 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl flex items-center justify-between text-xs font-bold text-gray-900 dark:text-slate-100">
+                                <span className="uppercase tracking-widest">{formatLabel(priority)}</span>
+                                <Flag size={12} className={
+                                    priority === 'high' ? 'text-rose-500' :
+                                        priority === 'medium' ? 'text-amber-500' :
+                                            'text-indigo-400'
+                                } />
                             </div>
                         </div>
                     </div>
 
-                    {/* Activity Section */}
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-4 border-b border-gray-100 dark:border-slate-800">
-                            {[
-                                { id: 'all', icon: History, label: 'All Log' },
-                                { id: 'comments', icon: MessageSquare, label: 'Commits' },
-                                { id: 'logs', icon: Shield, label: 'Audit' }
-                            ].map(tab => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id as any)}
-                                    className={`pb-3 text-[10px] font-black uppercase tracking-widest transition-all relative ${activeTab === tab.id ? 'text-[#6366f1]' : 'text-gray-400'}`}
-                                >
-                                    <span className="flex items-center gap-2">
-                                        <tab.icon size={12} />
-                                        {tab.label}
-                                    </span>
-                                    {activeTab === tab.id && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6366f1] rounded-full" />}
-                                </button>
-                            ))}
+                    <div className="grid grid-cols-2 gap-4">
+                        {/* Due Date Section */}
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Due Date</label>
+                            <div className="w-full px-5 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl flex items-center gap-2 text-xs font-bold text-gray-900 dark:text-slate-100">
+                                <Calendar size={14} className="text-gray-400" />
+                                {task.due_date ? format(new Date(task.due_date), 'MMMM dd, yyyy') : 'No Date Set'}
+                            </div>
                         </div>
+
+                        {/* Task ID / Reference */}
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Reference ID</label>
+                            <div className="w-full px-5 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                <Hash size={12} className="text-gray-400" />
+                                {task.reference_code || task.id.slice(0, 8)}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Description Section */}
+                    <div className="space-y-2">
+                        <label className="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Operational Details</label>
+                        <div className="w-full px-5 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl text-[13px] font-bold text-gray-600 dark:text-slate-400 min-h-[100px] leading-relaxed">
+                            {task.description || 'No operational details logged for this objective.'}
+                        </div>
+                    </div>
 
                         <div className="space-y-6">
                             {filteredActivity.map((a, idx) => (
@@ -258,14 +272,12 @@ export default function TaskDetailDrawer({ task, projectId, onClose, canManage =
                                         </div>
                                         <div className="flex-1 w-px bg-gray-50 dark:bg-slate-800 group-last:hidden" />
                                     </div>
-                                    <div className="flex-1 pt-1 pb-4">
-                                        <div className="flex items-center justify-between mb-1">
-                                            <p className="text-[10px] font-black text-gray-900 dark:text-slate-100 uppercase tracking-tight">{a.user?.full_name}</p>
-                                            <p className="text-[8px] font-bold text-gray-400 uppercase">{format(new Date(a.created_at), 'HH:mm • dd MMM')}</p>
+                                    <div className="flex-1 space-y-1">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[11px] font-black text-gray-900 dark:text-slate-100 uppercase tracking-tight">{c.user?.full_name}</span>
+                                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{format(new Date(c.created_at), 'MMM dd')}</span>
                                         </div>
-                                        <p className={`text-[11px] leading-relaxed ${a.type === 'comment' ? 'text-gray-600 dark:text-slate-400 font-bold' : 'text-gray-400 italic'}`}>
-                                            {a.message}
-                                        </p>
+                                        <p className="text-[11px] text-gray-600 dark:text-slate-400 font-medium leading-relaxed">{c.content}</p>
                                     </div>
                                 </div>
                             ))}
@@ -274,28 +286,31 @@ export default function TaskDetailDrawer({ task, projectId, onClose, canManage =
                 </div>
             </div>
 
-            {/* Response Interface */}
-            <div className="p-6 bg-gray-50/50 dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800">
-                <form onSubmit={handleCommentSubmit} className="relative">
-                    <div className="absolute left-3 top-3 text-gray-400">
-                        <AtSign size={14} />
-                    </div>
-                    <textarea
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        className="w-full pl-10 pr-12 py-3 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-800 rounded-2xl text-[11px] font-bold text-gray-700 dark:text-slate-200 outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all min-h-[44px] max-h-32 shadow-sm"
-                        placeholder="Commit a comment or @ mention unit..."
-                    />
-                    <button
-                        type="submit"
-                        className="absolute right-2 bottom-2 p-2 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 shadow-lg shadow-indigo-500/20 active:scale-90 transition-all"
-                    >
-                        <Send size={14} />
-                    </button>
-                    <div className="flex items-center gap-4 mt-2 px-2">
-                        <button type="button" className="text-gray-400 hover:text-indigo-500 transition-all flex items-center gap-1.5"><Paperclip size={12} /> <span className="text-[8px] font-black uppercase tracking-widest">Attach Manifest</span></button>
-                    </div>
-                </form>
+            {/* Bottom Action Bar */}
+            <div className="p-8 border-t border-gray-50 dark:border-slate-800/50 relative shrink-0 flex">
+                <button
+                    onClick={() => {
+                        setStatus('in_progress')
+                        handleUpdate({ status: 'in_progress' })
+                    }}
+                    disabled={userRole === 'viewer' || (userRole === 'member' && task.assigned_to !== currentUserId)}
+                    className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-gray-50 dark:hover:bg-slate-900 ${status === 'in_progress' ? 'text-amber-500' : 'text-gray-400 hover:text-amber-500'
+                        } disabled:opacity-50`}
+                >
+                    {status === 'in_progress' ? 'Already Doing' : 'Mark as Doing'}
+                </button>
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-50 dark:bg-slate-800/50" />
+                <button
+                    onClick={() => {
+                        setStatus('completed')
+                        handleUpdate({ status: 'completed' })
+                    }}
+                    disabled={userRole === 'viewer' || (userRole === 'member' && task.assigned_to !== currentUserId)}
+                    className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all hover:bg-gray-50 dark:hover:bg-slate-900 ${status === 'completed' ? 'text-emerald-500' : 'text-[#6366f1] hover:text-emerald-500'
+                        } disabled:opacity-50`}
+                >
+                    {status === 'completed' ? 'Tasks Done' : 'Mark as Done'}
+                </button>
             </div>
         </div>
     )

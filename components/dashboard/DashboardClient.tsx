@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { Plus, MoreHorizontal, Calendar, AlertCircle, Layout, CheckCircle2 } from 'lucide-react'
 import { format } from 'date-fns'
-import CreateTaskModal from '@/components/projects/CreateTaskModal'
+import dynamic from 'next/dynamic'
+const CreateTaskModal = dynamic(() => import('@/components/projects/CreateTaskModal'), { ssr: false })
 // import CreateTeamModal from '@/components/teams/CreateTeamModal' // To be created
 
 export function DashboardActions() {
@@ -104,7 +105,7 @@ export function TaskPriorityList({ tasks, completedCount, upcomingCount, overdue
                         className={`px-5 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === tab.label ? 'bg-[#f3f4ff] dark:bg-indigo-500/10 text-[#6366f1]' : 'bg-[#f8f9fa] dark:bg-slate-800/50 text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-800'
                             }`}
                     >
-                        {tab.count} {tab.label}
+                        {tab.count} {tab.label === 'Completed' ? 'resolved' : tab.label}
                     </button>
                 ))}
             </div>

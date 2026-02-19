@@ -106,7 +106,7 @@ export default function ProjectMembersClient({
                                     <div className="flex items-center gap-4">
                                         <div className="w-11 h-11 rounded-2xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-gray-100 dark:border-slate-800 shadow-sm group-hover:scale-105 transition-transform">
                                             {member.user?.avatar_url ? (
-                                                <img src={member.user.avatar_url} className="w-full h-full object-cover" />
+                                                <img src={member.user.avatar_url} alt={member.user.full_name || 'Member'} className="w-full h-full object-cover" />
                                             ) : (
                                                 <span className="text-sm font-black text-[#6366f1] uppercase">{member.user?.full_name?.[0] || 'U'}</span>
                                             )}

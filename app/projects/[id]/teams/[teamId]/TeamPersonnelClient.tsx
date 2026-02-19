@@ -9,9 +9,10 @@ interface TeamPersonnelClientProps {
     team: any
     projectId: string
     isAdmin: boolean
+    tasks: any[]
 }
 
-export default function TeamPersonnelClient({ team, projectId, isAdmin }: TeamPersonnelClientProps) {
+export default function TeamPersonnelClient({ team, projectId, isAdmin, tasks }: TeamPersonnelClientProps) {
     const [isAssignmentOpen, setIsAssignmentOpen] = useState(false)
     const existingMemberIds = team.members.map((m: any) => m.user.id)
 
@@ -42,13 +43,25 @@ export default function TeamPersonnelClient({ team, projectId, isAdmin }: TeamPe
                                 </div>
                                 <div>
                                     <p className="text-sm font-black text-gray-900 dark:text-slate-100">{member.user.full_name}</p>
-                                    <p className="text-[10px] font-black text-gray-400 capitalize flex items-center gap-1">
-                                        <Shield size={10} className={member.role === 'admin' ? 'text-indigo-500' : 'text-gray-300'} />
-                                        {member.role}
-                                    </p>
+                                    <div className="flex items-center gap-3">
+                                        <p className="text-[10px] font-black text-gray-400 capitalize flex items-center gap-1">
+                                            <Shield size={10} className={member.role === 'admin' ? 'text-indigo-500' : 'text-gray-300'} />
+                                            {member.role}
+                                        </p>
+                                        <div className="h-1 w-1 rounded-full bg-gray-300" />
+                                        <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest">
+                                            {tasks.filter(t => t.assigned_to === member.user.id && (t.status === 'in_progress' || t.status === 'review')).length} Active
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="w-2 h-2 rounded-full bg-green-500 shadow-lg shadow-green-500/20" />
+                            <div className="text-right">
+                                <p className="text-[10px] font-black text-gray-900 dark:text-slate-100">
+                                    {Math.round((tasks.filter(t => t.assigned_to === member.user.id && t.status === 'completed').length /
+                                        Math.max(tasks.filter(t => t.assigned_to === member.user.id).length, 1)) * 100)}%
+                                </p>
+                                <p className="text-[8px] font-black text-gray-400 uppercase tracking-tightest">Efficiency</p>
+                            </div>
                         </div>
                     ))}
                     {team.members.length === 0 && (

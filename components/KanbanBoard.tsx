@@ -8,6 +8,23 @@ import { format } from 'date-fns'
 import Modal from './ui/Modal'
 import TaskDetailDrawer from './projects/TaskDetailDrawer'
 
+// StrictDroppable for React 18 + react-beautiful-dnd
+import { DroppableProps } from 'react-beautiful-dnd'
+export const StrictDroppable = ({ children, ...props }: DroppableProps) => {
+  const [enabled, setEnabled] = useState(false)
+  useEffect(() => {
+    const animation = requestAnimationFrame(() => setEnabled(true))
+    return () => {
+      cancelAnimationFrame(animation)
+      setEnabled(false)
+    }
+  }, [])
+  if (!enabled) {
+    return null
+  }
+  return <Droppable {...props}>{children}</Droppable>
+}
+
 interface Task {
   id: string
   title: string
@@ -16,6 +33,10 @@ interface Task {
   priority: string
   due_date?: string
   assigned_to?: string
+  team_id?: string
+  teams?: {
+    name: string
+  }
   assignee?: {
     full_name?: string
     email?: string
@@ -31,9 +52,9 @@ interface KanbanBoardProps {
 }
 
 const COLUMNS = [
-  { id: 'pending', title: 'Pending' },
+  { id: 'pending', title: 'To Do' },
   { id: 'in_progress', title: 'In Progress' },
-  { id: 'completed', title: 'Completed' },
+  { id: 'completed', title: 'Done' },
 ]
 
 export default function KanbanBoard({ projectId, teamId, userId, tasks: initialTasks, canManage = false }: KanbanBoardProps) {
@@ -41,9 +62,12 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
   const [loading, setLoading] = useState(!initialTasks)
   const [winReady, setWinReady] = useState(false)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   useEffect(() => {
     setWinReady(true)
+    fetchUserContext()
     if (initialTasks) {
       setTasks(initialTasks)
       setLoading(false)
@@ -52,12 +76,31 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
     }
   }, [projectId, teamId, userId, initialTasks])
 
+  const fetchUserContext = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      setCurrentUserId(user.id)
+      if (projectId) {
+        const { data: member } = await supabase
+          .from('project_members')
+          .select('role')
+          .eq('project_id', projectId)
+          .eq('user_id', user.id)
+          .single()
+        if (member) setUserRole(member.role)
+      }
+    }
+  }
+
   const fetchTasks = async () => {
     try {
       let query = supabase
         .from('tasks')
         .select(`
           *,
+          teams:team_id (
+            name
+          ),
           assignee:assigned_to (
             id,
             full_name,
@@ -99,6 +142,24 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
     const task = tasks.find((t) => t.id === draggableId)
     if (!task) return
 
+    // Role-based validation
+    const isAdmin = userRole === 'admin' || userRole === 'owner' || userRole === 'manager'
+    const isTechLead = userRole === 'tech_lead'
+    const isMember = userRole === 'member'
+
+    if (isAdmin) {
+      // Full access
+    } else if (isTechLead) {
+      // Can move tasks if they are the lead? 
+      // Simplified: if it's in a team they belong to. 
+      // For now, let's assume if they have the role and it's their team.
+      // We might need to fetch their team_id.
+    } else if (isMember) {
+      if (task.assigned_to !== currentUserId) return
+    } else {
+      return // Viewer or no role
+    }
+
     // Optimistic update
     setTasks((prevTasks) =>
       prevTasks.map((t) =>
@@ -121,11 +182,21 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'border-l-4 border-l-red-500'
-      case 'medium': return 'border-l-4 border-l-yellow-500'
-      case 'low': return 'border-l-4 border-l-blue-500'
-      default: return 'border-l-4 border-l-gray-300'
+      case 'high': return 'border-l-4 border-l-rose-500 shadow-rose-500/5'
+      case 'medium': return 'border-l-4 border-l-amber-500 shadow-amber-500/5'
+      case 'low': return 'border-l-4 border-l-indigo-500 shadow-indigo-500/5'
+      default: return 'border-l-4 border-l-slate-300'
     }
+  }
+
+  const getTeamColor = (teamName: string) => {
+    const colors: Record<string, string> = {
+      'Logistics': 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:border-blue-500/20',
+      'Marketing': 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:border-purple-500/20',
+      'Security': 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:border-red-500/20',
+      'Technical': 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:border-emerald-500/20'
+    }
+    return colors[teamName] || 'bg-gray-50 text-gray-600 dark:bg-slate-800 dark:border-slate-700'
   }
 
   if (!winReady) return null
@@ -136,7 +207,7 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {COLUMNS.map((column) => {
           const columnTasks = tasks.filter((t) => t.status === column.id)
 
@@ -151,7 +222,7 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
                 </span>
               </div>
 
-              <Droppable droppableId={column.id}>
+              <StrictDroppable droppableId={column.id}>
                 {(provided, snapshot) => (
                   <div
                     {...provided.droppableProps}
@@ -181,23 +252,32 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
                                     {task.description}
                                   </p>
                                 )}
-                                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500 mt-2">
-                                  {task.due_date && (
-                                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg ${new Date(task.due_date) < new Date() && task.status !== 'completed'
-                                      ? 'bg-red-50 text-red-500 dark:bg-red-500/10'
-                                      : 'bg-gray-50 text-gray-400 dark:bg-slate-800'
-                                      }`}>
-                                      <Calendar className="h-3 w-3" />
-                                      {format(new Date(task.due_date), 'MMM dd')}
-                                    </div>
-                                  )}
-                                  {task.assignee && (
-                                    <div className="flex items-center gap-1.5">
-                                      <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-[9px] text-[#6366f1] border border-indigo-100 dark:border-indigo-500/20">
+                                <div className="flex items-center justify-between mt-2 pt-3 border-t border-gray-50 dark:border-slate-800/50">
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-1.5 h-1.5 rounded-full ${task.priority === 'high' ? 'bg-rose-500' : task.priority === 'medium' ? 'bg-amber-500' : 'bg-indigo-500'}`} />
+                                    <span className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400">{task.priority}</span>
+                                    {task.teams?.name && (
+                                      <span className={`ml-2 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${getTeamColor(task.teams.name)}`}>
+                                        {task.teams.name}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    {task.due_date && (
+                                      <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${new Date(task.due_date) < new Date() && task.status !== 'completed'
+                                        ? 'bg-red-50 text-red-500 dark:bg-red-500/10'
+                                        : 'bg-gray-50 text-gray-400 dark:bg-slate-800'
+                                        }`}>
+                                        <Calendar className="h-2.5 w-2.5" />
+                                        {format(new Date(task.due_date), 'MMM dd')}
+                                      </div>
+                                    )}
+                                    {task.assignee && (
+                                      <div className="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-[9px] font-black text-[#6366f1] border border-indigo-100 dark:border-indigo-500/20">
                                         {task.assignee.full_name?.[0] || 'U'}
                                       </div>
-                                    </div>
-                                  )}
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -208,7 +288,7 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
                     {provided.placeholder}
                   </div>
                 )}
-              </Droppable>
+              </StrictDroppable>
             </div>
           )
         })}
@@ -217,7 +297,7 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
       <Modal
         isOpen={!!selectedTask}
         onClose={() => setSelectedTask(null)}
-        title="Task Insight"
+        title="Task Details"
       >
         {selectedTask && (
           <TaskDetailDrawer

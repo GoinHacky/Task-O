@@ -121,8 +121,8 @@ export default function ProjectMembersTable({ members, currentUserRole, projectI
                                             </div>
                                         ) : (
                                             <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${member.role === 'admin' ? 'bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-500/20' :
-                                                    member.role === 'manager' ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-500/20' :
-                                                        'bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border-gray-100 dark:border-slate-700'
+                                                member.role === 'manager' ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-500/20' :
+                                                    'bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 border-gray-100 dark:border-slate-700'
                                                 }`}>
                                                 {member.role === 'admin' ? <Shield size={12} className="text-purple-500" /> : <UserIcon size={12} className="text-gray-400" />}
                                                 {member.role}
@@ -145,10 +145,9 @@ export default function ProjectMembersTable({ members, currentUserRole, projectI
                                                 <button
                                                     onClick={() => handleRemoveMember(member.id)}
                                                     disabled={loading === member.id}
-                                                    className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-white dark:hover:bg-slate-800 rounded-[14px] shadow-sm border border-transparent hover:border-gray-100 dark:hover:border-slate-700 transition-all"
-                                                    title="Remove Member"
+                                                    className="px-4 py-2 text-[10px] font-black text-gray-400 hover:text-red-500 uppercase tracking-widest transition-all"
                                                 >
-                                                    <Trash2 size={18} />
+                                                    {loading === member.id ? '...' : 'Remove'}
                                                 </button>
                                             </div>
                                         )}

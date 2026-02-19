@@ -54,25 +54,25 @@ export default function UpdateRoleModal({ isOpen, onClose, member, projectId }: 
     }
 
     const roles = [
-        { id: 'admin', label: 'Administrator', desc: 'Full architectural control & system management.', icon: Shield, color: 'text-rose-500', bg: 'bg-rose-50' },
-        { id: 'member', label: 'Technical Unit', desc: 'Execution capability with project read/write access.', icon: Zap, color: 'text-indigo-500', bg: 'bg-indigo-50' },
-        { id: 'viewer', label: 'Observer', desc: 'Read-only access to mission parameters.', icon: Eye, color: 'text-gray-500', bg: 'bg-gray-50' },
+        { id: 'admin', label: 'Admin', desc: 'Full administrative control over this project.', icon: Shield, color: 'text-rose-500', bg: 'bg-rose-50' },
+        { id: 'member', label: 'Member', desc: 'Can create and edit tasks, members, and project data.', icon: Zap, color: 'text-indigo-500', bg: 'bg-indigo-50' },
+        { id: 'viewer', label: 'Viewer', desc: 'Read-only access to tasks and project overview.', icon: Eye, color: 'text-gray-500', bg: 'bg-gray-50' },
     ]
 
     return (
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title="Update Access Level"
+            title="Update Member Role"
         >
             {success ? (
                 <div className="py-12 text-center animate-in fade-in zoom-in duration-500">
                     <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-3xl bg-indigo-50 text-indigo-500 mb-6 shadow-sm border border-indigo-100">
                         <Lock className="h-10 w-10" />
                     </div>
-                    <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tightest">Access Decided</h3>
+                    <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tightest">Role Updated</h3>
                     <p className="mt-2 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-relaxed">
-                        Neural permissions updated for {member.full_name || member.email}.
+                        Permissions updated for {member.full_name || member.email}.
                     </p>
                 </div>
             ) : (
@@ -89,14 +89,14 @@ export default function UpdateRoleModal({ isOpen, onClose, member, projectId }: 
                             {member.full_name?.[0] || member.email?.[0] || 'U'}
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Target Personnel</p>
-                            <h4 className="text-sm font-black text-gray-900 uppercase tracking-tightest">{member.full_name || 'Anonymous Unit'}</h4>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Project Member</p>
+                            <h4 className="text-sm font-black text-gray-900 uppercase tracking-tightest">{member.full_name || 'User'}</h4>
                             <p className="text-[10px] font-bold text-gray-400 lowercase">{member.email}</p>
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-1">Assign Authority Grade</label>
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-1">Select New Role</label>
                         <div className="space-y-3">
                             {roles.map((r) => (
                                 <button
@@ -134,14 +134,14 @@ export default function UpdateRoleModal({ isOpen, onClose, member, projectId }: 
                             onClick={onClose}
                             className="flex-1 px-4 py-4 border border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-50 transition-all active:scale-95"
                         >
-                            Retreat
+                            Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading || role === member.role}
                             className="flex-1 px-4 py-4 bg-gray-900 text-white text-[10px] font-black rounded-2xl hover:bg-black disabled:opacity-50 transition-all shadow-xl shadow-gray-900/10 active:scale-95 uppercase tracking-[0.2em]"
                         >
-                            {loading ? 'Authorizing...' : 'Override Role'}
+                            {loading ? 'Updating...' : 'Update Role'}
                         </button>
                     </div>
                 </form>

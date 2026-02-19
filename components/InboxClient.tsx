@@ -187,7 +187,7 @@ export default function InboxClient({ initialConversations, currentUser }: Inbox
             <div className="w-[380px] border-r border-gray-100 dark:border-slate-800/50 flex flex-col bg-white dark:bg-slate-900/30">
                 <div className="p-8 pb-4">
                     <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-2xl font-black text-gray-900 dark:text-slate-50 tracking-tight">Messages</h2>
+                        <h2 className="text-2xl font-black text-gray-900 dark:text-slate-50 tracking-tight">Inbox</h2>
                         <button
                             onClick={focusSearch}
                             className="w-10 h-10 rounded-2xl bg-[#f3f4ff] dark:bg-indigo-500/10 text-[#6366f1] flex items-center justify-center hover:bg-[#e8e9ff] dark:hover:bg-indigo-500/20 transition-all"
@@ -261,11 +261,11 @@ export default function InboxClient({ initialConversations, currentUser }: Inbox
                                 <div className="w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center font-black text-xl relative overflow-hidden shadow-sm">
                                     {conv.is_team ? (
                                         <div className="w-full h-full bg-[#f3f4ff] dark:bg-slate-800 text-[#6366f1] flex items-center justify-center">
-                                            {conv.avatar_url ? <img src={conv.avatar_url} className="w-full h-full object-cover" /> : <Hash size={24} />}
+                                            {conv.avatar_url ? <img src={conv.avatar_url} alt={conv.name || 'Team'} className="w-full h-full object-cover" /> : <Hash size={24} />}
                                         </div>
                                     ) : (
                                         <div className="w-full h-full bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 border border-gray-100 dark:border-slate-700 flex items-center justify-center">
-                                            {conv.user?.avatar_url ? <img src={conv.user.avatar_url} className="w-full h-full object-cover" /> : displayName[0]}
+                                            {conv.user?.avatar_url ? <img src={conv.user.avatar_url} alt={displayName} className="w-full h-full object-cover" /> : displayName[0]}
                                         </div>
                                     )}
                                     {!conv.is_team && (
@@ -304,7 +304,7 @@ export default function InboxClient({ initialConversations, currentUser }: Inbox
                         <div className="flex items-center gap-5">
                             <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-slate-800 flex items-center justify-center font-black text-[#6366f1] border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
                                 {activeConversation.avatar_url ? (
-                                    <img src={activeConversation.avatar_url} className="w-full h-full object-cover" />
+                                    <img src={activeConversation.avatar_url} alt={activeConversation.is_team ? activeConversation.name : activeConversation.user?.full_name} className="w-full h-full object-cover" />
                                 ) : (
                                     activeConversation.is_team ? <Hash size={20} /> : activeConversation.user?.full_name?.[0]
                                 )}

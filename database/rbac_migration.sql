@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS public.project_members (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  role TEXT NOT NULL CHECK (role IN ('admin', 'manager', 'member')),
+  role TEXT NOT NULL CHECK (role IN ('admin', 'tech_lead', 'manager', 'member')),
   status TEXT NOT NULL DEFAULT 'accepted' CHECK (status IN ('pending', 'accepted', 'rejected')),
   joined_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(project_id, user_id)

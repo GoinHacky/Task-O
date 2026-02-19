@@ -5,6 +5,7 @@ import { Plus, Bell, CheckCircle2, Layout, Calendar, Clock, AlertCircle, Users, 
 import { useTheme } from 'next-themes'
 import CreateTaskModal from './projects/CreateTaskModal'
 import InviteMemberModal from './InviteMemberModal'
+import { markAllNotificationsAsRead, clearAllNotifications as clearAllAction } from '@/lib/notifications/actions'
 import { supabase } from '@/lib/supabase/client'
 import { format } from 'date-fns'
 import Link from 'next/link'
@@ -105,6 +106,21 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
         fetchNotifications()
     }
 
+    const clearAllNotifications = async () => {
+        if (!currentUser?.id) return
+        try {
+            // Optimistic update
+            setNotifications([])
+            setUnreadCount(0)
+
+            await clearAllAction()
+            fetchNotifications()
+        } catch (error) {
+            console.error('Failed to clear notifications:', error)
+            fetchNotifications() // Rollback
+        }
+    }
+
     const handleNotificationClick = async (n: any) => {
         const isInvitation = ['workspace_invite', 'project_invite', 'invite'].includes(n.type)
         if (!n.read && !isInvitation) await markAsRead(n.id)
@@ -153,19 +169,36 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
 
                 {isNotificationsOpen && (
                     <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-gray-100 dark:border-slate-800 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
-                        <div className="p-5 border-b border-gray-50 dark:border-slate-800/50 flex items-center justify-between">
-                            <h3 className="text-[11px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest">Notifications</h3>
-                            <div className="flex items-center gap-3">
-                                {unreadCount > 0 && (
-                                    <button
-                                        onClick={markAllAsRead}
-                                        className="text-[9px] font-black text-[#6366f1] hover:underline uppercase tracking-wider"
-                                    >
-                                        Clear
-                                    </button>
-                                )}
-                                <span className="text-[10px] font-black text-[#6366f1] bg-[#f3f4ff] dark:bg-indigo-500/10 px-2 py-0.5 rounded-lg tracking-wider">{unreadCount}</span>
+                        <div className="p-5 border-b border-gray-50 dark:border-slate-800/50">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest">Notifications</span>
+                                <div className="flex gap-3">
+                                    {unreadCount > 0 && (
+                                        <button
+                                            onClick={async (e) => {
+                                                e.stopPropagation()
+                                                await markAllNotificationsAsRead()
+                                                fetchNotifications()
+                                            }}
+                                            className="text-[9px] font-black text-[#6366f1] hover:text-[#5558e3] bg-indigo-50 dark:bg-indigo-500/10 px-2 py-1 rounded-lg uppercase tracking-wider transition-colors"
+                                        >
+                                            Mark Read
+                                        </button>
+                                    )}
+                                    {notifications.length > 0 && (
+                                        <button
+                                            onClick={async (e) => {
+                                                e.stopPropagation()
+                                                await clearAllNotifications()
+                                            }}
+                                            className="text-[9px] font-black text-rose-500 hover:text-rose-600 bg-rose-50 dark:bg-rose-500/10 px-2 py-1 rounded-lg uppercase tracking-wider transition-colors"
+                                        >
+                                            Clear All
+                                        </button>
+                                    )}
+                                </div>
                             </div>
+                            <span className="text-[10px] font-black text-[#6366f1] bg-[#f3f4ff] dark:bg-indigo-500/10 px-2 py-0.5 rounded-lg tracking-wider">{unreadCount}</span>
                         </div>
                         <div className="max-h-80 overflow-y-auto">
                             {notifications.length > 0 ? (
@@ -258,13 +291,16 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
                             <Layout size={16} className="text-emerald-500" />
                             New Project
                         </Link>
-                        <Link
-                            href="/teams/new"
+                        <button
+                            onClick={() => {
+                                setIsMemberModalOpen(true)
+                                setIsCreateOpen(false)
+                            }}
                             className="w-full h-11 flex items-center gap-3 px-4 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 transition-all"
                         >
                             <Users size={16} className="text-blue-500" />
                             New Team
-                        </Link>
+                        </button>
                         <button
                             onClick={() => {
                                 setIsMemberModalOpen(true)

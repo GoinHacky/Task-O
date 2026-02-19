@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import TaskTimeline from '@/components/projects/TaskTimeline'
+import KanbanBoard from '@/components/KanbanBoard'
 import EditTaskModal from '@/components/projects/EditTaskModal'
 import CreateTaskModal from '@/components/projects/CreateTaskModal'
 import { Plus, Search, Filter } from 'lucide-react'
@@ -108,7 +108,7 @@ export default function ProjectKanbanClient({ projectId }: ProjectKanbanClientPr
                             onClick={() => setIsCreateModalOpen(true)}
                             className="px-6 py-2.5 bg-[#6366f1] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#5558e3] transition-all flex items-center gap-2 shadow-lg shadow-[#6366f1]/20 active:scale-95"
                         >
-                            <Plus size={16} /> New Goal
+                            <Plus size={16} /> New Task
                         </button>
                     )}
                 </div>
@@ -122,9 +122,11 @@ export default function ProjectKanbanClient({ projectId }: ProjectKanbanClientPr
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Gathering Intel...</p>
                     </div>
                 ) : (
-                    <TaskTimeline
+                    <KanbanBoard
+                        projectId={projectId}
+                        teamId={selectedTeam}
                         tasks={tasks}
-                        onTaskClick={(task) => setSelectedTask(task)}
+                        canManage={canManage}
                     />
                 )}
             </div>

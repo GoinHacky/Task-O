@@ -96,10 +96,10 @@ export default async function DashboardPage() {
       {/* Stats Cards Row */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
         {[
-          { label: 'Completed Tasks', value: formatCount(completedCount), icon: CheckCircle2, color: '#9333ea', bg: '#f3e8ff', darkBg: 'rgba(147, 51, 234, 0.1)' },
-          { label: 'Assigned Tasks', value: formatCount(assignedCount), icon: MessageSquare, color: '#3b82f6', bg: '#eff6ff', darkBg: 'rgba(59, 130, 246, 0.1)' },
-          { label: 'All Boards', value: formatCount(projectCount || 0), icon: Layout, color: '#6366f1', bg: '#eef2ff', darkBg: 'rgba(99, 102, 241, 0.1)' },
-          { label: 'Scheduled Tasks', value: formatCount(scheduledCount), icon: Calendar, color: '#ec4899', bg: '#fdf2f8', darkBg: 'rgba(236, 72, 153, 0.1)' },
+          { label: 'Completed Objectives', value: formatCount(completedCount), icon: CheckCircle2, color: '#9333ea', bg: '#f3e8ff', darkBg: 'rgba(147, 51, 147, 0.1)' },
+          { label: 'Assigned Objectives', value: formatCount(assignedCount), icon: MessageSquare, color: '#3b82f6', bg: '#eff6ff', darkBg: 'rgba(59, 130, 246, 0.1)' },
+          { label: 'Active Boards', value: formatCount(projectCount || 0), icon: Layout, color: '#6366f1', bg: '#eef2ff', darkBg: 'rgba(99, 102, 241, 0.1)' },
+          { label: 'Scheduled Objectives', value: formatCount(scheduledCount), icon: Calendar, color: '#ec4899', bg: '#fdf2f8', darkBg: 'rgba(236, 72, 153, 0.1)' },
         ].map((stat, i) => (
           <div key={i} className="bg-white dark:bg-slate-900/50 dark:backdrop-blur-xl p-4 sm:p-5 lg:p-7 rounded-2xl sm:rounded-3xl lg:rounded-[32px] border border-gray-100 dark:border-slate-800/50 shadow-sm flex items-center gap-3 sm:gap-4 lg:gap-6 hover:shadow-lg hover:shadow-indigo-500/5 transition-all duration-300 group">
             <div
@@ -119,11 +119,11 @@ export default async function DashboardPage() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10">
         {/* Task Priorities List */}
-        <section className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl lg:rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-4 sm:p-6 lg:p-8 pb-2 sm:pb-3 lg:pb-4 flex items-center justify-between">
-            <div className="min-w-0">
-              <h2 className="text-lg sm:text-xl lg:text-[22px] font-black text-gray-900 dark:text-slate-50 tracking-tight truncate">Tasks Priorities</h2>
-              <p className="text-[10px] sm:text-[11px] lg:text-xs text-gray-400 dark:text-slate-500 font-bold italic truncate">Team tasks sorted by priority</p>
+        <section className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+          <div className="p-8 pb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-[22px] font-black text-gray-900 dark:text-slate-50 tracking-tight">Objective Priorities</h2>
+              <p className="text-xs text-gray-400 dark:text-slate-500 font-bold italic">Collective objectives sorted by priority</p>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               <DashboardActions />
@@ -142,11 +142,11 @@ export default async function DashboardPage() {
         </section>
 
         {/* Announcements / Updates */}
-        <section className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl lg:rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-4 sm:p-6 lg:p-8 pb-2 sm:pb-3 lg:pb-4 flex items-center justify-between">
-            <div className="min-w-0">
-              <h2 className="text-lg sm:text-xl lg:text-[22px] font-black text-gray-900 dark:text-slate-50 tracking-tight truncate">Announcements</h2>
-              <p className="text-[10px] sm:text-[11px] lg:text-xs text-gray-400 dark:text-slate-500 font-bold italic truncate">From personal and team project</p>
+        <section className="bg-white dark:bg-slate-900 rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+          <div className="p-8 pb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-[22px] font-black text-gray-900 dark:text-slate-50 tracking-tight">Announcements</h2>
+              <p className="text-xs text-gray-400 dark:text-slate-500 font-bold italic">System briefs and project updates</p>
             </div>
             <SectionDropdown />
           </div>
@@ -174,11 +174,11 @@ export default async function DashboardPage() {
       </div>
 
       {/* My Teams Section */}
-      <section className="bg-white dark:bg-slate-900 p-4 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl lg:rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-sm">
-        <div className="flex items-center justify-between mb-6 sm:mb-8 lg:mb-10">
-          <div className="min-w-0">
-            <h2 className="text-xl sm:text-2xl lg:text-[26px] font-black text-gray-900 dark:text-slate-50 tracking-tight truncate">My Teams</h2>
-            <p className="text-[10px] sm:text-[11px] lg:text-xs text-gray-400 dark:text-slate-500 font-bold italic truncate">Teams with assigned tasks</p>
+      <section className="bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-sm">
+        <div className="flex items-center justify-between mb-10">
+          <div>
+            <h2 className="text-[26px] font-black text-gray-900 dark:text-slate-50 tracking-tight">Squads</h2>
+            <p className="text-xs text-gray-400 dark:text-slate-500 font-bold italic lowercase">Teams with active objectives</p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <TeamActions />
@@ -194,8 +194,8 @@ export default async function DashboardPage() {
                 <div className="absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4 text-gray-200 dark:text-slate-800 group-hover:text-gray-400 dark:group-hover:text-gray-600 transition-colors">
                   <SectionDropdown />
                 </div>
-                <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-xl sm:rounded-2xl md:rounded-3xl lg:rounded-[28px] bg-gray-50 dark:bg-slate-800/50 mb-3 sm:mb-4 lg:mb-6 flex items-center justify-center text-[#6366f1] text-lg sm:text-xl md:text-2xl lg:text-2xl font-black group-hover:scale-110 transition-transform duration-500 shadow-sm border border-gray-100 dark:border-slate-800 shrink-0">
-                  {team.avatar_url ? <img src={team.avatar_url} className="w-full h-full rounded-xl sm:rounded-2xl md:rounded-3xl lg:rounded-[28px] object-cover" /> : team.name[0]}
+                <div className="w-20 h-20 rounded-[28px] bg-gray-50 dark:bg-slate-800/50 mb-6 flex items-center justify-center text-[#6366f1] text-2xl font-black group-hover:scale-110 transition-transform duration-500 shadow-sm border border-gray-100 dark:border-slate-800">
+                  {team.avatar_url ? <img src={team.avatar_url} alt={team.name} className="w-full h-full rounded-[28px] object-cover" /> : team.name[0]}
                 </div>
                 <h4 className="text-sm sm:text-[15px] md:text-base lg:text-[17px] font-bold text-gray-900 dark:text-slate-100 truncate w-full group-hover:text-[#6366f1] transition-colors px-2">{team.name}</h4>
                 <div className="mt-1 sm:mt-1.5 lg:mt-2 flex flex-col gap-0.5 sm:gap-1">

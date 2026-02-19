@@ -1,6 +1,7 @@
 'use server'
 
-import { createServerSupabaseClient, getSupabaseAdmin } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getSupabaseAdmin } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 export async function inviteUserToWorkspace(

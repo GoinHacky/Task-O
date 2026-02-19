@@ -79,7 +79,7 @@ export default function Navbar({ currentUser }: NavbarProps) {
   const navItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/projects', icon: FolderKanban, label: 'Projects' },
-    { href: '/tasks', icon: ListTodo, label: 'Tasks' },
+    { href: '/tasks', icon: ListTodo, label: 'Objectives' },
     { href: '/kanban', icon: FolderKanban, label: 'Kanban' },
     { href: '/teams', icon: Users, label: 'Teams' },
     { href: '/reports', icon: BarChart3, label: 'Reports' },

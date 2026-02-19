@@ -6,12 +6,12 @@ export default function HeaderTitle() {
     const pathname = usePathname()
 
     const getPageTitle = (path: string) => {
-        if (path === '/dashboard') return 'Tasks Home'
-        if (path.startsWith('/notifications')) return 'Notification'
+        if (path === '/dashboard') return 'Project Hub'
+        if (path.startsWith('/notifications')) return 'Inbox'
         if (path.startsWith('/projects')) return 'Projects'
         if (path.startsWith('/settings')) return 'Settings'
         if (path.startsWith('/inbox')) return 'Inbox'
-        return 'Page'
+        return 'Overview'
     }
 
     return (

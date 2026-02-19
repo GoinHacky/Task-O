@@ -90,7 +90,7 @@ export default function TaskTimeline({ tasks, onTaskClick }: TaskTimelineProps) 
                                         <div className="flex items-center gap-2">
                                             <div className="w-6 h-6 rounded-lg bg-gray-50 dark:bg-slate-900 flex items-center justify-center border border-gray-100 dark:border-slate-800">
                                                 {task.assignee?.avatar_url ? (
-                                                    <img src={task.assignee.avatar_url} className="w-full h-full object-cover rounded-lg" />
+                                                    <img src={task.assignee.avatar_url} alt={task.assignee.full_name || 'Assignee'} className="w-full h-full object-cover rounded-lg" />
                                                 ) : (
                                                     <User size={10} className="text-gray-400" />
                                                 )}

@@ -4,8 +4,10 @@ import { useState } from 'react'
 import { inviteProjectMember } from '@/lib/projects/actions'
 import { UserPlus, CheckCircle2, AlertCircle } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
+import { useRouter } from 'next/navigation'
 
 export default function InviteProjectMemberModal({ projectId }: { projectId: string }) {
+    const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
     const [email, setEmail] = useState('')
     const [role, setRole] = useState<'admin' | 'manager' | 'member'>('member')
@@ -22,6 +24,7 @@ export default function InviteProjectMemberModal({ projectId }: { projectId: str
             await inviteProjectMember(projectId, email, role)
             setSuccess(true)
             setEmail('')
+            router.refresh()
             setTimeout(() => {
                 setSuccess(false)
                 setIsOpen(false)

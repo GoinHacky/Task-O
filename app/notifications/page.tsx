@@ -2,7 +2,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { Bell, Check, Trash2, Users } from 'lucide-react'
 import { format } from 'date-fns'
 import Link from 'next/link'
-import NotificationActions from '@/components/NotificationActions'
+import NotificationActions from '@/components/notifications/NotificationActions'
 import InvitationActions from '@/components/notifications/InvitationActions'
 
 export default async function NotificationsPage() {

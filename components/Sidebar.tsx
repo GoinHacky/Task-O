@@ -246,13 +246,18 @@ export default function Sidebar({ currentUser }: SidebarProps) {
                 <div className="p-6 pb-2">
                     <div className="flex items-center justify-between">
                         {(!isCollapsed || isMobileOpen) && (
-                            <Link href="/dashboard" className="transition-transform hover:scale-110 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-white shadow-lg shadow-indigo-500/10 p-1.5 border border-gray-50 flex items-center justify-center">
-                                    <img src="/logo.png" alt="Task-O" className="w-full h-full object-contain" />
-                                </div>
-                                <span className="text-xl font-black text-gray-900 dark:text-slate-50 tracking-tighter">Task-O</span>
+                            <Link href="/dashboard" className="flex items-center gap-3 transition-transform hover:scale-105">
+                                {/* Logo Image */}
+                                <img src="/task-o.png" alt="Task-O Logo" className="h-10 w-10 object-contain" />
+
+                                {/* Logo Text */}
+                                <span className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                                    Task-O
+                                </span>
                             </Link>
                         )}
+
+
                         <div className="flex items-center gap-1">
                             <button
                                 onClick={() => setIsCollapsed(!isCollapsed)}
@@ -269,6 +274,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
                         </div>
                     </div>
                 </div>
+
 
 
                 {/* Nav Items */}

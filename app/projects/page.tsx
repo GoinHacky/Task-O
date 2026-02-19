@@ -62,13 +62,13 @@ export default function ProjectsPage() {
       <section className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-[32px] font-black text-gray-900 dark:text-slate-50 tracking-tightest leading-none mb-1.5 uppercase">Projects</h1>
-          <p className="text-[10px] font-black text-gray-500 dark:text-slate-500 uppercase tracking-[0.2em] italic">Manage and track all your collaborative workspaces.</p>
+          <p className="text-[10px] font-black text-gray-500 dark:text-slate-500 uppercase tracking-[0.2em] italic">Manage and track all collaborative projects.</p>
         </div>
         <button
           onClick={() => setIsModalOpen(true)}
           className="px-6 py-2.5 bg-[#6366f1] text-white rounded-xl font-medium hover:bg-[#5558e3] transition-all flex items-center gap-2 shadow-lg shadow-[#6366f1]/20 self-start md:self-center active:scale-95"
         >
-          <Plus size={18} /> Create Project
+          <Plus size={18} /> New Project
         </button>
       </section>
 
@@ -117,13 +117,13 @@ export default function ProjectsPage() {
             <div className="w-20 h-20 bg-gray-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center text-gray-300 dark:text-slate-700 mb-6">
               <FolderKanban size={40} />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-slate-50">No projects yet</h3>
-            <p className="text-gray-500 dark:text-slate-500 mt-2 max-w-xs text-center">Get started by creating your first project and inviting your team.</p>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-slate-50">No active projects</h3>
+            <p className="text-gray-500 dark:text-slate-500 mt-2 max-w-xs text-center">Get started by executing your first project and deploying your squad.</p>
             <button
               onClick={() => setIsModalOpen(true)}
               className="mt-8 px-6 py-2.5 bg-gray-900 dark:bg-slate-50 text-white dark:text-slate-900 rounded-xl font-medium hover:scale-105 transition-all active:scale-95"
             >
-              Create First Project
+              Deploy First Project
             </button>
           </div>
         )}

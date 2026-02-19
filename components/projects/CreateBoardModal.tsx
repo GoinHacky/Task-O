@@ -95,16 +95,16 @@ export default function CreateBoardModal({ isOpen, onClose, projectId, teamId }:
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            title="Initialize Neural Board"
+            title="Create New Board"
         >
             {success ? (
                 <div className="py-12 text-center animate-in fade-in zoom-in duration-500">
                     <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-3xl bg-indigo-50 text-indigo-500 mb-6 shadow-sm border border-indigo-100">
                         <Zap className="h-10 w-10" />
                     </div>
-                    <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Board Initialized</h3>
+                    <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Board Created</h3>
                     <p className="mt-2 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-relaxed">
-                        Workspace grid deployed successfully.
+                        New board created successfully.
                     </p>
                 </div>
             ) : (
@@ -119,7 +119,7 @@ export default function CreateBoardModal({ isOpen, onClose, projectId, teamId }:
                     <div className="space-y-6">
                         {/* Board Identity */}
                         <div className="space-y-4">
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Board Identification</label>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Board Name</label>
                             <div className="relative group">
                                 <span className="absolute inset-y-0 left-0 pl-1.5 flex items-center text-gray-400 group-focus-within:text-indigo-500 transition-colors">
                                     <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
@@ -140,7 +140,7 @@ export default function CreateBoardModal({ isOpen, onClose, projectId, teamId }:
 
                         {/* Board Type */}
                         <div className="space-y-4">
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Operational Methodology</label>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Board Type</label>
                             <div className="grid grid-cols-2 gap-4">
                                 <button
                                     type="button"
@@ -176,13 +176,13 @@ export default function CreateBoardModal({ isOpen, onClose, projectId, teamId }:
                         {/* Column Configuration */}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between mb-2">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Column Architecture</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Columns</label>
                                 <button
                                     type="button"
                                     onClick={addColumn}
                                     className="text-[9px] font-black text-indigo-500 uppercase tracking-widest hover:text-indigo-600 transition-colors"
                                 >
-                                    + Add Phase
+                                    + Add Column
                                 </button>
                             </div>
                             <div className="space-y-2 max-h-48 overflow-y-auto pr-2 scrollbar-hide">
@@ -221,14 +221,14 @@ export default function CreateBoardModal({ isOpen, onClose, projectId, teamId }:
                             onClick={onClose}
                             className="flex-1 px-4 py-4 border border-gray-100 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-50 transition-all active:scale-95"
                         >
-                            Discard
+                            Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !name}
                             className="flex-1 px-4 py-4 bg-gray-900 text-white text-[10px] font-black rounded-2xl hover:bg-black disabled:opacity-50 transition-all shadow-xl shadow-gray-900/10 active:scale-95 uppercase tracking-[0.2em]"
                         >
-                            {loading ? 'Processing...' : 'Deploy Board'}
+                            {loading ? 'Processing...' : 'Create Board'}
                         </button>
                     </div>
                 </form>

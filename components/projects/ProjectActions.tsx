@@ -18,21 +18,21 @@ export default function ProjectActions({ projectId, isAdmin = false }: ProjectAc
 
     const actions = [
         {
-            label: 'Invite Members',
+            label: 'Add Member',
             icon: UserPlus,
             onClick: () => setIsInviteOpen(true),
             show: isAdmin,
             color: 'hover:bg-indigo-500 hover:text-white dark:hover:bg-indigo-600'
         },
         {
-            label: 'Create Board',
+            label: 'New Board',
             icon: Layout,
             onClick: () => setIsBoardOpen(true),
             show: isAdmin,
             color: 'hover:bg-amber-500 hover:text-white dark:hover:bg-amber-600'
         },
         {
-            label: 'Add Task',
+            label: 'New Task',
             icon: Plus,
             onClick: () => setIsTaskOpen(true),
             show: true,
