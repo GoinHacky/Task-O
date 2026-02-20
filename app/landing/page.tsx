@@ -45,10 +45,10 @@ export default function LandingPage() {
   ]
 
   const stats = [
-    { value: '10,000+', label: 'Active Users' },
-    { value: '99.9%', label: 'Uptime' },
-    { value: '50M+', label: 'Tasks Done' },
-    { value: '150+', label: 'Countries' },
+    { value: '0', label: 'Active Users' },
+    { value: '0', label: 'Uptime' },
+    { value: '0', label: 'Tasks Done' },
+    { value: '0', label: 'Countries' },
   ]
 
   return (
@@ -229,18 +229,6 @@ export default function LandingPage() {
             data-animate id="hero-text">
             <div className={`transition-all duration-700 ${isVisible['hero-text'] ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
 
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold mb-6"
-                style={{
-                  background: 'linear-gradient(145deg, rgba(255,255,255,0.92), rgba(235,244,255,0.88))',
-                  border: '1px solid rgba(0,82,204,0.15)',
-                  boxShadow: '0 2px 8px rgba(0,82,204,0.08)',
-                  color: '#0052CC',
-                }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#0052CC] animate-pulse" />
-                Trusted by 10,000+ teams worldwide
-              </div>
-
               <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 mb-5 leading-[1.1] tracking-tight">
                 A smarter way to{' '}
                 <span style={{
@@ -263,7 +251,7 @@ export default function LandingPage() {
                     background: 'linear-gradient(135deg, #1A72F0 0%, #0052CC 50%, #003DA8 100%)',
                     boxShadow: '0 4px 16px rgba(0,82,204,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
                   }}>
-                  Get started for free
+                  Get started
                   <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
                 <Link href="/login"
@@ -276,8 +264,6 @@ export default function LandingPage() {
                   Sign in to your account
                 </Link>
               </div>
-
-              <p className="text-xs text-gray-400 mt-4">No credit card required · Free forever on basic plan</p>
             </div>
           </div>
 
@@ -436,7 +422,7 @@ export default function LandingPage() {
                 Ready to transform how you work?
               </h2>
               <p className="text-gray-500 text-sm mb-7 leading-relaxed">
-                Join thousands of teams already using Task-O to stay organized, focused, and moving fast.
+                Use Task-O to stay organized, focused, and moving fast.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link href="/signup"
@@ -456,7 +442,6 @@ export default function LandingPage() {
                   Sign in
                 </Link>
               </div>
-              <p className="text-xs text-gray-400 mt-4">No credit card · Free forever on basic</p>
             </div>
           </div>
         </div>

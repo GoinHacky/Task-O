@@ -76,9 +76,7 @@ export default function LoginPage() {
         </defs>
         <circle cx="190" cy="190" r="180" fill="url(#sphere1)" />
         <circle cx="190" cy="190" r="180" fill="url(#sphere1shine)" />
-        {/* Rim light */}
         <circle cx="190" cy="190" r="178" stroke="url(#sphere1)" strokeWidth="2" fill="none" strokeOpacity="0.15" />
-        {/* Latitude lines for 3D effect */}
         <ellipse cx="190" cy="190" rx="180" ry="55" stroke="#0052CC" strokeOpacity="0.05" strokeWidth="1" fill="none" />
         <ellipse cx="190" cy="190" rx="180" ry="110" stroke="#0052CC" strokeOpacity="0.04" strokeWidth="1" fill="none" />
         <ellipse cx="190" cy="190" rx="70" ry="180" stroke="#0052CC" strokeOpacity="0.04" strokeWidth="1" fill="none" />
@@ -114,13 +112,9 @@ export default function LoginPage() {
             <stop offset="100%" stopColor="#0052CC" stopOpacity="0.02" />
           </radialGradient>
         </defs>
-        {/* Outer ring fill for 3D torus look */}
         <circle cx="112" cy="112" r="100" stroke="url(#ring1grad)" strokeWidth="22" fill="none" />
-        {/* Highlight on top-left of ring */}
         <path d="M 48 60 A 80 80 0 0 1 164 60" stroke="white" strokeOpacity="0.18" strokeWidth="10" fill="none" strokeLinecap="round" />
-        {/* Shadow on bottom-right */}
         <path d="M 48 165 A 80 80 0 0 0 164 165" stroke="#001F4D" strokeOpacity="0.06" strokeWidth="10" fill="none" strokeLinecap="round" />
-        {/* Inner edge */}
         <circle cx="112" cy="112" r="89" stroke="#0052CC" strokeOpacity="0.07" strokeWidth="1" fill="none" />
         <circle cx="112" cy="112" r="111" stroke="#0052CC" strokeOpacity="0.05" strokeWidth="1" fill="none" />
       </svg>
@@ -157,13 +151,9 @@ export default function LoginPage() {
             <stop offset="100%" stopColor="#002080" stopOpacity="0.05" />
           </linearGradient>
         </defs>
-        {/* Top face */}
         <polygon points="40,8 68,22 40,36 12,22" fill="url(#cubeTop)" stroke="#0052CC" strokeOpacity="0.12" strokeWidth="0.8" />
-        {/* Left face */}
         <polygon points="12,22 40,36 40,68 12,54" fill="url(#cubeLeft)" stroke="#0052CC" strokeOpacity="0.1" strokeWidth="0.8" />
-        {/* Right face */}
         <polygon points="40,36 68,22 68,54 40,68" fill="url(#cubeRight)" stroke="#0052CC" strokeOpacity="0.08" strokeWidth="0.8" />
-        {/* Top edge highlight */}
         <line x1="40" y1="8" x2="68" y2="22" stroke="white" strokeOpacity="0.2" strokeWidth="1" />
         <line x1="40" y1="8" x2="12" y2="22" stroke="white" strokeOpacity="0.14" strokeWidth="0.8" />
       </svg>
@@ -213,21 +203,24 @@ export default function LoginPage() {
         )))}
       </svg>
 
-      {/* ── FORM — frosted glass to match blue abstract ── */}
+      {/* ── FORM ── */}
       <div
         className={`w-full max-w-sm relative z-10 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
       >
-        {/* Logo */}
+        {/* Logo — clickable, leads to /landing */}
         <div className="text-center mb-7">
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-[#0052CC] rounded-xl mb-4"
-            style={{ boxShadow: '0 4px 20px rgba(0,82,204,0.35), 0 1px 4px rgba(0,82,204,0.2)' }}>
+          <Link
+            href="/landing"
+            className="inline-flex items-center justify-center w-12 h-12 bg-[#0052CC] rounded-xl mb-4 transition-all hover:scale-105 hover:brightness-110"
+            style={{ boxShadow: '0 4px 20px rgba(0,82,204,0.35), 0 1px 4px rgba(0,82,204,0.2)' }}
+          >
             <img src="/task-o.png" alt="Task-O" className="h-7 w-7 object-contain" />
-          </div>
+          </Link>
           <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
           <p className="text-gray-500 text-sm mt-1">Sign in to your Task-O account</p>
         </div>
 
-        {/* Card — frosted glass with blue tint matching background */}
+        {/* Card */}
         <div className="rounded-2xl p-6 relative"
           style={{
             background: 'linear-gradient(145deg, rgba(255,255,255,0.92) 0%, rgba(235,244,255,0.88) 100%)',
