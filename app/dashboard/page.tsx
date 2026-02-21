@@ -1,19 +1,12 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import {
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  Calendar,
   Users,
-  MoreHorizontal,
-  Plus,
-  ChevronRight,
-  TrendingUp,
-  MessageSquare,
-  Layout,
-  Bell
+  Bell,
+  BadgeCheck,
+  UserRoundCheck,
+  LayoutDashboard,
+  CalendarCheck2
 } from 'lucide-react'
-import Link from 'next/link'
 import { format } from 'date-fns'
 import { DashboardActions, SectionDropdown, TeamActions, TaskPriorityList } from '@/components/dashboard/DashboardClient'
 
@@ -27,14 +20,12 @@ export default async function DashboardPage() {
     return null
   }
 
-  // Fetch user profile for name
   const { data: profile } = await supabase
     .from('users')
     .select('full_name')
     .eq('id', user.id)
     .single()
 
-  // Fetch user's tasks
   const { data: tasks } = await supabase
     .from('tasks')
     .select(`
@@ -47,13 +38,11 @@ export default async function DashboardPage() {
     .or(`assigned_to.eq.${user.id},created_by.eq.${user.id}`)
     .order('created_at', { ascending: false })
 
-  // Fetch projects count (All Boards)
   const { count: projectCount } = await supabase
     .from('projects')
     .select('*', { count: 'exact', head: true })
     .eq('owner_id', user.id)
 
-  // Fetch user's teams with membership role
   const { data: teams } = await supabase
     .from('team_members')
     .select(`
@@ -68,7 +57,6 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .limit(5)
 
-  // Fetch recent notifications for Announcements
   const { data: announcements } = await supabase
     .from('notifications')
     .select('*')
@@ -76,7 +64,6 @@ export default async function DashboardPage() {
     .order('created_at', { ascending: false })
     .limit(3)
 
-  // Calculate stats
   const completedCount = tasks?.filter(t => t.status === 'completed').length || 0
   const assignedCount = tasks?.filter(t => t.assigned_to === user.id && t.status !== 'completed').length || 0
   const scheduledCount = tasks?.filter(t => t.due_date && new Date(t.due_date) > new Date() && t.status !== 'completed').length || 0
@@ -96,21 +83,64 @@ export default async function DashboardPage() {
       {/* Stats Cards Row */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
         {[
-          { label: 'Completed Objectives', value: formatCount(completedCount), icon: CheckCircle2, color: '#9333ea', bg: '#f3e8ff', darkBg: 'rgba(147, 51, 147, 0.1)' },
-          { label: 'Assigned Objectives', value: formatCount(assignedCount), icon: MessageSquare, color: '#3b82f6', bg: '#eff6ff', darkBg: 'rgba(59, 130, 246, 0.1)' },
-          { label: 'Active Boards', value: formatCount(projectCount || 0), icon: Layout, color: '#6366f1', bg: '#eef2ff', darkBg: 'rgba(99, 102, 241, 0.1)' },
-          { label: 'Scheduled Objectives', value: formatCount(scheduledCount), icon: Calendar, color: '#ec4899', bg: '#fdf2f8', darkBg: 'rgba(236, 72, 153, 0.1)' },
+          {
+            label: 'Completed Tasks',
+            value: formatCount(completedCount),
+            icon: BadgeCheck,
+            bg: '#caf0f8',
+            iconColor: '#03045E',
+            strokeWidth: 1.5,
+          },
+          {
+            label: 'Assigned Tasks',
+            value: formatCount(assignedCount),
+            icon: UserRoundCheck,
+            bg: '#ade8f4',
+            iconColor: '#03045E',
+            strokeWidth: 1.5,
+          },
+          {
+            label: 'Active Boards',
+            value: formatCount(projectCount || 0),
+            icon: LayoutDashboard,
+            bg: '#caf0f8',
+            iconColor: '#03045E',
+            strokeWidth: 1.5,
+          },
+          {
+            label: 'Scheduled Tasks',
+            value: formatCount(scheduledCount),
+            icon: CalendarCheck2,
+            bg: '#ade8f4',
+            iconColor: '#03045E',
+            strokeWidth: 1.5,
+          },
         ].map((stat, i) => (
-          <div key={i} className="bg-white dark:bg-slate-900/50 dark:backdrop-blur-xl p-4 sm:p-5 lg:p-7 rounded-2xl sm:rounded-3xl lg:rounded-[32px] border border-gray-100 dark:border-slate-800/50 shadow-sm flex items-center gap-3 sm:gap-4 lg:gap-6 hover:shadow-lg hover:shadow-indigo-500/5 transition-all duration-300 group">
-            <div
-              className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl lg:rounded-[24px] flex items-center justify-center border-2 border-transparent transition-transform group-hover:scale-110 shrink-0"
-              style={{ backgroundColor: typeof window !== 'undefined' && document.documentElement.classList.contains('dark') ? stat.darkBg : stat.bg, color: stat.color }}
-            >
-              <stat.icon size={20} className="sm:w-[22px] sm:h-[22px] lg:w-[26px] lg:h-[26px]" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[8px] sm:text-[9px] lg:text-[10px] font-black text-gray-400 dark:text-slate-500 mb-1 uppercase tracking-widest">{stat.label}</p>
-              <h3 className="text-xl sm:text-2xl lg:text-[28px] font-black text-gray-900 dark:text-slate-50 leading-none tracking-tight truncate">{stat.value}</h3>
+          <div
+            key={i}
+            className="dark:backdrop-blur-xl p-5 lg:p-6 rounded-2xl lg:rounded-3xl border shadow-sm hover:shadow-lg transition-all duration-300 group"
+            style={{
+              backgroundColor: stat.bg,
+              borderColor: 'rgb(209 213 219)',
+            }}
+          >
+            <div className="flex items-start gap-4">
+              {/* Icon — bold, no box */}
+              <div
+                className="w-12 h-12 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 group-hover:rotate-3"
+                style={{ color: stat.iconColor }}
+              >
+                <stat.icon size={34} strokeWidth={stat.strokeWidth} />
+              </div>
+              {/* Number + Label stacked */}
+              <div className="flex flex-col justify-center min-w-0 pt-0.5">
+                <h3 className="text-2xl lg:text-[28px] font-black text-gray-900 leading-none tracking-tight">
+                  {stat.value}
+                </h3>
+                <p className="mt-1.5 text-[9px] lg:text-[10px] font-black text-gray-900 uppercase tracking-widest leading-tight">
+                  {stat.label}
+                </p>
+              </div>
             </div>
           </div>
         ))}

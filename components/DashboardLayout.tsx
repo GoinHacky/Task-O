@@ -70,7 +70,7 @@ export default function DashboardLayout({
               Inner elements: H 43, search W 629
             */}
             <div
-              className="flex items-center bg-gray-200/90 dark:bg-slate-800/90 backdrop-blur-2xl shadow-sm"
+              className="flex items-center bg-gray-200/90 dark:bg-slate-800/90 backdrop-blur-2xl shadow-sm border border-gray-300 dark:border-slate-700"
               style={{
                 height: '68px',
                 borderRadius: '22px',

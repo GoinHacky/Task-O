@@ -168,14 +168,14 @@ export default function Sidebar({ currentUser }: SidebarProps) {
 
     const navLinkClass = (active: boolean) =>
         `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all relative group ${active
-            ? 'bg-[#f3f4ff] dark:bg-indigo-500/10 text-[#6366f1] font-black'
-            : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-gray-100 font-bold'
+            ? 'bg-[#f3f4ff] dark:bg-[#0077B6]/10 text-[#0077B6] font-black'
+            : 'text-gray-900 dark:text-gray-300 hover:text-[#0077B6] dark:hover:text-[#0077B6] font-bold'
         }`
 
     const navIconClass = (active: boolean) =>
         active
-            ? 'text-[#6366f1]'
-            : 'text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+            ? 'text-[#0077B6]'
+            : 'text-gray-900 dark:text-gray-300 group-hover:text-[#0077B6] dark:group-hover:text-[#0077B6]'
 
     return (
         <>
@@ -187,7 +187,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
                 />
             )}
 
-            <aside className={`fixed left-0 top-0 h-screen bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 transition-all duration-300 flex flex-col z-50 
+            <aside className={`fixed left-0 top-0 h-screen bg-white dark:bg-slate-900 border-r border-gray-300 dark:border-slate-800 transition-all duration-300 flex flex-col z-50 
                 ${isMobileOpen ? 'translate-x-0 w-72' : '-translate-x-full lg:translate-x-0'} 
                 ${isCollapsed && !isMobileOpen ? 'lg:w-20' : 'lg:w-64'}
             `}>
@@ -245,7 +245,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
                             {(!isCollapsed || isMobileOpen) && (
                                 <button
                                     onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
-                                    className="p-1 px-2 text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+                                    className="p-1 px-2 text-gray-400 hover:text-[#0077B6] transition-colors"
                                 >
                                     <div className={`transition-transform duration-200 ${isProjectsExpanded ? 'rotate-90' : ''}`}>
                                         <ChevronRight size={12} />
@@ -263,11 +263,11 @@ export default function Sidebar({ currentUser }: SidebarProps) {
                                             key={p.id}
                                             href={`/projects/${p.id}`}
                                             className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all truncate group ${isActive
-                                                    ? 'text-[#6366f1] font-black bg-[#f3f4ff]/50 dark:bg-indigo-500/5'
-                                                    : 'text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 font-bold'
+                                                ? 'text-[#0077B6] font-black bg-[#f3f4ff]/50 dark:bg-[#0077B6]/5'
+                                                : 'text-gray-900 dark:text-gray-400 hover:text-[#0077B6] dark:hover:text-[#0077B6] font-bold'
                                                 }`}
                                         >
-                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? 'bg-[#6366f1] shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'bg-gray-200 dark:bg-slate-800'}`} />
+                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isActive ? 'bg-[#0077B6] shadow-[0_0_8px_rgba(0,119,182,0.5)]' : 'bg-gray-300 dark:bg-slate-700 group-hover:bg-[#0077B6]'}`} />
                                             <span className="text-[10px] uppercase tracking-tight truncate">{p.name}</span>
                                         </Link>
                                     )
@@ -285,7 +285,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
                         <MessageSquare size={18} className={navIconClass(pathname === '/inbox')} />
                         {(!isCollapsed || isMobileOpen) && <span className="text-[11px] uppercase tracking-widest">Inbox</span>}
                         {(!isCollapsed || isMobileOpen) && unreadCount > 0 && (
-                            <span className="absolute right-3 px-1.5 py-0.5 bg-indigo-500 text-white text-[8px] font-black rounded-lg shadow-sm ring-2 ring-white dark:ring-slate-900 animate-in zoom-in duration-300">
+                            <span className="absolute right-3 px-1.5 py-0.5 bg-[#0077B6] text-white text-[8px] font-black rounded-lg shadow-sm ring-2 ring-white dark:ring-slate-900 animate-in zoom-in duration-300">
                                 {unreadCount}
                             </span>
                         )}
@@ -301,12 +301,12 @@ export default function Sidebar({ currentUser }: SidebarProps) {
                         {(!isCollapsed || isMobileOpen) && <span className="text-[11px] uppercase tracking-widest">Settings</span>}
                     </Link>
 
-                    {/* Logout — nav item directly below Settings */}
+                    {/* Logout */}
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group text-gray-400 dark:text-gray-500 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400 font-bold"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group text-gray-900 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 font-bold"
                     >
-                        <LogOut size={18} className="text-gray-400 dark:text-gray-500 group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors" />
+                        <LogOut size={18} className="text-gray-900 dark:text-gray-300 group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors" />
                         {(!isCollapsed || isMobileOpen) && <span className="text-[11px] uppercase tracking-widest">Logout</span>}
                     </button>
 
@@ -319,7 +319,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
                             <Link
                                 href="/settings/profile"
                                 onClick={() => setIsProfileOpen(false)}
-                                className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-[#f3f4ff] dark:hover:bg-slate-800 hover:text-[#6366f1] transition-colors"
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-[#f3f4ff] dark:hover:bg-slate-800 hover:text-[#0077B6] transition-colors"
                             >
                                 <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500">
                                     <User size={18} />
@@ -329,7 +329,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
                             <Link
                                 href="/help"
                                 onClick={() => setIsProfileOpen(false)}
-                                className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-[#f3f4ff] dark:hover:bg-slate-800 hover:text-[#6366f1] transition-colors"
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-[#f3f4ff] dark:hover:bg-slate-800 hover:text-[#0077B6] transition-colors"
                             >
                                 <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-orange-500">
                                     <HelpCircle size={18} />
@@ -339,7 +339,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
                             <Link
                                 href="/invite"
                                 onClick={() => setIsProfileOpen(false)}
-                                className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-[#f3f4ff] dark:hover:bg-slate-800 hover:text-[#6366f1] transition-colors"
+                                className="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-[#f3f4ff] dark:hover:bg-slate-800 hover:text-[#0077B6] transition-colors"
                             >
                                 <div className="w-8 h-8 rounded-lg bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500">
                                     <UserPlus size={18} />
@@ -353,7 +353,7 @@ export default function Sidebar({ currentUser }: SidebarProps) {
                         onClick={() => setIsProfileOpen(!isProfileOpen)}
                         className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${isProfileOpen ? 'bg-gray-50 dark:bg-slate-800' : 'hover:bg-gray-50 dark:hover:bg-slate-800'}`}
                     >
-                        <div className="w-10 h-10 rounded-xl bg-[#6366f1] overflow-hidden shrink-0 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+                        <div className="w-10 h-10 rounded-xl bg-[#0077B6] overflow-hidden shrink-0 flex items-center justify-center text-white text-sm font-bold shadow-sm">
                             {currentUser.avatar_url ? (
                                 <img src={currentUser.avatar_url} alt={currentUser.full_name} className="w-full h-full object-cover" />
                             ) : (

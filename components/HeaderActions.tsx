@@ -266,7 +266,7 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
             <div className="relative" ref={createDropdownRef}>
                 <button
                     onClick={() => setIsCreateOpen(!isCreateOpen)}
-                    className="flex items-center gap-2 bg-[#6366f1] text-white px-3 lg:px-4 py-2.5 rounded-xl hover:bg-[#5558e3] transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
+                    className="flex items-center gap-2 bg-[#0077B6] text-white px-3 lg:px-4 py-2.5 rounded-xl hover:bg-[#0096C7] transition-all shadow-lg shadow-indigo-600/20 active:scale-95"
                 >
                     <Plus size={18} />
                     <span className="hidden lg:inline text-[13px] font-black uppercase tracking-widest">Create</span>
