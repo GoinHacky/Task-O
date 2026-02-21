@@ -149,30 +149,28 @@ export default async function DashboardPage() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10">
         {/* Task Priorities List */}
-        <section className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-          <div className="p-8 pb-4 flex items-center justify-between">
+        <section className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[32px] border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col p-8 lg:p-10">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-[22px] font-black text-gray-900 dark:text-slate-50 tracking-tight">Objective Priorities</h2>
-              <p className="text-xs text-gray-400 dark:text-slate-500 font-bold italic">Collective objectives sorted by priority</p>
+              <h2 className="text-2xl lg:text-[28px] font-black text-gray-900 dark:text-slate-50 tracking-tight leading-none">Objective Priorities</h2>
+              <p className="mt-1 text-[11px] lg:text-[13px] text-gray-400 dark:text-slate-500">Collective objectives sorted by priority</p>
             </div>
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
               <DashboardActions />
               <SectionDropdown />
             </div>
           </div>
 
-          <div className="p-4 sm:p-6 lg:p-8 pt-2 sm:pt-3 lg:pt-4">
-            <TaskPriorityList
-              tasks={tasks || []}
-              completedCount={completedCount}
-              upcomingCount={upcomingTasks?.length || 0}
-              overdueCount={tasks?.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length || 0}
-            />
-          </div>
+          <TaskPriorityList
+            tasks={tasks || []}
+            completedCount={completedCount}
+            upcomingCount={upcomingTasks?.length || 0}
+            overdueCount={tasks?.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length || 0}
+          />
         </section>
 
         {/* Announcements / Updates */}
-        <section className="bg-white dark:bg-slate-900 rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+        <section className="bg-white dark:bg-slate-900 rounded-[32px] border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
           <div className="p-8 pb-4 flex items-center justify-between">
             <div>
               <h2 className="text-[22px] font-black text-gray-900 dark:text-slate-50 tracking-tight">Announcements</h2>
@@ -204,7 +202,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* My Teams Section */}
-      <section className="bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-sm">
+      <section className="bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-gray-200 dark:border-slate-800 shadow-sm">
         <div className="flex items-center justify-between mb-10">
           <div>
             <h2 className="text-[26px] font-black text-gray-900 dark:text-slate-50 tracking-tight">Squads</h2>
@@ -220,7 +218,7 @@ export default async function DashboardPage() {
           {teams && teams.length > 0 ? teams.filter((m: any) => m.teams).map((membership: any) => {
             const team = membership.teams
             return (
-              <div key={team.id} className="p-4 sm:p-5 md:p-6 lg:p-8 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl sm:rounded-3xl lg:rounded-[32px] hover:border-[#6366f1] hover:shadow-xl hover:shadow-[#6366f1]/5 transition-all duration-500 group flex flex-col items-center text-center relative overflow-hidden">
+              <div key={team.id} className="p-4 sm:p-5 md:p-6 lg:p-8 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl lg:rounded-[32px] hover:border-[#6366f1] hover:shadow-xl hover:shadow-[#6366f1]/5 transition-all duration-500 group flex flex-col items-center text-center relative overflow-hidden">
                 <div className="absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4 text-gray-200 dark:text-slate-800 group-hover:text-gray-400 dark:group-hover:text-gray-600 transition-colors">
                   <SectionDropdown />
                 </div>
