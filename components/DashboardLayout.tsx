@@ -56,46 +56,66 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] dark:bg-slate-950 flex">
-      {/* Sidebar - fixed width */}
+      {/* Sidebar */}
       <Sidebar currentUser={currentUser} />
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300
-        ${isCollapsed ? 'lg:pl-20' : 'lg:pl-64'}
-      `}>
-        {/* Top Navigation Bar */}
-        <header className="h-20 bg-white/70 dark:bg-slate-950/40 backdrop-blur-2xl border-b border-gray-100 dark:border-slate-800/50 sticky top-0 z-40">
-          <div className="max-w-[1400px] mx-auto w-full h-full flex items-center justify-between px-4 lg:px-8">
-            <div className="flex-1 flex items-center gap-4">
+      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${isCollapsed ? 'lg:pl-20' : 'lg:pl-64'}`}>
+
+        {/* Floating Header */}
+        <div className="sticky top-0 z-40 px-4 lg:px-8 pt-6 pb-5">
+          <header className="max-w-[1400px] mx-auto w-full">
+            {/*
+              Outer box: H 94 but visually scaled down to match prototype proportion
+              Outer radius: 22px — squircle, not a pill
+              Inner elements: H 43, search W 629
+            */}
+            <div
+              className="flex items-center bg-gray-200/90 dark:bg-slate-800/90 backdrop-blur-2xl shadow-sm"
+              style={{
+                height: '68px',
+                borderRadius: '22px',
+                padding: '0 14px',
+                gap: '10px',
+              }}
+            >
+              {/* Mobile menu button — 43×43 */}
               <button
                 onClick={() => setIsMobileOpen(true)}
-                className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl text-gray-500"
+                className="lg:hidden flex-shrink-0 flex items-center justify-center bg-gray-300/80 dark:bg-slate-700/80 hover:bg-gray-300 dark:hover:bg-slate-700 rounded-xl text-gray-500 dark:text-slate-400 transition-colors"
+                style={{ width: '43px', height: '43px' }}
               >
-                <Menu size={20} />
+                <Menu size={18} />
               </button>
-              <HeaderTitle />
-            </div>
 
-            <div className="hidden sm:flex flex-[2] max-w-xl mx-4">
-              <div className="relative group w-full">
-                <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 group-focus-within:text-[#6366f1] transition-colors">
-                  <Search size={16} />
+              {/* Search box: W 629 H 43 — fixed width, does NOT stretch */}
+              <div
+                className="relative group"
+                style={{ width: '629px', height: '43px', flexShrink: 0, maxWidth: 'calc(100% - 200px)' }}
+              >
+                <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 dark:text-slate-500 group-focus-within:text-[#6366f1] transition-colors pointer-events-none">
+                  <Search size={15} />
                 </span>
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="block w-full pl-10 pr-4 py-2 bg-gray-100/50 dark:bg-slate-800/40 border-none rounded-xl focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-[#6366f1]/10 transition-all text-sm font-medium"
+                  className="block w-full h-full pl-11 pr-4 bg-gray-300/80 dark:bg-slate-700/70 hover:bg-gray-300 dark:hover:bg-slate-700 focus:bg-white dark:focus:bg-slate-700 border-none focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 transition-all text-sm font-medium text-gray-700 dark:text-slate-200 placeholder:text-gray-400 dark:placeholder:text-slate-500"
+                  style={{ borderRadius: '12px' }}
                 />
               </div>
-            </div>
 
-            <div className="flex-1 flex justify-end">
-              <HeaderActions currentUser={currentUser} />
-            </div>
-          </div>
-        </header>
+              {/* Spacer — pushes actions to the right */}
+              <div className="flex-1 min-w-[32px]" />
 
-        {/* Dynamic Page Content */}
+              {/* Right actions — with right padding matching left, gap between items */}
+              <div className="flex items-center flex-shrink-0" style={{ gap: '8px', paddingRight: '4px' }}>
+                <HeaderActions currentUser={currentUser} />
+              </div>
+            </div>
+          </header>
+        </div>
+
+        {/* Page Content */}
         <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
           <div className="max-w-[1400px] mx-auto">
             {children}
@@ -105,4 +125,3 @@ export default function DashboardLayout({
     </div>
   )
 }
-
