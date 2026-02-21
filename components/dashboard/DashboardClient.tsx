@@ -13,12 +13,12 @@ export function DashboardActions() {
 
     return (
         <>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
                 <button
                     onClick={() => setIsTaskModalOpen(true)}
-                    className="px-4 py-2 bg-[#f3f4ff] text-[#6366f1] rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-[#e8e9ff] transition-colors"
+                    className="px-4 py-2 bg-[#0077B6] text-white rounded-xl text-[13px] font-black flex items-center gap-2 hover:bg-[#0096C7] transition-all shadow-lg shadow-blue-600/20 active:scale-95 uppercase tracking-widest"
                 >
-                    <Plus size={16} /> Task
+                    <Plus size={16} className="stroke-[3px]" /> Task
                 </button>
             </div>
             <CreateTaskModal isOpen={isTaskModalOpen} onClose={() => setIsTaskModalOpen(false)} />
@@ -49,9 +49,9 @@ export function SectionDropdown() {
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-2 text-gray-300 hover:text-gray-500 transition-colors"
+                className="p-1 px-2 text-gray-300 dark:text-slate-600 hover:text-gray-500 dark:hover:text-slate-400 transition-colors"
             >
-                <MoreHorizontal size={22} />
+                <MoreHorizontal size={20} />
             </button>
             {isOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
@@ -96,13 +96,15 @@ export function TaskPriorityList({ tasks, completedCount, upcomingCount, overdue
     ]
 
     return (
-        <div className="space-y-6">
-            <div className="flex gap-3">
+        <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
                 {tabs.map((tab) => (
                     <button
                         key={tab.label}
                         onClick={() => setActiveTab(tab.label as any)}
-                        className={`px-5 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === tab.label ? 'bg-[#f3f4ff] dark:bg-indigo-500/10 text-[#6366f1]' : 'bg-[#f8f9fa] dark:bg-slate-800/50 text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-800'
+                        className={`py-2.5 px-2 text-[10px] sm:text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all ${activeTab === tab.label
+                            ? 'bg-[#f3f4ff] dark:bg-indigo-500/15 text-[#6366f1] shadow-sm'
+                            : 'bg-gray-50 dark:bg-slate-800/40 text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-800'
                             }`}
                     >
                         {tab.count} {tab.label === 'Completed' ? 'resolved' : tab.label}
@@ -110,27 +112,31 @@ export function TaskPriorityList({ tasks, completedCount, upcomingCount, overdue
                 ))}
             </div>
 
-            <div className="space-y-6 min-h-[300px]">
+            <div className="space-y-4 min-h-[300px]">
                 {filteredTasks.length > 0 ? filteredTasks.map((task) => (
-                    <div key={task.id} className="flex items-center gap-5 group animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="w-5 h-5 rounded-lg border-2 border-gray-100 dark:border-slate-800 group-hover:border-[#6366f1] transition-all cursor-pointer flex-shrink-0 bg-white dark:bg-slate-950" />
+                    <div key={task.id} className="flex items-start gap-4 group animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="mt-1 w-6 h-6 rounded-xl border-2 border-gray-100 dark:border-slate-800 group-hover:border-[#6366f1] transition-all cursor-pointer flex-shrink-0 bg-white dark:bg-slate-950 flex items-center justify-center shadow-sm">
+                            <div className="w-2.5 h-2.5 rounded-full bg-transparent group-hover:bg-[#6366f1]/20 transition-all" />
+                        </div>
                         <div className="flex-1 min-w-0">
-                            <h4 className="text-[15px] font-bold text-gray-900 dark:text-slate-100 truncate group-hover:text-[#6366f1] transition-colors">{task.title}</h4>
-                            <div className="mt-1.5 flex items-center gap-4 text-[12px] font-semibold text-gray-400">
-                                <span className="flex items-center gap-1.5">
-                                    <Calendar size={14} /> {task.due_date ? format(new Date(task.due_date), 'dd MMM yyyy - p') : 'No due date'}
+                            <h4 className="text-[16px] font-black text-gray-900 dark:text-slate-100 truncate group-hover:text-[#6366f1] transition-colors tracking-tight">{task.title}</h4>
+                            <div className="mt-1 flex items-center gap-3 text-[11px] font-bold text-gray-400 dark:text-slate-500">
+                                <span className="flex items-center gap-1.5 bg-gray-50/50 dark:bg-slate-800/30 px-2 py-1 rounded-lg">
+                                    <Calendar size={13} className="text-gray-400" /> {task.due_date ? format(new Date(task.due_date), 'dd MMM yyyy - p') : 'No due date'}
                                 </span>
                                 {task.priority && (
-                                    <span className={`flex items-center gap-1.5 capitalize px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest ${task.priority === 'high' ? 'bg-red-50 text-red-500 dark:bg-red-500/10' :
-                                        task.priority === 'medium' ? 'bg-yellow-50 text-yellow-500 dark:bg-yellow-500/10' :
+                                    <span className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${task.priority === 'high' ? 'bg-red-50 text-red-500 dark:bg-red-500/10' :
+                                        task.priority === 'medium' ? 'bg-amber-50 text-amber-500 dark:bg-amber-500/10' :
                                             'bg-green-50 text-green-500 dark:bg-green-500/10'
                                         }`}>
-                                        <AlertCircle size={14} /> {task.priority}
+                                        <AlertCircle size={12} className="stroke-[3px]" /> {task.priority}
                                     </span>
                                 )}
                             </div>
                         </div>
-                        <SectionDropdown />
+                        <div className="mt-1">
+                            <SectionDropdown />
+                        </div>
                     </div>
                 )) : (
                     <div className="py-20 text-center">

@@ -313,9 +313,9 @@ export default function Sidebar({ currentUser }: SidebarProps) {
                 </nav>
 
                 {/* User Profile Footer */}
-                <div className="p-4 border-t border-gray-100 dark:border-slate-800 relative" ref={profileRef}>
+                <div className="p-4 border-t border-gray-300 dark:border-slate-800 relative" ref={profileRef}>
                     {isProfileOpen && (
-                        <div className={`absolute bottom-full mb-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-800 py-2 z-[60] animate-in fade-in slide-in-from-bottom-2 duration-200 ${isCollapsed ? 'left-4 w-48' : 'left-4 right-4'}`}>
+                        <div className={`absolute bottom-full mb-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-300 dark:border-slate-800 py-2 z-[60] animate-in fade-in slide-in-from-bottom-2 duration-200 ${isCollapsed ? 'left-4 w-48' : 'left-4 right-4'}`}>
                             <Link
                                 href="/settings/profile"
                                 onClick={() => setIsProfileOpen(false)}
