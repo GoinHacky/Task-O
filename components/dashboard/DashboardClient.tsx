@@ -109,16 +109,16 @@ export function TaskPriorityList({ tasks, completedCount, upcomingCount, overdue
                     let colorStats = ""
                     if (isUpcoming) {
                         colorStats = isActive
-                            ? "bg-yellow-400 text-black border-yellow-500 shadow-md"
-                            : "bg-gray-50/50 dark:bg-slate-800/40 text-gray-400 dark:text-slate-500 border-gray-300 dark:border-slate-800 hover:bg-yellow-100 hover:text-black hover:border-yellow-400"
+                            ? "bg-[#00838F] text-black border-[#006064] shadow-md translate-y-[-1px]"
+                            : "bg-[#00838F] text-black border-[#00838F]/50"
                     } else if (isOverdue) {
                         colorStats = isActive
-                            ? "bg-[#ff3232] text-black border-[#d10000] shadow-md"
-                            : "bg-gray-50/50 dark:bg-slate-800/40 text-gray-400 dark:text-slate-500 border-gray-300 dark:border-slate-800 hover:bg-[#ff1818]/80 hover:text-black hover:border-[#ff1818]"
+                            ? "bg-[#ff2d2d] text-black border-[#e60000] shadow-md translate-y-[-1px]"
+                            : "bg-[#ff2d2d] text-black border-[#ff2d2d]/50"
                     } else if (isCompleted) {
                         colorStats = isActive
-                            ? "bg-[#00d26a] text-black border-[#00a352] shadow-md"
-                            : "bg-gray-50/50 dark:bg-slate-800/40 text-gray-400 dark:text-slate-500 border-gray-300 dark:border-slate-800 hover:bg-[#00d26a]/80 hover:text-black hover:border-[#00d26a]"
+                            ? "bg-[#00e676] text-black border-[#00c853] shadow-md translate-y-[-1px]"
+                            : "bg-[#00e676] text-black border-[#00e676]/50"
                     }
 
                     return (
@@ -136,8 +136,8 @@ export function TaskPriorityList({ tasks, completedCount, upcomingCount, overdue
             <div className="space-y-4 min-h-[300px]">
                 {filteredTasks.length > 0 ? filteredTasks.map((task) => (
                     <div key={task.id} className="flex items-start gap-4 group animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <div className="mt-1 w-6 h-6 rounded-xl border-2 border-gray-300 dark:border-slate-800 group-hover:border-[#6366f1] transition-all cursor-pointer flex-shrink-0 bg-white dark:bg-slate-950 flex items-center justify-center shadow-sm">
-                            <div className="w-2.5 h-2.5 rounded-full bg-transparent group-hover:bg-[#6366f1]/20 transition-all" />
+                        <div className="mt-1 w-6 h-6 rounded-full border-2 border-indigo-50 dark:border-indigo-900/20 flex-shrink-0 bg-white dark:bg-slate-950 flex items-center justify-center shadow-sm">
+                            <div className="w-2.5 h-2.5 rounded-full bg-[#6366f1] shadow-[0_0_8px_rgba(99,102,241,0.3)]" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <h4 className="text-[16px] font-black text-gray-900 dark:text-slate-100 truncate group-hover:text-[#6366f1] transition-colors tracking-tight">{task.title}</h4>

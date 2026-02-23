@@ -121,7 +121,7 @@ export default async function DashboardPage() {
             className="dark:backdrop-blur-xl p-5 lg:p-6 rounded-2xl lg:rounded-3xl border shadow-sm hover:shadow-lg transition-all duration-300 group"
             style={{
               backgroundColor: stat.bg,
-              borderColor: 'rgb(209 213 219)',
+              borderColor: 'rgba(156, 163, 175, 0.4)',
             }}
           >
             <div className="flex items-start gap-4">
@@ -149,10 +149,10 @@ export default async function DashboardPage() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 lg:gap-10">
         {/* Task Priorities List */}
-        <section className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[32px] border border-gray-300 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col p-8 lg:p-10">
+        <section className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-[32px] border border-gray-400/40 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col p-8 lg:p-10">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-2xl lg:text-[28px] font-black text-gray-900 dark:text-slate-50 tracking-tight leading-none">Objective Priorities</h2>
+              <h2 className="text-2xl lg:text-[28px] font-semibold text-gray-900 dark:text-slate-50 tracking-tight leading-none">Objective Priorities</h2>
               <p className="mt-1 text-[11px] lg:text-[13px] text-gray-400 dark:text-slate-500">Collective objectives sorted by priority</p>
             </div>
             <div className="flex items-center gap-2 sm:gap-4 shrink-0">
@@ -170,10 +170,10 @@ export default async function DashboardPage() {
         </section>
 
         {/* Announcements / Updates */}
-        <section className="bg-white dark:bg-slate-900 rounded-[32px] border border-gray-300 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+        <section className="bg-white dark:bg-slate-900 rounded-[32px] border border-gray-400/40 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
           <div className="p-8 pb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-[22px] font-black text-gray-900 dark:text-slate-50 tracking-tight">Announcements</h2>
+              <h2 className="text-[22px] font-semibold text-gray-900 dark:text-slate-50 tracking-tight">Announcements</h2>
               <p className="text-xs text-gray-400 dark:text-slate-500 font-bold italic">System briefs and project updates</p>
             </div>
             <SectionDropdown />
@@ -202,10 +202,10 @@ export default async function DashboardPage() {
       </div>
 
       {/* My Teams Section */}
-      <section className="bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-gray-300 dark:border-slate-800 shadow-sm">
+      <section className="bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-gray-400/40 dark:border-slate-800 shadow-sm">
         <div className="flex items-center justify-between mb-10">
           <div>
-            <h2 className="text-[26px] font-black text-gray-900 dark:text-slate-50 tracking-tight">Teams</h2>
+            <h2 className="text-[26px] font-semibold text-gray-900 dark:text-slate-50 tracking-tight">Teams</h2>
             <p className="text-xs text-gray-400 dark:text-slate-500">Teams with active tasks</p>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -218,11 +218,11 @@ export default async function DashboardPage() {
           {teams && teams.length > 0 ? teams.filter((m: any) => m.teams).map((membership: any) => {
             const team = membership.teams
             return (
-              <div key={team.id} className="p-6 sm:p-8 lg:p-10 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-800 rounded-2xl sm:rounded-3xl lg:rounded-[32px] hover:border-[#6366f1] hover:shadow-xl hover:shadow-[#6366f1]/5 transition-all duration-500 group flex flex-col items-center text-center relative overflow-hidden">
+              <div key={team.id} className="p-6 sm:p-8 lg:p-10 bg-white dark:bg-slate-900 border border-gray-400/40 dark:border-slate-800 rounded-2xl sm:rounded-3xl lg:rounded-[32px] hover:border-[#6366f1] hover:shadow-xl hover:shadow-[#6366f1]/5 transition-all duration-500 group flex flex-col items-center text-center relative overflow-hidden">
                 <div className="absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4 text-gray-200 dark:text-slate-800 group-hover:text-gray-400 dark:group-hover:text-gray-600 transition-colors">
                   <SectionDropdown />
                 </div>
-                <div className="w-20 h-20 rounded-[28px] bg-gray-50 dark:bg-slate-800/50 mb-6 flex items-center justify-center text-[#6366f1] text-2xl font-black group-hover:scale-110 transition-transform duration-500 shadow-sm border border-gray-300 dark:border-slate-800">
+                <div className="w-20 h-20 rounded-[28px] bg-gray-50 dark:bg-slate-800/50 mb-6 flex items-center justify-center text-[#6366f1] text-2xl font-black group-hover:scale-110 transition-transform duration-500 shadow-sm border border-gray-400/40 dark:border-slate-800">
                   {team.avatar_url ? <img src={team.avatar_url} alt={team.name} className="w-full h-full rounded-[28px] object-cover" /> : team.name[0]}
                 </div>
                 <h4 className="text-sm sm:text-[15px] md:text-base lg:text-[17px] font-bold text-gray-900 dark:text-slate-100 truncate w-full group-hover:text-[#6366f1] transition-colors px-2">{team.name}</h4>
