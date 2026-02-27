@@ -43,12 +43,12 @@ export default function ProjectsPage() {
         onSuccess={fetchProjects}
       />
 
-      <div className="flex-1 bg-[#111318] rounded-2xl border border-white/[0.06] flex flex-col overflow-hidden">
+      <div className="flex-1 bg-white dark:bg-[#111318] rounded-2xl border border-gray-300 dark:border-slate-800 flex flex-col overflow-hidden shadow-sm">
 
         {/* Header */}
         <div className="flex items-start justify-between px-6 pt-6 pb-5 flex-shrink-0">
           <div>
-            <h1 className="text-2xl font-black text-white tracking-tight leading-none uppercase">Projects</h1>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-none uppercase">Projects</h1>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.18em] italic mt-1">
               Manage and track all collaborative projects.
             </p>
@@ -84,13 +84,13 @@ export default function ProjectsPage() {
 
 function EmptyState({ onNew }: { onNew: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 border border-dashed border-white/10 rounded-2xl">
-      <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-slate-600 mb-5">
+    <div className="flex flex-col items-center justify-center py-24 border border-dashed border-slate-200 dark:border-white/10 rounded-2xl">
+      <div className="w-16 h-16 bg-slate-50 dark:bg-white/5 rounded-2xl flex items-center justify-center text-slate-400 dark:text-slate-600 mb-5">
         <FolderKanban size={32} />
       </div>
-      <h3 className="text-lg font-bold text-white mb-1">No projects yet</h3>
+      <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">No projects yet</h3>
       <p className="text-slate-500 text-sm text-center max-w-xs mb-6">Get started by creating your first project.</p>
-      <button onClick={onNew} className="px-5 py-2.5 bg-[#0077B6] hover:bg-[#0096C7] text-white rounded-xl transition-all text-[12px] font-black uppercase tracking-widest active:scale-95">
+      <button onClick={onNew} className="px-5 py-2.5 bg-[#0077B6] hover:bg-[#0096C7] text-white rounded-xl transition-all text-[12px] font-black uppercase tracking-widest active:scale-95 shadow-lg shadow-blue-500/20">
         Create First Project
       </button>
     </div>
@@ -117,9 +117,9 @@ function ProjectCard({ project }: { project: any }) {
       href={`/projects/${project.id}`}
       className="group flex flex-col justify-between
                  h-[148px]
-                 bg-white/[0.03] hover:bg-white/[0.06]
-                 border border-white/[0.08] hover:border-white/[0.16]
-                 rounded-2xl p-4 transition-all duration-150"
+                 bg-slate-50/50 hover:bg-slate-100 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]
+                 border border-gray-300 dark:border-slate-800 hover:border-blue-500/30 dark:hover:border-white/[0.12]
+                 rounded-2xl p-4 transition-all duration-150 shadow-sm hover:shadow-md"
     >
       {/* TOP: icon + title + desc */}
       <div className="flex items-start gap-3">
@@ -127,10 +127,10 @@ function ProjectCard({ project }: { project: any }) {
           <FolderKanban size={18} className={color.icon} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-bold text-white truncate leading-snug group-hover:text-[#60a5fa] transition-colors">
+          <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate leading-snug group-hover:text-[#0077B6] transition-colors">
             {project.name}
           </p>
-          <p className="text-[11.5px] text-slate-500 truncate leading-snug mt-0.5">
+          <p className="text-[11.5px] text-slate-500 dark:text-slate-500 truncate leading-snug mt-0.5">
             {project.description || 'No description provided.'}
           </p>
         </div>
@@ -138,16 +138,16 @@ function ProjectCard({ project }: { project: any }) {
 
       {/* MIDDLE: pills */}
       <div className="flex items-center gap-1.5 flex-wrap">
-        <span className={`inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[10px] font-semibold ${isAdmin ? 'bg-violet-500/15 text-violet-400' : 'bg-blue-500/15 text-blue-400'
+        <span className={`inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[10px] font-semibold ${isAdmin ? 'bg-violet-500/10 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400' : 'bg-blue-500/10 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400'
           }`}>
           <span className="w-1.5 h-1.5 rounded-full bg-current" />
           {isAdmin ? 'Admin' : 'Member'}
         </span>
-        <span className="inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[10px] font-semibold bg-white/[0.06] text-slate-400">
+        <span className="inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400">
           <Layout size={9} /> Active
         </span>
         {isAdmin && (
-          <span className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[10px] font-semibold bg-white/[0.06] text-slate-400">
+          <span className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400">
             Owner
           </span>
         )}
@@ -155,13 +155,13 @@ function ProjectCard({ project }: { project: any }) {
 
       {/* BOTTOM: divider + footer */}
       <div>
-        <div className="h-px bg-white/[0.07] mb-2.5" />
+        <div className="h-px bg-slate-100 dark:bg-white/[0.07] mb-2.5" />
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 text-[10.5px] text-slate-500">
+          <div className="flex items-center gap-3 text-[10.5px] text-slate-400 dark:text-slate-500">
             <span className="flex items-center gap-1.5"><Clock size={10} />{date}</span>
             <span className="flex items-center gap-1.5"><Layout size={10} />Active</span>
           </div>
-          <ChevronRight size={13} className="text-slate-700 group-hover:text-[#60a5fa] group-hover:translate-x-0.5 transition-all" />
+          <ChevronRight size={13} className="text-slate-300 dark:text-slate-700 group-hover:text-[#0077B6] dark:group-hover:text-[#60a5fa] group-hover:translate-x-0.5 transition-all" />
         </div>
       </div>
     </Link>
