@@ -17,6 +17,15 @@ export async function inviteUserToWorkspace(
 
     if (!inviter) throw new Error('Unauthorized')
 
+    // 0. Get inviter's full name
+    const { data: inviterProfile } = await admin
+        .from('users')
+        .select('full_name')
+        .eq('id', inviter.id)
+        .single()
+
+    const inviterName = inviterProfile?.full_name || inviter.email
+
     // 1. Find or "invite" user
     // Since we don't have a true workspace_members table, we'll use a platform-wide approach.
     // Check if user exists (case-insensitive)
@@ -30,6 +39,24 @@ export async function inviteUserToWorkspace(
     // For this demo, we'll assume they must exist or we just create a notification if they do.
     if (!targetUser) {
         throw new Error('User not found. For this version, users must already have an account.')
+    }
+
+    // 1.5 Check if already a member or pending
+    if (projectId) {
+        const { data: existingMember } = await admin
+            .from('project_members')
+            .select('status')
+            .eq('project_id', projectId)
+            .eq('user_id', targetUser.id)
+            .single()
+
+        if (existingMember) {
+            if (existingMember.status === 'accepted') {
+                throw new Error('User is already a member of this project.')
+            } else if (existingMember.status === 'pending') {
+                throw new Error('User already has a pending invitation to this project.')
+            }
+        }
     }
 
     // 2. Add to project if projectId is provided
@@ -67,10 +94,11 @@ export async function inviteUserToWorkspace(
     // 4. Send Notification
     const { error: notifError } = await admin.from('notifications').insert({
         user_id: targetUser.id,
-        type: 'workspace_invite',
-        message: message || `You've been invited to join the workspace by ${inviter.email}`,
+        type: 'invite',
+        message: message || `You've been invited to join the workspace by ${inviterName}`,
         related_id: projectId || targetUser.id,
-        read: false
+        read: false,
+        metadata: projectId ? { project_name: (await admin.from('projects').select('name').eq('id', projectId).single()).data?.name } : undefined
     })
 
     if (notifError) console.error('Error sending notification:', notifError)

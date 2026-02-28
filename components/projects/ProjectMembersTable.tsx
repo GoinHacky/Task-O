@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { MoreVertical, Shield, User as UserIcon, Trash2, Check, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import ConfirmationModal from '../ui/ConfirmationModal'
 
 interface ProjectMembersTableProps {
     members: any[]
@@ -17,6 +18,8 @@ export default function ProjectMembersTable({ members, currentUserRole, projectI
     const [editingId, setEditingId] = useState<string | null>(null)
     const [newRole, setNewRole] = useState('')
     const [loading, setLoading] = useState<string | null>(null)
+    const [memberToRemove, setMemberToRemove] = useState<string | null>(null)
+    const [error, setError] = useState<string | null>(null)
 
     const canManage = currentUserRole === 'admin' || currentUserRole === 'manager'
 
@@ -32,14 +35,13 @@ export default function ProjectMembersTable({ members, currentUserRole, projectI
             setEditingId(null)
             router.refresh()
         } catch (error: any) {
-            alert(error.message)
+            setError(error.message)
         } finally {
             setLoading(null)
         }
     }
 
     const handleRemoveMember = async (memberId: string) => {
-        if (!confirm('Are you sure you want to remove this member?')) return
         setLoading(memberId)
         try {
             const { error } = await supabase
@@ -48,9 +50,11 @@ export default function ProjectMembersTable({ members, currentUserRole, projectI
                 .eq('id', memberId)
 
             if (error) throw error
+            setMemberToRemove(null)
             router.refresh()
         } catch (error: any) {
-            alert(error.message)
+            setError(error.message)
+            setMemberToRemove(null)
         } finally {
             setLoading(null)
         }
@@ -143,7 +147,7 @@ export default function ProjectMembersTable({ members, currentUserRole, projectI
                                                     <Shield size={18} />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleRemoveMember(member.id)}
+                                                    onClick={() => setMemberToRemove(member.id)}
                                                     disabled={loading === member.id}
                                                     className="px-4 py-2 text-[10px] font-black text-gray-400 hover:text-red-500 uppercase tracking-widest transition-all"
                                                 >
@@ -163,6 +167,26 @@ export default function ProjectMembersTable({ members, currentUserRole, projectI
                     <p className="text-sm text-gray-400 dark:text-slate-500 font-bold italic">No members found in this project.</p>
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={!!memberToRemove}
+                onClose={() => setMemberToRemove(null)}
+                onConfirm={() => memberToRemove && handleRemoveMember(memberToRemove)}
+                title="Personnel Termination"
+                message="Are you sure you want to remove this member from the project? This will revoke their access to all tasks and discussion channels immediately."
+                confirmLabel="Confirm Removal"
+                type="danger"
+            />
+
+            <ConfirmationModal
+                isOpen={!!error}
+                onClose={() => setError(null)}
+                onConfirm={() => setError(null)}
+                title="System Conflict"
+                message={error || 'An unexpected error occurred during access modification.'}
+                confirmLabel="Acknowledge"
+                type="warning"
+            />
         </div>
     )
 }

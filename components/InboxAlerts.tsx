@@ -52,6 +52,11 @@ export default function InboxAlerts({ notifications: initialNotifications }: Inb
                 case 'reopen':
                     await updateTask(taskId, { status: 'todo' })
                     break
+                case 'accept':
+                case 'reject':
+                    const { respondToPlatformInvitation } = await import('@/lib/users/actions')
+                    await respondToPlatformInvitation(taskId, action === 'accept')
+                    break
                 default:
                     break
             }
@@ -198,39 +203,61 @@ export default function InboxAlerts({ notifications: initialNotifications }: Inb
                                 </div>
 
                                 {/* Actions Row */}
-                                <div className="flex items-center gap-3 pl-9 mt-8">
-                                    {isTask && (
-                                        <button
-                                            disabled={!!processingId}
-                                            onClick={() => handleAction(notif.id, 'start', notif.related_id)}
-                                            className="px-8 py-2.5 bg-[#6366f1] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#5558e3] transition-all shadow-lg shadow-[#6366f1]/20 active:scale-95 disabled:opacity-50"
-                                        >
-                                            Start
-                                        </button>
-                                    )}
-                                    {isMention && (
-                                        <button
-                                            onClick={() => router.push(`/projects/${notif.related_id}`)}
-                                            className="px-8 py-2.5 bg-amber-400 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 transition-all shadow-lg shadow-amber-400/20 active:scale-95"
-                                        >
-                                            Reply
-                                        </button>
-                                    )}
-                                    {isReview && (
-                                        <button
-                                            disabled={!!processingId}
-                                            onClick={() => handleAction(notif.id, 'approve', notif.related_id)}
-                                            className="px-8 py-2.5 bg-[#6366f1] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#5558e3] transition-all shadow-lg shadow-[#6366f1]/20 active:scale-95 disabled:opacity-50"
-                                        >
-                                            Approve
-                                        </button>
-                                    )}
-                                    <button
-                                        className="px-8 py-2.5 bg-gray-50 dark:bg-slate-800 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-slate-700 transition-all active:scale-95 flex items-center gap-2"
-                                    >
-                                        <Eye size={14} /> View
-                                    </button>
-                                </div>
+                                {!notif.read && (
+                                    <div className="flex items-center gap-3 pl-9 mt-8">
+                                        {isTask && (
+                                            <button
+                                                disabled={!!processingId}
+                                                onClick={() => handleAction(notif.id, 'start', notif.related_id)}
+                                                className="px-8 py-2.5 bg-[#6366f1] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#5558e3] transition-all shadow-lg shadow-[#6366f1]/20 active:scale-95 disabled:opacity-50"
+                                            >
+                                                Start
+                                            </button>
+                                        )}
+                                        {isMention && (
+                                            <button
+                                                onClick={() => router.push(`/projects/${notif.related_id}`)}
+                                                className="px-8 py-2.5 bg-amber-400 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 transition-all shadow-lg shadow-amber-400/20 active:scale-95"
+                                            >
+                                                Reply
+                                            </button>
+                                        )}
+                                        {isReview && (
+                                            <button
+                                                disabled={!!processingId}
+                                                onClick={() => handleAction(notif.id, 'approve', notif.related_id)}
+                                                className="px-8 py-2.5 bg-[#6366f1] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#5558e3] transition-all shadow-lg shadow-[#6366f1]/20 active:scale-95 disabled:opacity-50"
+                                            >
+                                                Approve
+                                            </button>
+                                        )}
+                                        {config.label === 'Invitation' && (
+                                            <>
+                                                <button
+                                                    disabled={!!processingId}
+                                                    onClick={() => handleAction(notif.id, 'accept', notif.related_id)}
+                                                    className="px-8 py-2.5 bg-green-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-600 transition-all shadow-lg shadow-green-500/20 active:scale-95 disabled:opacity-50"
+                                                >
+                                                    Accept
+                                                </button>
+                                                <button
+                                                    disabled={!!processingId}
+                                                    onClick={() => handleAction(notif.id, 'reject', notif.related_id)}
+                                                    className="px-8 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 dark:hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50"
+                                                >
+                                                    Decline
+                                                </button>
+                                            </>
+                                        )}
+                                        {config.label !== 'Invitation' && (
+                                            <button
+                                                className="px-8 py-2.5 bg-gray-50 dark:bg-slate-800 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-slate-700 transition-all active:scale-95 flex items-center gap-2"
+                                            >
+                                                <Eye size={14} /> View
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             {index < filteredNotifications.length - 1 && (
                                 <div className="mx-8 h-px bg-gray-100/80 dark:bg-slate-800/50" />

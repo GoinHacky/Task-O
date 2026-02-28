@@ -73,12 +73,14 @@ export async function createTask(data: {
 
     // 2. Send Notification if assigned
     if (data.assigned_to) {
+        const { data: project } = await supabaseAdmin.from('projects').select('name').eq('id', data.project_id).single()
         await supabaseAdmin.from('notifications').insert({
             user_id: data.assigned_to,
             type: 'task_assignment',
             message: `Assigned: ${data.title}`,
             related_id: task.id,
-            read: false
+            read: false,
+            metadata: { project_name: project?.name, due_date: data.due_date }
         })
     }
 
@@ -189,6 +191,9 @@ export async function updateTask(taskId: string, data: any) {
 
         const notificationMessage = `Update: ${originalTask.title} is now ${statusLabel}`
 
+        const { data: project } = await supabaseAdmin.from('projects').select('name').eq('id', originalTask.project_id).single()
+        const metadata = { project_name: project?.name }
+
         // Notify creator
         if (originalTask.created_by && originalTask.created_by !== user.id) {
             await supabaseAdmin.from('notifications').insert({
@@ -196,7 +201,8 @@ export async function updateTask(taskId: string, data: any) {
                 type: 'task_status_change',
                 message: notificationMessage,
                 related_id: taskId,
-                read: false
+                read: false,
+                metadata
             })
         }
 
@@ -207,7 +213,8 @@ export async function updateTask(taskId: string, data: any) {
                 type: 'task_status_change',
                 message: notificationMessage,
                 related_id: taskId,
-                read: false
+                read: false,
+                metadata
             })
         }
 

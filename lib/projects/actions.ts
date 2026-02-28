@@ -28,6 +28,22 @@ export async function inviteProjectMember(projectId: string, email: string, role
         throw new Error('You do not have permission to invite members to this project')
     }
 
+    // Get inviter's full name and project name
+    const { data: inviterProfile } = await supabase
+        .from('users')
+        .select('full_name')
+        .eq('id', user.id)
+        .single()
+
+    const { data: projectInfo } = await supabase
+        .from('projects')
+        .select('name')
+        .eq('id', projectId)
+        .single()
+
+    const inviterName = inviterProfile?.full_name || user.email
+    const projectName = projectInfo?.name || 'a project'
+
     // Find user by email
     const { data: targetUser } = await supabase
         .from('users')
@@ -40,6 +56,21 @@ export async function inviteProjectMember(projectId: string, email: string, role
     }
 
     // Add to project_members as pending
+    const { data: existingMember } = await supabase
+        .from('project_members')
+        .select('status')
+        .eq('project_id', projectId)
+        .eq('user_id', targetUser.id)
+        .single()
+
+    if (existingMember) {
+        if (existingMember.status === 'accepted') {
+            throw new Error('User is already a member of this project')
+        } else {
+            throw new Error('User already has a pending invitation to this project')
+        }
+    }
+
     const { error } = await supabase
         .from('project_members')
         .insert({
@@ -50,7 +81,6 @@ export async function inviteProjectMember(projectId: string, email: string, role
         })
 
     if (error) {
-        if (error.code === '23505') throw new Error('User is already a member of this project')
         throw error
     }
 
@@ -58,9 +88,10 @@ export async function inviteProjectMember(projectId: string, email: string, role
     await supabase.from('notifications').insert({
         user_id: targetUser.id,
         type: 'project_invite',
-        message: `Project invite: You have been invited to join this project.`,
+        message: `You've been invited to join "${projectName}" by ${inviterName}`,
         related_id: projectId,
-        read: false
+        read: false,
+        metadata: { project_name: projectName }
     })
 
     revalidatePath('/dashboard')
