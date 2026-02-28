@@ -86,7 +86,7 @@ export default async function ProjectOverviewPage({
   return (
     <div className="space-y-12 animate-in fade-in duration-700 pb-32">
       {/* Vital Status Bar */}
-      <div className="flex items-center justify-between border-b border-gray-100 dark:border-slate-800/50 pb-8 mt-2">
+      <div className="flex items-center justify-between border-b border-gray-300 dark:border-slate-800 pb-8 mt-2">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest">Project Integrity:</span>
@@ -104,28 +104,28 @@ export default async function ProjectOverviewPage({
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest">Timeline Phase:</span>
-          <span className="text-[10px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.15em] px-3 py-1 bg-gray-50 dark:bg-slate-800/50 rounded-lg border border-gray-100 dark:border-slate-800/50">Execution Active</span>
+          <span className="text-[10px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.15em] px-3 py-1 bg-gray-50 dark:bg-slate-800/50 rounded-lg border border-gray-300 dark:border-slate-800">Execution Active</span>
         </div>
       </div>
 
       {/* KPI Section */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-slate-900/40 p-8 rounded-[40px] border border-gray-100 dark:border-slate-800/50 shadow-sm backdrop-blur-xl group hover:border-[#6366f1]/20 transition-all">
+        <div className="bg-white dark:bg-slate-900/40 p-8 rounded-[40px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl group hover:border-[#6366f1]/20 transition-all">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Total Tasks</p>
           <h3 className="text-[32px] font-black text-gray-900 dark:text-slate-50 tracking-tightest leading-none">{totalTasks}</h3>
         </div>
 
-        <div className="bg-white dark:bg-slate-900/40 p-8 rounded-[40px] border border-gray-100 dark:border-slate-800/50 shadow-sm backdrop-blur-xl group hover:border-emerald-500/20 transition-all">
+        <div className="bg-white dark:bg-slate-900/40 p-8 rounded-[40px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl group hover:border-emerald-500/20 transition-all">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Resolved</p>
           <h3 className="text-[32px] font-black text-emerald-500 tracking-tightest leading-none">{completedTasks}</h3>
         </div>
 
-        <div className="bg-white dark:bg-slate-900/40 p-8 rounded-[40px] border border-gray-100 dark:border-slate-800/50 shadow-sm backdrop-blur-xl group hover:border-amber-500/20 transition-all">
+        <div className="bg-white dark:bg-slate-900/40 p-8 rounded-[40px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl group hover:border-amber-500/20 transition-all">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Operating</p>
           <h3 className="text-[32px] font-black text-amber-500 tracking-tightest leading-none">{doingTasks}</h3>
         </div>
 
-        <div className="bg-white dark:bg-slate-900/40 p-8 rounded-[40px] border border-gray-100 dark:border-slate-800/50 shadow-sm backdrop-blur-xl group hover:border-indigo-500/20 transition-all">
+        <div className="bg-white dark:bg-slate-900/40 p-8 rounded-[40px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl group hover:border-indigo-500/20 transition-all">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Queued</p>
           <h3 className="text-[32px] font-black text-indigo-500 tracking-tightest leading-none">{pendingTasks}</h3>
         </div>
@@ -133,11 +133,11 @@ export default async function ProjectOverviewPage({
 
       {/* Team Progress & Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1 bg-white dark:bg-slate-900/40 p-10 rounded-[50px] border border-gray-100 dark:border-slate-800/50 shadow-sm backdrop-blur-xl">
-          <h3 className="text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] mb-10 flex items-center gap-2">
+        <div className="lg:col-span-1 bg-white dark:bg-slate-900/40 p-7 rounded-[50px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl h-fit">
+          <h3 className="text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
             <Users size={14} className="text-[#6366f1]" /> Team Performance
           </h3>
-          <div className="space-y-10">
+          <div className="space-y-4">
             <div className="space-y-3">
               <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-500">
                 <span>FLOW</span>
@@ -153,7 +153,7 @@ export default async function ProjectOverviewPage({
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900/40 p-10 rounded-[50px] border border-gray-100 dark:border-slate-800/50 shadow-sm backdrop-blur-xl">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900/40 p-10 rounded-[50px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl">
           <div className="flex items-center justify-between mb-10">
             <h3 className="text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] flex items-center gap-2">
               <Activity size={14} className="text-[#6366f1]" /> Recent Activity
@@ -164,7 +164,7 @@ export default async function ProjectOverviewPage({
         </div>
 
         {/* Milestone Timeline (New Premium Widget) */}
-        <div className="lg:col-span-1 bg-white dark:bg-slate-900/40 p-10 rounded-[50px] border border-gray-100 dark:border-slate-800/50 shadow-sm backdrop-blur-xl">
+        <div className="lg:col-span-1 bg-white dark:bg-slate-900/40 p-10 rounded-[50px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl">
           <h3 className="text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] mb-10 flex items-center gap-2">
             <Clock size={14} className="text-[#6366f1]" /> Project Timeline
           </h3>
@@ -191,7 +191,7 @@ export default async function ProjectOverviewPage({
       {/* Strategic Sector Status & Budget (National Convention Specific) */}
       {project.name.toLowerCase().includes('convention') && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in slide-in-from-bottom-5 duration-700">
-          <div className="bg-white dark:bg-slate-900/40 p-10 rounded-[50px] border border-gray-100 dark:border-slate-800/50 shadow-sm backdrop-blur-xl">
+          <div className="bg-white dark:bg-slate-900/40 p-10 rounded-[50px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl">
             <h3 className="text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
               <Shield size={14} className="text-[#6366f1]" /> Sector Readiness status
             </h3>
@@ -202,7 +202,7 @@ export default async function ProjectOverviewPage({
                 { label: 'Delta Zone', progress: 100, status: 'Resolved' },
                 { label: 'Perimeter', progress: 68, status: 'Active' }
               ].map((sector, i) => (
-                <div key={i} className="p-6 rounded-3xl bg-gray-50/50 dark:bg-slate-800/30 border border-gray-100 dark:border-slate-800/50">
+                <div key={i} className="p-6 rounded-3xl bg-gray-50/50 dark:bg-slate-800/30 border border-gray-300 dark:border-slate-800">
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-[10px] font-black uppercase tracking-widest text-[#6366f1]">{sector.label}</span>
                     <span className={`text-[8px] font-black uppercase tracking-widest ${sector.status === 'Resolved' ? 'text-emerald-500' : sector.status === 'Infiltrated' ? 'text-amber-500' : 'text-indigo-500'}`}>{sector.status}</span>
@@ -270,7 +270,7 @@ export default async function ProjectOverviewPage({
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900/40 p-10 rounded-[40px] border border-gray-100 dark:border-slate-800/50 shadow-sm">
+        <div className="bg-white dark:bg-slate-900/40 p-10 rounded-[40px] border border-gray-300 dark:border-slate-800 shadow-sm">
           <h3 className="text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] mb-8 text-center flex items-center justify-center gap-2">
             <Zap size={14} className="text-amber-500" /> Operational Control
           </h3>

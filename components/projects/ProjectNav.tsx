@@ -31,7 +31,7 @@ export default function ProjectNav({ projectId, role }: ProjectNavProps) {
     ]
 
     return (
-        <nav className="flex items-center gap-1.5 p-1 bg-gray-50/50 dark:bg-slate-900/50 rounded-[18px] border border-gray-100 dark:border-slate-800/50 backdrop-blur-sm">
+        <nav className="flex items-center gap-1.5 p-1 bg-gray-50/50 dark:bg-slate-900/50 rounded-[18px] border border-gray-300 dark:border-slate-800 backdrop-blur-sm">
             {tabs.map((tab) => {
                 if (tab.roles && !tab.roles.includes(role)) return null
 
@@ -43,7 +43,7 @@ export default function ProjectNav({ projectId, role }: ProjectNavProps) {
                         key={tab.href}
                         href={tab.href}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300 ${isActive
-                            ? 'bg-white dark:bg-slate-800 text-[#6366f1] shadow-sm ring-1 ring-gray-100 dark:ring-slate-700'
+                            ? 'bg-white dark:bg-slate-800 text-[#6366f1] shadow-sm ring-1 ring-gray-300 dark:ring-slate-700'
                             : 'text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300'
                             }`}
                     >

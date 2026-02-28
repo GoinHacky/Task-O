@@ -56,7 +56,7 @@ export default async function ProjectLayout({
                         <span className="text-gray-900 dark:text-slate-100 italic">{project.name}</span>
                     </div>
 
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-6 border-b border-gray-100 dark:border-slate-800/60">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                         <ProjectHeader projectName={project.name} projectDescription={project.description} />
 
                         <ProjectNav projectId={id} role={userRole} />
