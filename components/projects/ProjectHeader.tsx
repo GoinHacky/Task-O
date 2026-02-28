@@ -38,7 +38,7 @@ export default function ProjectHeader({ projectName, projectDescription }: Proje
             <h1 className="text-[32px] font-black text-gray-900 dark:text-slate-50 tracking-tightest leading-none uppercase flex items-center flex-wrap">
                 <span>{projectName}</span>
                 <span className="text-gray-200 dark:text-slate-800 mx-3 font-light">/</span>
-                <span className="text-gray-900/90 dark:text-slate-50/90 font-black">{sectionName}</span>
+                <span className="text-gray-900 dark:text-slate-50 font-black">{sectionName}</span>
             </h1>
             <div className="flex items-center gap-3">
                 <p className="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-[0.2em] italic">

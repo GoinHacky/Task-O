@@ -51,6 +51,20 @@ export default function SignupPage() {
     }
   }
 
+  const handleGoogleSignIn = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      if (error) throw error
+    } catch (error: any) {
+      setError(error.message || 'An error occurred during Google sign in')
+    }
+  }
+
   return (
     <div className="h-screen flex items-center justify-center bg-white px-4 overflow-hidden relative">
 
@@ -376,6 +390,7 @@ export default function SignupPage() {
 
               <button
                 type="button"
+                onClick={handleGoogleSignIn}
                 className="w-full flex items-center justify-center gap-2.5 py-2 text-sm font-medium text-gray-600 rounded-lg transition-all hover:text-gray-800"
                 style={{
                   background: 'rgba(255,255,255,0.7)',
