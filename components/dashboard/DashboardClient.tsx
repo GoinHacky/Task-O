@@ -73,61 +73,64 @@ export function SectionDropdown() {
     )
 }
 
-export function TaskPriorityList({ tasks, completedCount, upcomingCount, overdueCount }: {
+export function TaskPriorityList({ tasks, completedCount, pendingCount, overdueCount }: {
     tasks: any[],
     completedCount: number,
-    upcomingCount: number,
+    pendingCount: number,
     overdueCount: number
 }) {
-    const [activeTab, setActiveTab] = useState<'Upcoming' | 'Overdue' | 'Completed'>('Upcoming')
+    const [activeTab, setActiveTab] = useState<'Pending' | 'Overdue' | 'Resolve'>('Pending')
 
     const filteredTasks = tasks.filter(task => {
-        if (activeTab === 'Completed') return task.status === 'completed'
+        if (activeTab === 'Resolve') return task.status === 'completed'
         if (activeTab === 'Overdue') return task.due_date && new Date(task.due_date) < new Date() && task.status !== 'completed'
-        if (activeTab === 'Upcoming') return task.status !== 'completed' && task.due_date && new Date(task.due_date) >= new Date()
+        if (activeTab === 'Pending') return task.status !== 'completed' && task.due_date && new Date(task.due_date) >= new Date()
         return false
     }).sort((a, b) => {
-        if (activeTab === 'Upcoming') return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+        if (activeTab === 'Pending') return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     }).slice(0, 4)
 
     const tabs = [
-        { label: 'Upcoming', count: upcomingCount },
+        { label: 'Pending', count: pendingCount },
         { label: 'Overdue', count: overdueCount },
-        { label: 'Completed', count: completedCount }
+        { label: 'Resolve', count: completedCount }
     ]
 
     return (
         <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3">
                 {tabs.map((tab) => {
-                    const isUpcoming = tab.label === 'Upcoming'
+                    const isPending = tab.label === 'Pending'
                     const isOverdue = tab.label === 'Overdue'
-                    const isCompleted = tab.label === 'Completed'
+                    const isResolve = tab.label === 'Resolve'
                     const isActive = activeTab === tab.label
 
                     let colorStats = ""
-                    if (isUpcoming) {
+                    if (isPending) {
                         colorStats = isActive
-                            ? "bg-[#00838F] text-white border-[#006064] shadow-md translate-y-[-1px]"
-                            : "bg-[#00838F] text-white border-[#00838F]/50"
+                            ? "bg-[#CF7929] text-white border-[#B36620] shadow-md translate-y-[-1px]"
+                            : "bg-[#CF7929] text-white border-[#CF7929]/50 hover:bg-[#DA8C45]"
                     } else if (isOverdue) {
                         colorStats = isActive
-                            ? "bg-[#ff2d2d] text-white border-[#e60000] shadow-md translate-y-[-1px]"
-                            : "bg-[#ff2d2d] text-white border-[#ff2d2d]/50"
-                    } else if (isCompleted) {
+                            ? "bg-[#C2312F] text-white border-[#A62725] shadow-md translate-y-[-1px]"
+                            : "bg-[#C2312F] text-white border-[#C2312F]/50 hover:bg-[#D64543]"
+                    } else if (isResolve) {
                         colorStats = isActive
-                            ? "bg-[#00e676] text-white border-[#00c853] shadow-md translate-y-[-1px]"
-                            : "bg-[#00e676] text-white border-[#00e676]/50"
+                            ? "bg-[#1E9E74] text-white border-[#178561] shadow-md translate-y-[-1px]"
+                            : "bg-[#1E9E74] text-white border-[#1E9E74]/50 hover:bg-[#26B889]"
                     }
 
                     return (
                         <button
                             key={tab.label}
                             onClick={() => setActiveTab(tab.label as any)}
-                            className={`py-2.5 px-2 text-[10px] sm:text-[11px] font-black uppercase tracking-widest rounded-2xl transition-all border ${colorStats}`}
+                            className={`py-2 px-1 text-[10px] sm:text-[11px] font-black uppercase tracking-widest rounded-full transition-all border flex items-center justify-center gap-2 ${colorStats}`}
                         >
-                            {tab.count} {isCompleted ? 'resolved' : tab.label}
+                            <span>{tab.label}</span>
+                            <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[9px] font-black">
+                                {tab.count}
+                            </span>
                         </button>
                     )
                 })}
@@ -172,43 +175,3 @@ export function TaskPriorityList({ tasks, completedCount, upcomingCount, overdue
     )
 }
 
-export function ScrollSuggestion() {
-    const [isVisible, setIsVisible] = useState(true)
-
-    useEffect(() => {
-        const handleScroll = () => {
-            if (window.scrollY > 100) {
-                setIsVisible(false)
-            } else {
-                setIsVisible(true)
-            }
-        }
-
-        window.addEventListener('scroll', handleScroll)
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
-
-    if (!isVisible) return null
-
-    return (
-        <>
-            <style jsx>{`
-                @keyframes soft-float {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-6px); }
-                }
-                .animate-soft-float {
-                    animation: soft-float 3s ease-in-out infinite;
-                }
-            `}</style>
-            <div
-                className="fixed bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 animate-soft-float cursor-pointer z-[100] pointer-events-none"
-            >
-                <div className="px-4 py-2 rounded-full bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-gray-200/50 dark:border-slate-800/50 shadow-2xl flex items-center gap-3">
-                    <ChevronDown size={14} className="text-[#6366f1] stroke-[3]" />
-                    <span className="text-[9px] font-black uppercase tracking-[0.25em] text-gray-900 dark:text-slate-100 opacity-70">More contents below</span>
-                </div>
-            </div>
-        </>
-    )
-}

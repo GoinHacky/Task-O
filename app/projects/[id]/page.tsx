@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { Activity, Zap, Users, Target, AlertCircle, Clock, Shield } from 'lucide-react'
 import ProjectActions from '@/components/projects/ProjectActions'
 import RecentActivity from '@/components/projects/RecentActivity'
+import ScrollSuggestion from '@/components/ScrollSuggestion'
 
 export default async function ProjectOverviewPage({
   params
@@ -287,6 +288,7 @@ export default async function ProjectOverviewPage({
           />
         </div>
       </div>
+      <ScrollSuggestion />
     </div>
   )
 }

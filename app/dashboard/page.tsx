@@ -8,7 +8,8 @@ import {
   CalendarCheck2
 } from 'lucide-react'
 import { format } from 'date-fns'
-import { DashboardActions, SectionDropdown, TeamActions, TaskPriorityList, ScrollSuggestion } from '@/components/dashboard/DashboardClient'
+import { DashboardActions, SectionDropdown, TeamActions, TaskPriorityList } from '@/components/dashboard/DashboardClient'
+import ScrollSuggestion from '@/components/ScrollSuggestion'
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient()
@@ -164,7 +165,7 @@ export default async function DashboardPage() {
           <TaskPriorityList
             tasks={tasks || []}
             completedCount={completedCount}
-            upcomingCount={upcomingTasks?.length || 0}
+            pendingCount={upcomingTasks?.length || 0}
             overdueCount={tasks?.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length || 0}
           />
         </section>
