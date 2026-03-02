@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { CheckCircle, Zap, Users, BarChart3, Calendar, ArrowRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import AuthErrorBanner from '@/components/AuthErrorBanner'
 
 export default function LandingPage() {
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({})
@@ -53,6 +54,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
+      <AuthErrorBanner />
 
       {/* ── SHARED 3D ABSTRACT BACKGROUND (fixed, subtle) ── */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
