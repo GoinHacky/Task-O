@@ -34,15 +34,16 @@ export default function ProjectHeader({ projectName, projectDescription }: Proje
     const sectionName = getSectionName()
 
     return (
-        <div className="flex flex-col gap-1.5">
-            <h1 className="text-[32px] font-black text-gray-900 dark:text-slate-50 tracking-tightest leading-none uppercase flex items-center flex-wrap">
-                <span>{projectName}</span>
-                <span className="text-gray-200 dark:text-slate-800 mx-3 font-light">/</span>
-                <span className="text-gray-900 dark:text-slate-50 font-black">{sectionName}</span>
+        <div className="flex flex-col">
+            <h1 className="text-2xl md:text-[32px] font-black tracking-tightest leading-[0.8] uppercase max-w-7xl flex flex-col transition-all duration-300">
+                <span className="text-gray-900 dark:text-slate-50">
+                    {projectName} <span className="text-gray-200 dark:text-slate-800 font-light ml-2">/</span>
+                </span>
+                <span className="text-gray-900 dark:text-slate-50">{sectionName}</span>
             </h1>
-            <div className="flex items-center gap-3">
-                <p className="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-[0.2em] italic">
-                    {projectDescription?.substring(0, 100) || 'STRATEGIC OPERATIONS ARCHITECTURE'}
+            <div className="mt-2 md:mt-3">
+                <p className="text-[9px] md:text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-[0.3em] md:tracking-[0.4em] leading-relaxed max-w-3xl">
+                    {projectDescription || 'STRATEGIC OPERATIONS ARCHITECTURE'}
                 </p>
             </div>
         </div>

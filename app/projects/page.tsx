@@ -73,7 +73,7 @@ export default function ProjectsPage() {
               Row 2 fills only 2 slots — the 3rd slot is naturally empty.
               Every card is h-[148px] fixed so all are identical size.
             */
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {projects.map(p => <ProjectCard key={p.id} project={p} />)}
             </div>
           )}

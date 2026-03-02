@@ -84,9 +84,9 @@ export default async function ProjectOverviewPage({
   const statusIndicator = healthScore > 60 ? 'On Track' : healthScore > 30 ? 'At Risk' : 'Off Track'
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700 pb-32">
+    <div className="space-y-8 md:space-y-12">
       {/* Vital Status Bar */}
-      <div className="flex items-center justify-between border-b border-gray-300 dark:border-slate-800 pb-8 mt-2">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-300 dark:border-slate-800 pb-6 md:pb-8 mt-2">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest">Project Integrity:</span>
@@ -109,81 +109,86 @@ export default async function ProjectOverviewPage({
       </div>
 
       {/* KPI Section */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-slate-900/40 p-8 rounded-[40px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl group hover:border-[#6366f1]/20 transition-all">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <div className="bg-white dark:bg-slate-900/40 p-4 md:p-8 rounded-[30px] md:rounded-[40px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl group hover:border-[#6366f1]/20 transition-all">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Total Tasks</p>
-          <h3 className="text-[32px] font-black text-gray-900 dark:text-slate-50 tracking-tightest leading-none">{totalTasks}</h3>
+          <h3 className="text-2xl md:text-[32px] font-black text-gray-900 dark:text-slate-50 tracking-tightest leading-none">{totalTasks}</h3>
         </div>
 
         <div className="bg-white dark:bg-slate-900/40 p-8 rounded-[40px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl group hover:border-emerald-500/20 transition-all">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Resolved</p>
-          <h3 className="text-[32px] font-black text-emerald-500 tracking-tightest leading-none">{completedTasks}</h3>
+          <h3 className="text-2xl md:text-[32px] font-black text-emerald-500 tracking-tightest leading-none">{completedTasks}</h3>
         </div>
 
         <div className="bg-white dark:bg-slate-900/40 p-8 rounded-[40px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl group hover:border-amber-500/20 transition-all">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Operating</p>
-          <h3 className="text-[32px] font-black text-amber-500 tracking-tightest leading-none">{doingTasks}</h3>
+          <h3 className="text-2xl md:text-[32px] font-black text-amber-500 tracking-tightest leading-none">{doingTasks}</h3>
         </div>
 
         <div className="bg-white dark:bg-slate-900/40 p-8 rounded-[40px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl group hover:border-indigo-500/20 transition-all">
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Queued</p>
-          <h3 className="text-[32px] font-black text-indigo-500 tracking-tightest leading-none">{pendingTasks}</h3>
+          <h3 className="text-2xl md:text-[32px] font-black text-indigo-500 tracking-tightest leading-none">{pendingTasks}</h3>
         </div>
       </div>
 
       {/* Team Progress & Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1 bg-white dark:bg-slate-900/40 p-7 rounded-[50px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl h-fit">
-          <h3 className="text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
-            <Users size={14} className="text-[#6366f1]" /> Team Performance
-          </h3>
-          <div className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-500">
-                <span>FLOW</span>
-                <span>{healthScore}%</span>
+        <div className="lg:col-span-1 flex flex-col gap-8">
+          {/* Team Performance */}
+          <div className="bg-white dark:bg-slate-900/40 p-5 md:p-7 rounded-[35px] md:rounded-[50px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl h-fit">
+            <h3 className="text-[10px] md:text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] mb-5 flex items-center gap-2">
+              <Users size={14} className="text-[#6366f1]" /> Team Performance
+            </h3>
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-gray-500">
+                  <span>FLOW</span>
+                  <span>{healthScore}%</span>
+                </div>
+                <div className="w-full h-2 bg-gray-50 dark:bg-slate-800 rounded-full overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-[#6366f1] to-purple-500 h-full transition-all duration-1000"
+                    style={{ width: `${healthScore}%` }}
+                  />
+                </div>
               </div>
-              <div className="w-full h-2 bg-gray-50 dark:bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-[#6366f1] to-purple-500 h-full transition-all duration-1000"
-                  style={{ width: `${healthScore}%` }}
-                />
-              </div>
+            </div>
+          </div>
+
+          {/* Project Timeline */}
+          <div className="bg-white dark:bg-slate-900/40 p-7 md:p-10 rounded-[35px] md:rounded-[50px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl h-fit">
+            <h3 className="text-[10px] md:text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] mb-8 md:mb-10 flex items-center gap-2">
+              <Clock size={14} className="text-[#6366f1]" /> Project Timeline
+            </h3>
+            <div className="space-y-8 relative">
+              <div className="absolute left-[7px] top-2 bottom-2 w-px bg-gray-100 dark:bg-slate-800" />
+              {[
+                { label: 'Venue Security Sweep', status: 'completed', date: 'Feb 15' },
+                { label: 'Logistics Deployment', status: 'active', date: 'Feb 20' },
+                { label: 'Media Briefing', status: 'pending', date: 'Mar 01' },
+                { label: 'Main Event Execution', status: 'pending', date: 'Mar 12' }
+              ].map((m, i) => (
+                <div key={i} className="flex gap-4 relative z-10">
+                  <div className={`w-4 h-4 rounded-full border-4 border-white dark:border-slate-950 ${m.status === 'completed' ? 'bg-emerald-500' : m.status === 'active' ? 'bg-[#6366f1] animate-pulse' : 'bg-gray-200'}`} />
+                  <div className="flex-1 -mt-1">
+                    <p className="text-[11px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-tight">{m.label}</p>
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">{m.date} - {m.status}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900/40 p-10 rounded-[50px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl">
-          <div className="flex items-center justify-between mb-10">
-            <h3 className="text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] flex items-center gap-2">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900/40 p-5 md:p-7 rounded-[35px] md:rounded-[50px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl h-fit">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-[10px] md:text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] flex items-center gap-2">
               <Activity size={14} className="text-[#6366f1]" /> Recent Activity
             </h3>
-            <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest italic">Live Feed</span>
+            <span className="text-[7px] md:text-[8px] font-black text-gray-400 uppercase tracking-widest italic">Live Feed</span>
           </div>
-          <RecentActivity activities={activities || []} />
-        </div>
-
-        {/* Milestone Timeline (New Premium Widget) */}
-        <div className="lg:col-span-1 bg-white dark:bg-slate-900/40 p-10 rounded-[50px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl">
-          <h3 className="text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] mb-10 flex items-center gap-2">
-            <Clock size={14} className="text-[#6366f1]" /> Project Timeline
-          </h3>
-          <div className="space-y-8 relative">
-            <div className="absolute left-[7px] top-2 bottom-2 w-px bg-gray-100 dark:bg-slate-800" />
-            {[
-              { label: 'Venue Security Sweep', status: 'completed', date: 'Feb 15' },
-              { label: 'Logistics Deployment', status: 'active', date: 'Feb 20' },
-              { label: 'Media Briefing', status: 'pending', date: 'Mar 01' },
-              { label: 'Main Event Execution', status: 'pending', date: 'Mar 12' }
-            ].map((m, i) => (
-              <div key={i} className="flex gap-4 relative z-10">
-                <div className={`w-4 h-4 rounded-full border-4 border-white dark:border-slate-950 ${m.status === 'completed' ? 'bg-emerald-500' : m.status === 'active' ? 'bg-[#6366f1] animate-pulse' : 'bg-gray-200'}`} />
-                <div className="flex-1 -mt-1">
-                  <p className="text-[11px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-tight">{m.label}</p>
-                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">{m.date} - {m.status}</p>
-                </div>
-              </div>
-            ))}
+          <div className="max-h-[360px] overflow-y-auto pr-4 scrollbar-hide">
+            <RecentActivity activities={activities || []} />
           </div>
         </div>
       </div>
@@ -195,7 +200,7 @@ export default async function ProjectOverviewPage({
             <h3 className="text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
               <Shield size={14} className="text-[#6366f1]" /> Sector Readiness status
             </h3>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
               {[
                 { label: 'Logan Sector', progress: 85, status: 'Secured' },
                 { label: 'Hub Sector', progress: 42, status: 'Infiltrated' },
@@ -225,11 +230,11 @@ export default async function ProjectOverviewPage({
               <div className="flex justify-between items-end">
                 <div>
                   <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2">Total Mission Fund</p>
-                  <h4 className="text-[32px] font-black tracking-tightest leading-none text-indigo-400">$1.2M</h4>
+                  <h4 className="text-2xl md:text-[32px] font-black tracking-tightest leading-none text-indigo-400">$1.2M</h4>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-2">Deployed</p>
-                  <h4 className="text-[20px] font-black tracking-tightest leading-none text-white">$842K</h4>
+                  <h4 className="text-lg md:text-[20px] font-black tracking-tightest leading-none text-white">$842K</h4>
                 </div>
               </div>
               <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
@@ -252,15 +257,17 @@ export default async function ProjectOverviewPage({
 
       {/* Insights & Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-[#6366f1] p-12 rounded-[50px] shadow-xl shadow-indigo-600/20 text-white flex flex-col justify-between">
+        <div className="bg-[#6366f1] p-7 rounded-[50px] shadow-xl shadow-indigo-600/20 text-white flex flex-col justify-between min-h-[250px]">
           <div>
-            <h3 className="text-[12px] font-black text-white/60 uppercase tracking-[0.2em] mb-6">Project Progress</h3>
+            <h3 className="text-[12px] font-black text-white/60 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+              <Activity size={14} className="text-white/80" /> Project Progress
+            </h3>
             <p className="text-[20px] font-black uppercase tracking-tightest leading-tight">
               Progress is <span className="text-white/40">{healthScore}%</span> relative to targets.
               {overdueTasks > 0 ? ` Immediate intervention required for ${overdueTasks} overdue tasks.` : ' Deployment status remains optimal.'}
             </p>
           </div>
-          <div className="mt-8 flex items-center gap-4 border-t border-white/10 pt-8">
+          <div className="mt-8 flex items-center gap-4 border-t border-white/10 pt-6">
             <div className="flex -space-x-2">
               {[1, 2, 3, 4].map(i => (
                 <div key={i} className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-[10px] font-black">U</div>
@@ -270,8 +277,8 @@ export default async function ProjectOverviewPage({
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900/40 p-10 rounded-[40px] border border-gray-300 dark:border-slate-800 shadow-sm">
-          <h3 className="text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] mb-8 text-center flex items-center justify-center gap-2">
+        <div className="bg-white dark:bg-slate-900/40 p-7 rounded-[50px] border border-gray-300 dark:border-slate-800 shadow-sm backdrop-blur-xl">
+          <h3 className="text-[12px] font-black text-gray-900 dark:text-slate-50 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
             <Zap size={14} className="text-amber-500" /> Operational Control
           </h3>
           <ProjectActions
