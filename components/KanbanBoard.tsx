@@ -52,9 +52,9 @@ interface KanbanBoardProps {
 }
 
 const COLUMNS = [
-  { id: 'pending', title: 'To Do' },
-  { id: 'in_progress', title: 'In Progress' },
-  { id: 'completed', title: 'Done' },
+  { id: 'pending', title: 'To Do', color: 'bg-[#0096C7]' },
+  { id: 'in_progress', title: 'In Progress', color: 'bg-[#CF7929]' },
+  { id: 'completed', title: 'Done', color: 'bg-[#1E9E74]' },
 ]
 
 export default function KanbanBoard({ projectId, teamId, userId, tasks: initialTasks, canManage = false }: KanbanBoardProps) {
@@ -207,17 +207,17 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {COLUMNS.map((column) => {
           const columnTasks = tasks.filter((t) => t.status === column.id)
 
           return (
             <div key={column.id} className="flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-black text-gray-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+              <div className={`mb-6 p-4 ${column.color} rounded-[20px] shadow-sm flex items-center justify-center gap-3`}>
+                <h3 className="text-[14px] font-black text-white uppercase tracking-[0.1em]">
                   {column.title}
                 </h3>
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-slate-800 rounded-lg text-[10px] font-black text-gray-500">
+                <span className="flex items-center justify-center w-6 h-6 bg-white/20 rounded-full text-[11px] font-bold text-white shrink-0">
                   {columnTasks.length}
                 </span>
               </div>

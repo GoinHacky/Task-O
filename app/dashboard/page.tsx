@@ -8,7 +8,7 @@ import {
   CalendarCheck2
 } from 'lucide-react'
 import { format } from 'date-fns'
-import { DashboardActions, SectionDropdown, TeamActions, TaskPriorityList } from '@/components/dashboard/DashboardClient'
+import { DashboardActions, SectionDropdown, TeamActions, TaskPriorityList, ScrollSuggestion } from '@/components/dashboard/DashboardClient'
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient()
@@ -242,6 +242,8 @@ export default async function DashboardPage() {
           )}
         </div>
       </section>
+
+      <ScrollSuggestion />
     </div>
   )
 }

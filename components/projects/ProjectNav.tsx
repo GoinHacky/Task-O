@@ -44,10 +44,10 @@ export default function ProjectNav({ projectId, role }: ProjectNavProps) {
                         href={tab.href}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300 ${isActive
                             ? 'bg-white dark:bg-slate-800 text-[#6366f1] shadow-sm ring-1 ring-gray-300 dark:ring-slate-700'
-                            : 'text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300'
+                            : 'text-gray-400 dark:text-slate-400 hover:text-gray-600 dark:hover:text-slate-200'
                             }`}
                     >
-                        <Icon size={14} className={isActive ? 'text-[#6366f1]' : 'text-gray-400 dark:text-slate-500'} />
+                        <Icon size={14} className={isActive ? 'text-[#6366f1]' : 'text-gray-400 dark:text-slate-400'} />
                         <span className="hidden sm:inline">{tab.label}</span>
                     </Link>
                 )

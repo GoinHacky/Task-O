@@ -83,7 +83,7 @@ export default function ProjectKanbanClient({ projectId }: ProjectKanbanClientPr
     }, [selectedTeam])
 
     return (
-        <div className="space-y-10 pb-32">
+        <div className="space-y-8">
             {/* Action Bar */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-1">
                 <div className="flex items-center gap-4">
@@ -92,7 +92,7 @@ export default function ProjectKanbanClient({ projectId }: ProjectKanbanClientPr
                         onChange={(e) => setSelectedTeam(e.target.value || undefined)}
                         className="pl-4 pr-10 py-2.5 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 dark:text-slate-300 outline-none focus:ring-2 focus:ring-[#6366f1]/10 transition-all appearance-none cursor-pointer"
                     >
-                        <option value="">All Regions</option>
+                        <option value="">All Teams</option>
                         {teams.map((team: Team) => (
                             <option key={team.id} value={team.id}>{team.name}</option>
                         ))}
