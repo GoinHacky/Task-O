@@ -142,7 +142,6 @@ export default function InviteMemberModal({ isOpen, onClose, projectId, initialT
                                 className="w-full px-5 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-bold text-gray-900 dark:text-slate-100 appearance-none"
                             >
                                 <option value="admin">Admin</option>
-                                <option value="tech_lead">Tech Lead</option>
                                 <option value="member">Member</option>
                                 <option value="viewer">Viewer</option>
                             </select>
