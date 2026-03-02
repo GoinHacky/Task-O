@@ -77,7 +77,7 @@ export default function DashboardLayout({
       >
 
         {/* ── FLOATING HEADER ── */}
-        <div className="sticky top-0 z-40 px-3 sm:px-4 lg:px-8 pt-3 sm:pt-4 lg:pt-6 pb-3 sm:pb-4 lg:pb-5">
+        <div className="sticky top-0 z-40 px-3 sm:px-4 lg:px-8 pt-3 sm:pt-4 lg:pt-6 pb-2">
           <header className="max-w-[1400px] mx-auto w-full">
             <div
               className="
@@ -205,7 +205,7 @@ export default function DashboardLayout({
             sm:      px-4  py-4
             lg:      px-8  py-8   (desktop breathing room)
         */}
-        <main className="flex-1 p-3 sm:p-4 lg:p-8 overflow-y-auto">
+        <main className="flex-1 px-3 sm:px-4 lg:px-8 pb-3 sm:pb-4 lg:pb-8 pt-2 sm:pt-4 lg:pt-6 overflow-y-auto">
           <div className="max-w-[1400px] mx-auto">
             {children}
           </div>
