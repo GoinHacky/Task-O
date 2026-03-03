@@ -20,9 +20,9 @@ export default function HelpSupportClient({ user }: HelpSupportClientProps) {
 
     return (
         <DashboardLayout>
-            <div className="max-w-5xl mx-auto py-8">
-                <div className="bg-white dark:bg-slate-900 rounded-[40px] border border-gray-200 dark:border-slate-800 shadow-xl shadow-gray-100/50 dark:shadow-none min-h-[600px] overflow-hidden flex flex-col">
-                    <div className="p-8 md:p-12 flex-1 animate-in fade-in slide-in-from-right-4 duration-500 h-full flex flex-col">
+            <div className="max-w-4xl mx-auto">
+                <div className="bg-white dark:bg-slate-900 rounded-[48px] border border-gray-200 dark:border-slate-800 shadow-xl shadow-gray-100/50 dark:shadow-none min-h-[600px] overflow-hidden flex flex-col">
+                    <div className="p-10 md:p-14 flex-1 animate-in fade-in slide-in-from-right-4 duration-500 h-full flex flex-col">
                         <div className="mb-10">
                             <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tightest mb-2">Help & Support</h1>
                             <p className="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em]">We're here to help you succeed</p>

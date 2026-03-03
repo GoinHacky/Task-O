@@ -5,6 +5,7 @@ import { Plus, Bell, CheckCircle2, Layout, Calendar, Clock, AlertCircle, Users, 
 import { useTheme } from 'next-themes'
 import CreateTaskModal from './projects/CreateTaskModal'
 import InviteMemberModal from './InviteMemberModal'
+import CreateTeamModal from './teams/CreateTeamModal'
 import { markAllNotificationsAsRead, clearAllNotifications as clearAllAction } from '@/lib/notifications/actions'
 import { supabase } from '@/lib/supabase/client'
 import { format } from 'date-fns'
@@ -21,6 +22,7 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
     const [isMemberModalOpen, setIsMemberModalOpen] = useState(false)
+    const [isTeamModalOpen, setIsTeamModalOpen] = useState(false)
     const [processingId, setProcessingId] = useState<string | null>(null)
     const router = useRouter()
     const [notifications, setNotifications] = useState<any[]>([])
@@ -293,7 +295,7 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
                         </Link>
                         <button
                             onClick={() => {
-                                setIsMemberModalOpen(true)
+                                setIsTeamModalOpen(true)
                                 setIsCreateOpen(false)
                             }}
                             className="w-full h-11 flex items-center gap-3 px-4 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 transition-all"
@@ -323,6 +325,11 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
             <InviteMemberModal
                 isOpen={isMemberModalOpen}
                 onClose={() => setIsMemberModalOpen(false)}
+            />
+
+            <CreateTeamModal
+                isOpen={isTeamModalOpen}
+                onClose={() => setIsTeamModalOpen(false)}
             />
         </div>
     )

@@ -33,11 +33,11 @@ export default function InviteFriendsClient({ user }: InviteFriendsClientProps) 
 
     return (
         <DashboardLayout>
-            <div className="max-w-5xl mx-auto py-8">
-                <div className="bg-white dark:bg-slate-900 rounded-[40px] border border-gray-200 dark:border-slate-800 shadow-xl shadow-gray-100/50 dark:shadow-none min-h-[600px] overflow-hidden flex flex-col">
+            <div className="max-w-4xl mx-auto">
+                <div className="bg-white dark:bg-slate-900 rounded-[48px] border border-gray-200 dark:border-slate-800 shadow-xl shadow-gray-100/50 dark:shadow-none min-h-[600px] overflow-hidden flex flex-col">
 
                     {message && (
-                        <div className={`p-4 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'} border-b font-bold text-xs flex items-center gap-3 animate-in slide-in-from-top duration-300`}>
+                        <div className={`p-10 py-4 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'} border-b font-bold text-xs flex items-center gap-3 animate-in slide-in-from-top duration-300`}>
                             <div className={`w-6 h-6 rounded-full ${message.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'} text-white flex items-center justify-center shrink-0`}>
                                 {message.type === 'success' ? '✓' : '!'}
                             </div>
@@ -45,7 +45,7 @@ export default function InviteFriendsClient({ user }: InviteFriendsClientProps) 
                         </div>
                     )}
 
-                    <div className="p-8 md:p-12 flex-1 animate-in fade-in slide-in-from-right-4 duration-500">
+                    <div className="p-10 md:p-14 flex-1 animate-in fade-in slide-in-from-right-4 duration-500">
                         <div className="mb-10">
                             <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tightest mb-2">Invite Friends</h1>
                             <p className="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em]">Scale your workflow with more hands</p>
