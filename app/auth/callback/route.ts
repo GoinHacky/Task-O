@@ -9,10 +9,17 @@ export async function GET(request: NextRequest) {
 
     if (code) {
         const cookieStore = cookies()
-        const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+        const supabase = createRouteHandlerClient({ cookies: () => cookieStore }, {
+            supabaseUrl,
+            supabaseKey: supabaseAnonKey,
+        } as any)
         await supabase.auth.exchangeCodeForSession(code)
     }
 
     // URL to redirect to after sign in process completes
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    const next = requestUrl.searchParams.get('next') || '/dashboard'
+    return NextResponse.redirect(new URL(next, request.url))
 }

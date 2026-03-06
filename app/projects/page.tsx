@@ -1,6 +1,6 @@
 'use client'
 
-import { createClientSupabaseClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Plus, FolderKanban, Clock, Layout, ChevronRight } from 'lucide-react'
 import { format } from 'date-fns'
@@ -11,7 +11,6 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const supabase = createClientSupabaseClient()
 
   const fetchProjects = useCallback(async () => {
     setLoading(true)
@@ -24,7 +23,7 @@ export default function ProjectsPage() {
       .order('created_at', { ascending: false })
     setProjects(data || [])
     setLoading(false)
-  }, [supabase])
+  }, [])
 
   useEffect(() => { fetchProjects() }, [fetchProjects])
 

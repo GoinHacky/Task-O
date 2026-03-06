@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Plus, Bell, CheckCircle2, Layout, Calendar, Clock, AlertCircle, Users, Sun, Moon, UserPlus } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import CreateTaskModal from './projects/CreateTaskModal'
 import InviteMemberModal from './InviteMemberModal'
+import CreateTeamModal from './teams/CreateTeamModal'
 import { markAllNotificationsAsRead, clearAllNotifications as clearAllAction } from '@/lib/notifications/actions'
 import { supabase } from '@/lib/supabase/client'
 import { format } from 'date-fns'
@@ -21,6 +22,7 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
     const [isMemberModalOpen, setIsMemberModalOpen] = useState(false)
+    const [isTeamModalOpen, setIsTeamModalOpen] = useState(false)
     const [processingId, setProcessingId] = useState<string | null>(null)
     const router = useRouter()
     const [notifications, setNotifications] = useState<any[]>([])
@@ -48,6 +50,21 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
+    const fetchNotifications = useCallback(async () => {
+        if (!currentUser?.id) return
+        const { data } = await supabase
+            .from('notifications')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false })
+            .limit(10)
+
+        if (data) {
+            setNotifications(data)
+            setUnreadCount(data.filter(n => !n.read).length)
+        }
+    }, [currentUser?.id])
+
     useEffect(() => {
         if (!currentUser?.id) return
         fetchNotifications()
@@ -71,22 +88,7 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
         return () => {
             supabase.removeChannel(channel)
         }
-    }, [currentUser?.id])
-
-    const fetchNotifications = async () => {
-        if (!currentUser?.id) return
-        const { data } = await supabase
-            .from('notifications')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .order('created_at', { ascending: false })
-            .limit(10)
-
-        if (data) {
-            setNotifications(data)
-            setUnreadCount(data.filter(n => !n.read).length)
-        }
-    }
+    }, [currentUser?.id, fetchNotifications])
 
     const markAllAsRead = async () => {
         if (!currentUser?.id) return
@@ -293,7 +295,7 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
                         </Link>
                         <button
                             onClick={() => {
-                                setIsMemberModalOpen(true)
+                                setIsTeamModalOpen(true)
                                 setIsCreateOpen(false)
                             }}
                             className="w-full h-11 flex items-center gap-3 px-4 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 transition-all"
@@ -323,6 +325,11 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
             <InviteMemberModal
                 isOpen={isMemberModalOpen}
                 onClose={() => setIsMemberModalOpen(false)}
+            />
+
+            <CreateTeamModal
+                isOpen={isTeamModalOpen}
+                onClose={() => setIsTeamModalOpen(false)}
             />
         </div>
     )

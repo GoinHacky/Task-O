@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { CheckCircle2, AlertCircle, Trash2, Calendar, User, Clock, Tag, ChevronDown } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
@@ -39,21 +39,7 @@ export default function EditTaskModal({ isOpen, onClose, task, onUpdate }: EditT
     const [deleting, setDeleting] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    useEffect(() => {
-        if (isOpen) {
-            setTitle(task.title)
-            setDescription(task.description || '')
-            setStatus(task.status)
-            setPriority(task.priority)
-            setDueDate(task.due_date || '')
-            setDueTime(task.due_time || '')
-            setTaskTag(task.task_tag || '')
-            setAssignedTo(task.assigned_to || '')
-            fetchMembers()
-        }
-    }, [isOpen, task])
-
-    const fetchMembers = async () => {
+    const fetchMembers = useCallback(async () => {
         const { data } = await supabase
             .from('project_members')
             .select(`
@@ -67,7 +53,21 @@ export default function EditTaskModal({ isOpen, onClose, task, onUpdate }: EditT
 
         const memberList = data?.map((m: any) => m.users).filter(Boolean) || []
         setMembers(memberList)
-    }
+    }, [task.project_id])
+
+    useEffect(() => {
+        if (isOpen) {
+            setTitle(task.title)
+            setDescription(task.description || '')
+            setStatus(task.status)
+            setPriority(task.priority)
+            setDueDate(task.due_date || '')
+            setDueTime(task.due_time || '')
+            setTaskTag(task.task_tag || '')
+            setAssignedTo(task.assigned_to || '')
+            fetchMembers()
+        }
+    }, [isOpen, task, fetchMembers])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()

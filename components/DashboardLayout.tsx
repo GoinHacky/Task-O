@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { createClientSupabaseClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/client'
 import Sidebar from '@/components/Sidebar'
 import HeaderTitle from '@/components/HeaderTitle'
 import HeaderActions from '@/components/HeaderActions'
@@ -18,7 +18,6 @@ export default function DashboardLayout({
   const [user, setUser] = React.useState<any>(null)
   const [userProfile, setUserProfile] = React.useState<any>(null)
   const { isCollapsed, setIsMobileOpen } = useSidebar()
-  const supabase = createClientSupabaseClient()
 
   React.useEffect(() => {
     async function getUser() {
@@ -37,7 +36,7 @@ export default function DashboardLayout({
       setUserProfile(profile)
     }
     getUser()
-  }, [supabase, router])
+  }, [router])
 
   if (!user) {
     return (

@@ -77,7 +77,7 @@ export default function NewTaskPage() {
     }
 
     fetchProjectMembers()
-  }, [selectedProjectId])
+  }, [selectedProjectId, assignedTo])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

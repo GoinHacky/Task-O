@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import {
     Calendar, CheckCircle2, Clock, Circle, AlertCircle, User, Trash2,
@@ -39,24 +39,16 @@ export default function TaskDetailDrawer({ task, projectId, onClose, canManage =
 
     const scrollRef = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-        fetchActivities()
-        fetchComments()
-        fetchProjectMembers()
-        fetchUserRole()
-        if (task.team_id) fetchTeamInfo()
-    }, [task.id])
-
-    const fetchTeamInfo = async () => {
+    const fetchTeamInfo = useCallback(async () => {
         const { data } = await supabase
             .from('teams')
             .select('name')
             .eq('id', task.team_id)
             .single()
         setTeamInfo(data)
-    }
+    }, [task.team_id])
 
-    const fetchUserRole = async () => {
+    const fetchUserRole = useCallback(async () => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
         setCurrentUserId(user.id)
@@ -76,33 +68,41 @@ export default function TaskDetailDrawer({ task, projectId, onClose, canManage =
             .eq('user_id', user.id)
 
         setUserTeams(teams?.map(t => t.team_id) || [])
-    }
+    }, [projectId])
 
-    const fetchActivities = async () => {
+    const fetchActivities = useCallback(async () => {
         const { data } = await supabase
             .from('activities')
             .select('*, user:user_id(full_name, avatar_url)')
             .eq('task_id', task.id)
             .order('created_at', { ascending: false })
         setActivities(data || [])
-    }
+    }, [task.id])
 
-    const fetchComments = async () => {
+    const fetchComments = useCallback(async () => {
         const { data } = await supabase
             .from('comments')
             .select('*, user:user_id(id, full_name, avatar_url)')
             .eq('task_id', task.id)
             .order('created_at', { ascending: true })
         setComments(data || [])
-    }
+    }, [task.id])
 
-    const fetchProjectMembers = async () => {
+    const fetchProjectMembers = useCallback(async () => {
         const { data } = await supabase
             .from('project_members')
             .select('users:user_id(id, full_name, email)')
             .eq('project_id', projectId)
         setProjectMembers(data?.map((m: any) => m.users) || [])
-    }
+    }, [projectId])
+
+    useEffect(() => {
+        fetchActivities()
+        fetchComments()
+        fetchProjectMembers()
+        fetchUserRole()
+        if (task.team_id) fetchTeamInfo()
+    }, [task.id, task.team_id, fetchActivities, fetchComments, fetchProjectMembers, fetchUserRole, fetchTeamInfo])
 
     const handleUpdate = async (updates: any) => {
         if (userRole === 'viewer') return

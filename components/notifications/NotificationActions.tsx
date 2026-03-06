@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Check, Trash2 } from 'lucide-react'
 import { markNotificationAsRead, deleteNotification } from '@/lib/notifications/actions'
+import ConfirmationModal from '../ui/ConfirmationModal'
 
 interface NotificationActionsProps {
     notificationId: string
@@ -11,6 +12,7 @@ interface NotificationActionsProps {
 
 export default function NotificationActions({ notificationId, isRead }: NotificationActionsProps) {
     const [loading, setLoading] = useState(false)
+    const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
 
     const handleMarkAsRead = async () => {
         setLoading(true)
@@ -24,8 +26,6 @@ export default function NotificationActions({ notificationId, isRead }: Notifica
     }
 
     const handleDelete = async () => {
-        if (!confirm('Are you sure you want to delete this notification?')) return
-
         setLoading(true)
         try {
             await deleteNotification(notificationId)
@@ -50,12 +50,22 @@ export default function NotificationActions({ notificationId, isRead }: Notifica
             )}
             <button
                 disabled={loading}
-                onClick={handleDelete}
+                onClick={() => setIsConfirmingDelete(true)}
                 className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all disabled:opacity-50"
                 title="Delete notification"
             >
                 <Trash2 size={18} />
             </button>
+
+            <ConfirmationModal
+                isOpen={isConfirmingDelete}
+                onClose={() => setIsConfirmingDelete(false)}
+                onConfirm={handleDelete}
+                title="Dispose Notification"
+                message="Are you sure you want to remove this update from your feed? This action cannot be undone."
+                confirmLabel="Delete"
+                type="danger"
+            />
         </div>
     )
 }

@@ -5,10 +5,11 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import { format } from 'date-fns'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import UpdateRoleModal from './UpdateRoleModal'
+import ConfirmationModal from '../ui/ConfirmationModal'
 
 interface MemberDetailDrawerProps {
     member: any
@@ -31,14 +32,12 @@ export default function MemberDetailDrawer({
     const [tasks, setTasks] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false)
+    const [isConfirmingRemove, setIsConfirmingRemove] = useState(false)
+    const [error, setError] = useState<string | null>(null)
     const isSelf = member.user.id === currentUserId
     const isOwner = member.user.id === ownerId
 
-    useEffect(() => {
-        fetchMemberTasks()
-    }, [member.user.id, projectId])
-
-    const fetchMemberTasks = async () => {
+    const fetchMemberTasks = useCallback(async () => {
         setLoading(true)
         const { data } = await supabase
             .from('tasks')
@@ -49,7 +48,11 @@ export default function MemberDetailDrawer({
 
         setTasks(data || [])
         setLoading(false)
-    }
+    }, [member.user.id, projectId])
+
+    useEffect(() => {
+        fetchMemberTasks()
+    }, [fetchMemberTasks])
 
     const activeCount = tasks.filter(t => t.status === 'in_progress').length
     const completedCount = tasks.filter(t => t.status === 'completed').length
@@ -60,8 +63,6 @@ export default function MemberDetailDrawer({
     }).length
 
     const handleRemove = async () => {
-        if (!confirm(`Are you sure you want to remove ${member.user.full_name || 'this member'}?`)) return
-
         try {
             const { error } = await supabase
                 .from('project_members')
@@ -69,10 +70,12 @@ export default function MemberDetailDrawer({
                 .eq('id', member.id)
 
             if (error) throw error
+            setIsConfirmingRemove(false)
             onClose()
             router.refresh()
-        } catch (error: any) {
-            alert(error.message)
+        } catch (err: any) {
+            setError(err.message)
+            setIsConfirmingRemove(false)
         }
     }
 
@@ -218,14 +221,34 @@ export default function MemberDetailDrawer({
             {isAdmin && !isOwner && !isSelf && (
                 <div className="pt-6 border-t border-gray-50 dark:border-slate-800/50">
                     <button
-                        onClick={handleRemove}
+                        onClick={() => setIsConfirmingRemove(true)}
                         className="w-full py-4 bg-red-50/50 dark:bg-red-500/5 hover:bg-red-50 dark:hover:bg-red-500/10 text-[10px] font-black text-red-500 uppercase tracking-widest rounded-2xl transition-all border border-transparent flex items-center justify-center gap-2 group"
                     >
                         <Trash2 size={14} className="group-hover:scale-110 transition-transform" />
-                        Remove
+                        Remove Member
                     </button>
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={isConfirmingRemove}
+                onClose={() => setIsConfirmingRemove(false)}
+                onConfirm={handleRemove}
+                title="Personnel Termination"
+                message={`Are you sure you want to remove ${member.user.full_name || 'this member'}? This will revoke all their access to the personnel hub and active tasks.`}
+                confirmLabel="Remove Member"
+                type="danger"
+            />
+
+            <ConfirmationModal
+                isOpen={!!error}
+                onClose={() => setError(null)}
+                onConfirm={() => setError(null)}
+                title="System Alert"
+                message={error || 'An unknown error occurred'}
+                confirmLabel="Acknowledge"
+                type="warning"
+            />
 
             <UpdateRoleModal
                 isOpen={isRoleModalOpen}

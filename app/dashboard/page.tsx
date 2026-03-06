@@ -41,9 +41,9 @@ export default async function DashboardPage() {
     .order('created_at', { ascending: false })
 
   const { count: projectCount } = await supabase
-    .from('projects')
+    .from('project_members')
     .select('*', { count: 'exact', head: true })
-    .eq('owner_id', user.id)
+    .eq('user_id', user.id)
 
   const { data: teams } = await supabase
     .from('team_members')

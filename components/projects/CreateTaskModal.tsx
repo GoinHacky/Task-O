@@ -1,9 +1,11 @@
+'use client'
 import {
     ClipboardList, CheckCircle2, AlertCircle, Layout, Hash, Users, FileText,
     Layers, Tag, Calendar, Clock, Paperclip, ChevronDown, X, Bold, Italic,
-    List, Link as LinkIcon, Type, Shield, Flag
+    List, Link as LinkIcon, Type, Shield, Flag, Plus
 } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createTask } from '@/lib/tasks/actions'
 import Modal from '@/components/ui/Modal'
 import { supabase } from '@/lib/supabase/client'
@@ -26,14 +28,10 @@ export default function CreateTaskModal({ isOpen, onClose, initialProjectId, ini
     const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [isFetchingInitial, setIsFetchingInitial] = useState(true)
 
-    useEffect(() => {
-        if (isOpen) {
-            fetchContext()
-        }
-    }, [isOpen])
-
-    const fetchContext = async () => {
+    const fetchContext = useCallback(async () => {
+        setIsFetchingInitial(true)
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
@@ -41,12 +39,12 @@ export default function CreateTaskModal({ isOpen, onClose, initialProjectId, ini
         const { data: projectData } = await supabase
             .from('project_members')
             .select(`
-                role,
-                projects (
-                    id,
-                    name
-                )
-            `)
+role,
+    projects(
+        id,
+        name
+    )
+        `)
             .eq('user_id', user.id)
 
         const projectList = projectData?.map((p: any) => p.projects).filter(Boolean) || []
@@ -66,65 +64,72 @@ export default function CreateTaskModal({ isOpen, onClose, initialProjectId, ini
             .eq('user_id', user.id)
 
         setUserTeams(teamData?.map(t => t.team_id) || [])
-    }
+        setIsFetchingInitial(false)
+    }, [initialProjectId, projectId])
 
     useEffect(() => {
-        const fetchData = async () => {
-            if (!projectId) {
-                setMembers([])
-                setTeams([])
-                return
-            }
+        if (isOpen) {
+            fetchContext()
+        }
+    }, [isOpen, fetchContext])
 
-            // Fetch Teams for project
-            const { data: teamsData } = await supabase
-                .from('teams')
-                .select('*')
-                .eq('project_id', projectId)
-
-            setTeams(teamsData || [])
-
-            // Fetch Members
-            let query = supabase
-                .from('project_members')
-                .select(`
-                    users:user_id (
-                        id,
-                        full_name,
-                        email,
-                        avatar_url
-                    )
-                `)
-                .eq('project_id', projectId)
-
-            // Tech Lead filtering logic
-            if (userRole === 'tech_lead' && selectedTeamId) {
-                // Fetch team members for the selected team
-                const { data: teamMembers } = await supabase
-                    .from('team_members')
-                    .select('user_id')
-                    .eq('team_id', selectedTeamId)
-
-                const teamMemberIds = teamMembers?.map(tm => tm.user_id) || []
-                query = query.in('user_id', teamMemberIds)
-            }
-
-            const { data: memberData } = await query
-
-            const memberList = memberData?.map((m: any) => m.users).filter(Boolean) || []
-            setMembers(memberList)
-
-            // Auto-assign for member role
-            if (userRole === 'member') {
-                const { data: { user } } = await supabase.auth.getUser()
-                if (user) setAssignedMemberIds([user.id])
-            }
+    const fetchData = useCallback(async () => {
+        if (!projectId) {
+            setMembers([])
+            setTeams([])
+            return
         }
 
+        // Fetch Teams for project
+        const { data: teamsData } = await supabase
+            .from('teams')
+            .select('*')
+            .eq('project_id', projectId)
+
+        setTeams(teamsData || [])
+
+        // Fetch Members
+        let query = supabase
+            .from('project_members')
+            .select(`
+users: user_id(
+    id,
+    full_name,
+    email,
+    avatar_url
+)
+    `)
+            .eq('project_id', projectId)
+
+        // Tech Lead filtering logic
+        if (userRole === 'tech_lead' && selectedTeamId) {
+            // Fetch team members for the selected team
+            const { data: teamMembers } = await supabase
+                .from('team_members')
+                .select('user_id')
+                .eq('team_id', selectedTeamId)
+
+            const teamMemberIds = teamMembers?.map(tm => tm.user_id) || []
+            query = query.in('user_id', teamMemberIds)
+        }
+
+        const { data: memberData } = await query
+
+        const memberList = memberData?.map((m: any) => m.users).filter(Boolean) || []
+        setMembers(memberList)
+
+        // Auto-assign for member role
+        if (userRole === 'member') {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) setAssignedMemberIds([user.id])
+        }
+    }, [projectId, userRole, selectedTeamId])
+
+    useEffect(() => {
         if (isOpen) {
             fetchData()
         }
-    }, [projectId, selectedTeamId, userRole, isOpen])
+    }, [isOpen, fetchData])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -178,6 +183,8 @@ export default function CreateTaskModal({ isOpen, onClose, initialProjectId, ini
         )
     }
 
+    const noProjects = !isFetchingInitial && projects.length === 0
+
     return (
         <Modal
             isOpen={isOpen}
@@ -193,13 +200,15 @@ export default function CreateTaskModal({ isOpen, onClose, initialProjectId, ini
                     >
                         Cancel
                     </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={loading || !title || !projectId}
-                        className="flex-1 py-4 text-[10px] font-black text-[#6366f1] uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-slate-900 transition-all disabled:opacity-50"
-                    >
-                        {loading ? 'Executing...' : 'Create Task'}
-                    </button>
+                    {!noProjects && (
+                        <button
+                            onClick={handleSubmit}
+                            disabled={loading || !title || !projectId}
+                            className="flex-1 py-4 text-[10px] font-black text-[#6366f1] uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-slate-900 transition-all disabled:opacity-50"
+                        >
+                            {loading ? 'Executing...' : 'Create Task'}
+                        </button>
+                    )}
                 </>
             }
         >
@@ -212,6 +221,23 @@ export default function CreateTaskModal({ isOpen, onClose, initialProjectId, ini
                     <p className="mt-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                         Task created successfully
                     </p>
+                </div>
+            ) : noProjects ? (
+                <div className="py-12 px-6 text-center animate-in fade-in zoom-in duration-500 bg-gray-50/50 dark:bg-slate-900/50 rounded-[32px] border border-dashed border-gray-200 dark:border-slate-800">
+                    <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-indigo-500/5 transition-transform hover:scale-110 duration-500">
+                        <Layout size={32} className="text-gray-300" />
+                    </div>
+                    <h3 className="text-lg font-black text-gray-900 dark:text-white uppercase tracking-tight mb-2">No Projects Found</h3>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-8 leading-relaxed">
+                        Missions require a project context. Create one first to begin tasking.
+                    </p>
+                    <Link
+                        href="/projects"
+                        onClick={onClose}
+                        className="inline-flex items-center gap-2 px-8 py-3 bg-[#6366f1] text-white text-[10px] font-black rounded-xl hover:bg-[#5558e3] transition-all shadow-lg shadow-indigo-500/20 active:scale-95 uppercase tracking-[0.2em]"
+                    >
+                        <Plus size={14} strokeWidth={2.5} /> Create My First Project
+                    </Link>
                 </div>
             ) : (
                 <div className="space-y-2">

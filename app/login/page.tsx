@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase/client'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import AuthErrorBanner from '@/components/AuthErrorBanner'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -60,6 +61,7 @@ export default function LoginPage() {
 
   return (
     <div className="h-screen flex items-center justify-center bg-white px-4 overflow-hidden relative">
+      <AuthErrorBanner />
 
       {/* ── 3D ABSTRACT BACKGROUND ── */}
 

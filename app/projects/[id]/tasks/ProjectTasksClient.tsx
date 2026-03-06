@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Filter, Plus, ChevronDown, Layout, List } from 'lucide-react'
+import { Search, Filter, Plus, ChevronDown, Layout, List, Kanban, Calendar as CalendarIcon, Table as TableIcon } from 'lucide-react'
 import TaskTimeline from '@/components/projects/TaskTimeline'
 import TaskTable from '@/components/projects/TaskTable'
 import TaskDetailDrawer from '@/components/projects/TaskDetailDrawer'
@@ -9,6 +9,8 @@ import { supabase } from '@/lib/supabase/client'
 import Modal from '@/components/ui/Modal'
 import CreateTaskModal from '@/components/projects/CreateTaskModal'
 import EditTaskModal from '@/components/projects/EditTaskModal'
+import KanbanBoard from '@/components/KanbanBoard'
+import CalendarClient from '@/components/CalendarClient'
 
 interface ProjectTasksClientProps {
     projectId: string
@@ -22,7 +24,7 @@ export default function ProjectTasksClient({ projectId, tasks, canManage }: Proj
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState('all')
     const [priorityFilter, setPriorityFilter] = useState('all')
-    const [viewMode, setViewMode] = useState<'timeline' | 'table'>('table')
+    const [viewMode, setViewMode] = useState<'board' | 'list' | 'timeline' | 'calendar'>('board')
 
     const filteredTasks = tasks.filter(task => {
         const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -52,16 +54,32 @@ export default function ProjectTasksClient({ projectId, tasks, canManage }: Proj
                 <div className="flex items-center gap-4">
                     <div className="flex items-center bg-gray-50/50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-xl p-1">
                         <button
-                            onClick={() => setViewMode('table')}
-                            className={`p-1.5 rounded-lg transition-all ${viewMode === 'table' ? 'bg-white dark:bg-slate-800 text-[#6366f1] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                            onClick={() => setViewMode('board')}
+                            className={`p-1.5 rounded-lg transition-all ${viewMode === 'board' ? 'bg-white dark:bg-slate-800 text-[#6366f1] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                            title="Board View"
                         >
-                            <Layout size={14} />
+                            <Kanban size={14} />
+                        </button>
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white dark:bg-slate-800 text-[#6366f1] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                            title="List View"
+                        >
+                            <TableIcon size={14} />
                         </button>
                         <button
                             onClick={() => setViewMode('timeline')}
                             className={`p-1.5 rounded-lg transition-all ${viewMode === 'timeline' ? 'bg-white dark:bg-slate-800 text-[#6366f1] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                            title="Timeline View"
                         >
                             <List size={14} />
+                        </button>
+                        <button
+                            onClick={() => setViewMode('calendar')}
+                            className={`p-1.5 rounded-lg transition-all ${viewMode === 'calendar' ? 'bg-white dark:bg-slate-800 text-[#6366f1] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                            title="Calendar View"
+                        >
+                            <CalendarIcon size={14} />
                         </button>
                     </div>
 
@@ -91,15 +109,26 @@ export default function ProjectTasksClient({ projectId, tasks, canManage }: Proj
             </div>
 
             <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                {viewMode === 'table' ? (
+                {viewMode === 'board' ? (
+                    <KanbanBoard
+                        projectId={projectId}
+                        tasks={filteredTasks}
+                        canManage={canManage}
+                    />
+                ) : viewMode === 'list' ? (
                     <TaskTable
                         tasks={filteredTasks}
                         onTaskClick={(task) => setSelectedTask(task)}
                     />
-                ) : (
+                ) : viewMode === 'timeline' ? (
                     <TaskTimeline
                         tasks={filteredTasks}
                         onTaskClick={(task) => setSelectedTask(task)}
+                    />
+                ) : (
+                    <CalendarClient
+                        projectId={projectId}
+                        userId={""} // Pass empty as it will use the context inside
                     />
                 )}
             </div>

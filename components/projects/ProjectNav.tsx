@@ -9,7 +9,8 @@ import {
     Users,
     UserPlus,
     BarChart3,
-    Settings
+    Settings,
+    Calendar
 } from 'lucide-react'
 
 interface ProjectNavProps {
@@ -22,7 +23,6 @@ export default function ProjectNav({ projectId, role }: ProjectNavProps) {
 
     const tabs = [
         { href: `/projects/${projectId}`, icon: Home, label: 'Overview' },
-        { href: `/projects/${projectId}/kanban`, icon: FolderKanban, label: 'Boards' },
         { href: `/projects/${projectId}/tasks`, icon: ClipboardList, label: 'Tasks' },
         { href: `/projects/${projectId}/teams`, icon: Users, label: 'Teams' },
         { href: `/projects/${projectId}/members`, icon: UserPlus, label: 'Members', roles: ['admin', 'manager', 'owner'] },

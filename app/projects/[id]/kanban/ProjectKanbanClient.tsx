@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import KanbanBoard from '@/components/KanbanBoard'
 import EditTaskModal from '@/components/projects/EditTaskModal'
@@ -25,6 +25,30 @@ export default function ProjectKanbanClient({ projectId }: ProjectKanbanClientPr
     const [loading, setLoading] = useState(true)
     const [selectedTask, setSelectedTask] = useState<any | null>(null)
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+
+    const fetchTasks = useCallback(async () => {
+        setLoading(true)
+        let query = supabase
+            .from('tasks')
+            .select(`
+                *,
+                assignee:assigned_to (
+                    id,
+                    full_name,
+                    email,
+                    avatar_url
+                )
+            `)
+            .eq('project_id', projectId)
+
+        if (selectedTeam) {
+            query = query.eq('team_id', selectedTeam)
+        }
+
+        const { data } = await query.order('created_at', { ascending: false })
+        setTasks(data || [])
+        setLoading(false)
+    }, [projectId, selectedTeam])
 
     useEffect(() => {
         const fetchInitialData = async () => {
@@ -52,35 +76,11 @@ export default function ProjectKanbanClient({ projectId }: ProjectKanbanClientPr
             fetchTasks()
         }
         fetchInitialData()
-    }, [projectId])
-
-    const fetchTasks = async () => {
-        setLoading(true)
-        let query = supabase
-            .from('tasks')
-            .select(`
-                *,
-                assignee:assigned_to (
-                    id,
-                    full_name,
-                    email,
-                    avatar_url
-                )
-            `)
-            .eq('project_id', projectId)
-
-        if (selectedTeam) {
-            query = query.eq('team_id', selectedTeam)
-        }
-
-        const { data } = await query.order('created_at', { ascending: false })
-        setTasks(data || [])
-        setLoading(false)
-    }
+    }, [projectId, fetchTasks])
 
     useEffect(() => {
         fetchTasks()
-    }, [selectedTeam])
+    }, [fetchTasks])
 
     return (
         <div className="space-y-8">
