@@ -89,60 +89,65 @@ export default async function DashboardPage() {
             label: 'Completed Tasks',
             value: formatCount(completedCount),
             icon: BadgeCheck,
-            bg: '#caf0f8',
-            iconColor: '#03045E',
-            strokeWidth: 1.5,
+            bg: '#0093c4',
+            iconColor: '#0093c4',
+            strokeWidth: 2,
           },
           {
             label: 'Assigned Tasks',
             value: formatCount(assignedCount),
             icon: UserRoundCheck,
-            bg: '#ade8f4',
-            iconColor: '#03045E',
-            strokeWidth: 1.5,
+            bg: '#0072b0',
+            iconColor: '#0072b0',
+            strokeWidth: 2,
           },
           {
             label: 'Active Boards',
             value: formatCount(projectCount || 0),
             icon: LayoutDashboard,
-            bg: '#caf0f8',
-            iconColor: '#03045E',
-            strokeWidth: 1.5,
+            bg: '#00509d',
+            iconColor: '#00509d',
+            strokeWidth: 2,
           },
           {
             label: 'Scheduled Tasks',
             value: formatCount(scheduledCount),
             icon: CalendarCheck2,
-            bg: '#ade8f4',
-            iconColor: '#03045E',
-            strokeWidth: 1.5,
+            bg: '#00296b',
+            iconColor: '#00296b',
+            strokeWidth: 2,
           },
         ].map((stat, i) => (
           <div
             key={i}
-            className="dark:backdrop-blur-xl p-5 lg:p-6 rounded-2xl lg:rounded-3xl border shadow-sm hover:shadow-lg transition-all duration-300 group"
+            className="rounded-[20px] lg:rounded-[24px] shadow-sm hover:shadow-lg transition-all duration-300 group flex flex-col p-4 lg:p-5 gap-4 lg:gap-5"
             style={{
               backgroundColor: stat.bg,
-              borderColor: 'rgba(156, 163, 175, 0.4)',
             }}
           >
-            <div className="flex items-start gap-4">
-              {/* Icon — bold, no box */}
+            <div className="flex items-center gap-4 lg:gap-5">
+              {/* White Icon Box */}
               <div
-                className="w-12 h-12 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 group-hover:rotate-3"
+                className="w-[52px] h-[52px] lg:w-[64px] lg:h-[64px] bg-white rounded-[14px] lg:rounded-[18px] flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm"
                 style={{ color: stat.iconColor }}
               >
-                <stat.icon size={34} strokeWidth={stat.strokeWidth} />
+                <stat.icon size={26} strokeWidth={stat.strokeWidth} className="lg:w-[30px] lg:h-[30px]" />
               </div>
-              {/* Number + Label stacked */}
-              <div className="flex flex-col justify-center min-w-0 pt-0.5">
-                <h3 className="text-2xl lg:text-[28px] font-black text-gray-900 leading-none tracking-tight">
+              {/* Large White Number */}
+              <div className="flex-1 min-w-0">
+                <h3 className="text-[40px] lg:text-[48px] font-normal text-white leading-none">
                   {stat.value}
                 </h3>
-                <p className="mt-1.5 text-[9px] lg:text-[10px] font-black text-gray-900 uppercase tracking-widest leading-tight">
-                  {stat.label}
-                </p>
               </div>
+            </div>
+            {/* White Label Bar */}
+            <div className="bg-white w-full rounded-[10px] lg:rounded-[12px] py-3 lg:py-3.5 px-3 flex justify-center items-center">
+              <p
+                className="text-[10px] lg:text-[11px] font-black uppercase tracking-[0.15em] leading-tight text-center"
+                style={{ color: stat.bg }}
+              >
+                {stat.label}
+              </p>
             </div>
           </div>
         ))}
