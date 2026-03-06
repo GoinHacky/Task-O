@@ -25,7 +25,7 @@ export default function HelpSupportClient({ user }: HelpSupportClientProps) {
                     <div className="p-10 md:p-14 flex-1 animate-in fade-in slide-in-from-right-4 duration-500 h-full flex flex-col">
                         <div className="mb-10">
                             <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tightest mb-2">Help & Support</h1>
-                            <p className="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em]">We're here to help you succeed</p>
+                            <p className="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em]">We&apos;re here to help you succeed</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">

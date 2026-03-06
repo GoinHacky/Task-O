@@ -62,7 +62,7 @@ export default function InviteFriendsClient({ user }: InviteFriendsClientProps) 
                             </div>
                             <div className="flex-1 text-center md:text-left">
                                 <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-4">Invite 3 friends, get Pro free for a month!</h2>
-                                <p className="text-sm text-gray-500 dark:text-slate-400 leading-relaxed font-medium mb-0">Help us grow Task-O and we'll reward you with premium features. It's a win-win for everyone.</p>
+                                <p className="text-sm text-gray-500 dark:text-slate-400 leading-relaxed font-medium mb-0">Help us grow Task-O and we&apos;ll reward you with premium features. It&apos;s a win-win for everyone.</p>
                             </div>
                         </div>
 
