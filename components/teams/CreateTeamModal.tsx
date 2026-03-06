@@ -2,7 +2,7 @@
 
 import { Users, Layout, ChevronDown, AlertCircle, User as UserIcon, Check, Plus } from 'lucide-react'
 import Image from 'next/image'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createTeam } from '@/lib/teams/actions'
 import Modal from '@/components/ui/Modal'
 import { supabase } from '@/lib/supabase/client'
@@ -30,13 +30,7 @@ export default function CreateTeamModal({ isOpen, onClose, initialProjectId, onS
     const [error, setError] = useState<string | null>(null)
     const [isFetchingInitial, setIsFetchingInitial] = useState(true)
 
-    useEffect(() => {
-        if (isOpen) {
-            fetchInitialData()
-        }
-    }, [isOpen])
-
-    const fetchInitialData = async () => {
+    const fetchInitialData = useCallback(async () => {
         setIsFetchingInitial(true)
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
@@ -55,7 +49,13 @@ export default function CreateTeamModal({ isOpen, onClose, initialProjectId, onS
             setProjectId(projectsList[0].id)
         }
         setIsFetchingInitial(false)
-    }
+    }, [projectId])
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchInitialData()
+        }
+    }, [isOpen, fetchInitialData])
 
     useEffect(() => {
         const fetchProjectMembers = async () => {

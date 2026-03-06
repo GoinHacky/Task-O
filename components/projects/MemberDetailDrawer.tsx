@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import { format } from 'date-fns'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import UpdateRoleModal from './UpdateRoleModal'
@@ -37,11 +37,7 @@ export default function MemberDetailDrawer({
     const isSelf = member.user.id === currentUserId
     const isOwner = member.user.id === ownerId
 
-    useEffect(() => {
-        fetchMemberTasks()
-    }, [member.user.id, projectId])
-
-    const fetchMemberTasks = async () => {
+    const fetchMemberTasks = useCallback(async () => {
         setLoading(true)
         const { data } = await supabase
             .from('tasks')
@@ -52,7 +48,11 @@ export default function MemberDetailDrawer({
 
         setTasks(data || [])
         setLoading(false)
-    }
+    }, [member.user.id, projectId])
+
+    useEffect(() => {
+        fetchMemberTasks()
+    }, [fetchMemberTasks])
 
     const activeCount = tasks.filter(t => t.status === 'in_progress').length
     const completedCount = tasks.filter(t => t.status === 'completed').length

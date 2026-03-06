@@ -23,7 +23,7 @@ export default function ProjectsPage() {
       .order('created_at', { ascending: false })
     setProjects(data || [])
     setLoading(false)
-  }, [supabase])
+  }, [])
 
   useEffect(() => { fetchProjects() }, [fetchProjects])
 

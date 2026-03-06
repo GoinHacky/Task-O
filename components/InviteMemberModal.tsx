@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { UserPlus, CheckCircle2, AlertCircle, Shield, User as UserIcon, Eye, Users, MessageSquare, ChevronDown, Check, X, Layout, Plus } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import { inviteUserToWorkspace } from '@/lib/users/actions'
@@ -29,13 +29,7 @@ export default function InviteMemberModal({ isOpen, onClose, projectId: initialP
     const [error, setError] = useState<string | null>(null)
     const [isFetchingInitial, setIsFetchingInitial] = useState(true)
 
-    useEffect(() => {
-        if (isOpen) {
-            fetchInitialData()
-        }
-    }, [isOpen])
-
-    const fetchInitialData = async () => {
+    const fetchInitialData = useCallback(async () => {
         setIsFetchingInitial(true)
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
@@ -54,7 +48,13 @@ export default function InviteMemberModal({ isOpen, onClose, projectId: initialP
             setProjectId(projectsList[0].id)
         }
         setIsFetchingInitial(false)
-    }
+    }, [projectId])
+
+    useEffect(() => {
+        if (isOpen) {
+            fetchInitialData()
+        }
+    }, [isOpen, fetchInitialData])
 
     useEffect(() => {
         const fetchTeams = async () => {

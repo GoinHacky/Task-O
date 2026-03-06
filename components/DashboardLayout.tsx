@@ -36,7 +36,7 @@ export default function DashboardLayout({
       setUserProfile(profile)
     }
     getUser()
-  }, [supabase, router])
+  }, [router])
 
   if (!user) {
     return (

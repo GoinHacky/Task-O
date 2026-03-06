@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase/client'
 import { Lock, Eye, EyeOff, CheckCircle2, ArrowRight } from 'lucide-react'
+import Image from 'next/image'
 
 export default function ResetPasswordPage() {
     const router = useRouter()
@@ -77,7 +78,7 @@ export default function ResetPasswordPage() {
                 <div className="text-center mb-7">
                     <div className="inline-flex items-center justify-center w-12 h-12 bg-[#0052CC] rounded-xl mb-4"
                         style={{ boxShadow: '0 4px 20px rgba(0,82,204,0.35), 0 1px 4px rgba(0,82,204,0.2)' }}>
-                        <img src="/task-o.png" alt="Task-O" className="h-7 w-7 object-contain" />
+                        <Image src="/task-o.png" alt="Task-O" width={28} height={28} className="object-contain" />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-900">Set New Password</h1>
                     <p className="text-gray-500 text-sm mt-1">Please enter your new security credentials</p>

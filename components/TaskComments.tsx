@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { MessageSquare, Send, User } from 'lucide-react'
 import { format } from 'date-fns'
@@ -26,6 +26,25 @@ export default function TaskComments({ taskId, userId }: TaskCommentsProps) {
   const [newComment, setNewComment] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const fetchComments = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('comments')
+      .select(`
+        *,
+        user:user_id (
+          id,
+          full_name,
+          email
+        )
+      `)
+      .eq('task_id', taskId)
+      .order('created_at', { ascending: true })
+
+    if (data) {
+      setComments(data as Comment[])
+    }
+  }, [taskId])
+
   useEffect(() => {
     fetchComments()
 
@@ -47,28 +66,9 @@ export default function TaskComments({ taskId, userId }: TaskCommentsProps) {
       .subscribe()
 
     return () => {
-      channel.unsubscribe()
+      supabase.removeChannel(channel)
     }
-  }, [taskId])
-
-  const fetchComments = async () => {
-    const { data, error } = await supabase
-      .from('comments')
-      .select(`
-        *,
-        user:user_id (
-          id,
-          full_name,
-          email
-        )
-      `)
-      .eq('task_id', taskId)
-      .order('created_at', { ascending: true })
-
-    if (data) {
-      setComments(data as Comment[])
-    }
-  }
+  }, [taskId, fetchComments])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

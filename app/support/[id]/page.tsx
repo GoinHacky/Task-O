@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowLeft, Clock, MessageSquare, Shield, Activity, User } from 'lucide-react'
 import { format } from 'date-fns'
 import { addSupportComment } from '@/lib/support/actions'
@@ -139,7 +140,7 @@ export default async function SupportDetail({ params }: { params: { id: string }
                             <div>
                                 <h3 className="text-[11px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-4">Screenshot</h3>
                                 <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-800">
-                                    <img src={request.screenshot_url} alt="Support Screenshot" className="w-full h-auto" />
+                                    <Image src={request.screenshot_url} alt="Support Screenshot" width={800} height={450} className="w-full h-auto" />
                                 </div>
                             </div>
                         )}
@@ -157,7 +158,7 @@ export default async function SupportDetail({ params }: { params: { id: string }
                                 <div key={comment.id} className="flex gap-4">
                                     <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
                                         {comment.user.avatar_url ? (
-                                            <img src={comment.user.avatar_url} alt={comment.user.full_name} className="w-full h-full object-cover" />
+                                            <Image src={comment.user.avatar_url} alt={comment.user.full_name} width={40} height={40} className="w-full h-full object-cover" />
                                         ) : (
                                             <User className="text-gray-400" size={20} />
                                         )}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
     format,
     addMonths,
@@ -26,6 +26,7 @@ import {
 import { supabase } from '@/lib/supabase/client'
 import TaskDetailDrawer from './projects/TaskDetailDrawer'
 import CreateTaskModal from './projects/CreateTaskModal'
+import Modal from './ui/Modal'
 
 interface Task {
     id: string
@@ -51,11 +52,7 @@ export default function CalendarClient({ projectId, userId }: CalendarClientProp
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
     const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 
-    useEffect(() => {
-        fetchTasks()
-    }, [currentMonth, projectId])
-
-    const fetchTasks = async () => {
+    const fetchTasks = useCallback(async () => {
         setLoading(true)
         const monthStart = startOfMonth(currentMonth)
         const monthEnd = endOfMonth(currentMonth)
@@ -71,19 +68,19 @@ export default function CalendarClient({ projectId, userId }: CalendarClientProp
 
         if (projectId) {
             query = query.eq('project_id', projectId)
-        } else {
-            // For global view, we might want to filter by user's projects or assigned tasks
-            // Simplified for now: fetch all tasks user has access to via projects
-            // RLS will naturally filter this.
         }
 
-        const { data, error } = await query
+        const { data } = await query
 
         if (data) {
             setTasks(data)
         }
         setLoading(false)
-    }
+    }, [currentMonth, projectId])
+
+    useEffect(() => {
+        fetchTasks()
+    }, [fetchTasks])
 
     const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
     const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1))
@@ -245,27 +242,31 @@ export default function CalendarClient({ projectId, userId }: CalendarClientProp
             </div>
 
             {selectedTask && (
-                <TaskDetailDrawer
+                <Modal
                     isOpen={isTaskDrawerOpen}
                     onClose={() => {
                         setIsTaskDrawerOpen(false)
                         setSelectedTask(null)
                     }}
-                    taskId={selectedTask.id}
-                    onTaskDeleted={fetchTasks}
-                    onTaskUpdated={fetchTasks}
-                />
+                    title="Task Details"
+                >
+                    <TaskDetailDrawer
+                        task={selectedTask}
+                        projectId={selectedTask.project_id || projectId || ''}
+                        onClose={() => {
+                            setIsTaskDrawerOpen(false)
+                            setSelectedTask(null)
+                        }}
+                    />
+                </Modal>
             )}
 
             {isCreateModalOpen && (
                 <CreateTaskModal
                     isOpen={isCreateModalOpen}
                     onClose={() => setIsCreateModalOpen(false)}
-                    onTaskCreated={fetchTasks}
-                    initialData={{
-                        due_date: selectedDate ? format(selectedDate, 'yyyy-MM-dd') : undefined,
-                        project_id: projectId
-                    }}
+                    onSuccess={fetchTasks}
+                    initialProjectId={projectId}
                 />
             )}
         </div>

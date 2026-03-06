@@ -4,7 +4,7 @@ import {
     List, Link as LinkIcon, Type, Shield, Flag, Plus
 } from 'lucide-react'
 import Link from 'next/link'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createTask } from '@/lib/tasks/actions'
 import Modal from '@/components/ui/Modal'
 import { supabase } from '@/lib/supabase/client'
@@ -29,13 +29,7 @@ export default function CreateTaskModal({ isOpen, onClose, initialProjectId, ini
     const [error, setError] = useState<string | null>(null)
     const [isFetchingInitial, setIsFetchingInitial] = useState(true)
 
-    useEffect(() => {
-        if (isOpen) {
-            fetchContext()
-        }
-    }, [isOpen])
-
-    const fetchContext = async () => {
+    const fetchContext = useCallback(async () => {
         setIsFetchingInitial(true)
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
@@ -70,28 +64,33 @@ role,
 
         setUserTeams(teamData?.map(t => t.team_id) || [])
         setIsFetchingInitial(false)
-    }
+    }, [initialProjectId, projectId])
 
     useEffect(() => {
-        const fetchData = async () => {
-            if (!projectId) {
-                setMembers([])
-                setTeams([])
-                return
-            }
+        if (isOpen) {
+            fetchContext()
+        }
+    }, [isOpen, fetchContext])
 
-            // Fetch Teams for project
-            const { data: teamsData } = await supabase
-                .from('teams')
-                .select('*')
-                .eq('project_id', projectId)
+    const fetchData = useCallback(async () => {
+        if (!projectId) {
+            setMembers([])
+            setTeams([])
+            return
+        }
 
-            setTeams(teamsData || [])
+        // Fetch Teams for project
+        const { data: teamsData } = await supabase
+            .from('teams')
+            .select('*')
+            .eq('project_id', projectId)
 
-            // Fetch Members
-            let query = supabase
-                .from('project_members')
-                .select(`
+        setTeams(teamsData || [])
+
+        // Fetch Members
+        let query = supabase
+            .from('project_members')
+            .select(`
 users: user_id(
     id,
     full_name,
@@ -99,36 +98,37 @@ users: user_id(
     avatar_url
 )
     `)
-                .eq('project_id', projectId)
+            .eq('project_id', projectId)
 
-            // Tech Lead filtering logic
-            if (userRole === 'tech_lead' && selectedTeamId) {
-                // Fetch team members for the selected team
-                const { data: teamMembers } = await supabase
-                    .from('team_members')
-                    .select('user_id')
-                    .eq('team_id', selectedTeamId)
+        // Tech Lead filtering logic
+        if (userRole === 'tech_lead' && selectedTeamId) {
+            // Fetch team members for the selected team
+            const { data: teamMembers } = await supabase
+                .from('team_members')
+                .select('user_id')
+                .eq('team_id', selectedTeamId)
 
-                const teamMemberIds = teamMembers?.map(tm => tm.user_id) || []
-                query = query.in('user_id', teamMemberIds)
-            }
-
-            const { data: memberData } = await query
-
-            const memberList = memberData?.map((m: any) => m.users).filter(Boolean) || []
-            setMembers(memberList)
-
-            // Auto-assign for member role
-            if (userRole === 'member') {
-                const { data: { user } } = await supabase.auth.getUser()
-                if (user) setAssignedMemberIds([user.id])
-            }
+            const teamMemberIds = teamMembers?.map(tm => tm.user_id) || []
+            query = query.in('user_id', teamMemberIds)
         }
 
+        const { data: memberData } = await query
+
+        const memberList = memberData?.map((m: any) => m.users).filter(Boolean) || []
+        setMembers(memberList)
+
+        // Auto-assign for member role
+        if (userRole === 'member') {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) setAssignedMemberIds([user.id])
+        }
+    }, [projectId, userRole, selectedTeamId])
+
+    useEffect(() => {
         if (isOpen) {
             fetchData()
         }
-    }, [projectId, selectedTeamId, userRole, isOpen])
+    }, [isOpen, fetchData])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
