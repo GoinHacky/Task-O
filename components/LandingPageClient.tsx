@@ -4,7 +4,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { CheckCircle, Zap, Users, BarChart3, Calendar, ArrowRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import AuthErrorBanner from '@/components/AuthErrorBanner'
 
 interface Stat {
   value: string | number
@@ -51,7 +50,6 @@ export default function LandingPageClient({ stats }: LandingPageClientProps) {
 
   return (
     <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
-      <AuthErrorBanner />
 
       {/* ── SHARED 3D ABSTRACT BACKGROUND ── */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
