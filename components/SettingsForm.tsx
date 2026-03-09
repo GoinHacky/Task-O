@@ -131,8 +131,8 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
   }
 
   const handleDeleteAccount = async () => {
-    if (confirm('Are you sure you want to deactivate your account? This action cannot be undone.')) {
-      setError('Account deactivation is currently handled by administration for security reasons.')
+    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      setError('Account deletion is currently handled by administration for security reasons.')
     }
   }
 
@@ -140,13 +140,13 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
     { id: 'general', label: 'General', icon: User },
     { id: 'password', label: 'Password', icon: Lock },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'deactivation', label: 'Deactivation', icon: Trash2, danger: true },
+    { id: 'deletion', label: 'Delete Account', icon: Trash2, danger: true },
   ]
 
   return (
     <div className="flex flex-col md:flex-row gap-4 min-h-[600px] p-2 md:p-4">
       {/* Sidebar Tabs */}
-      <div className="w-full md:w-64 shrink-0 flex flex-col gap-2 bg-gray-50/50 dark:bg-slate-950/20 p-4 rounded-[40px] border border-gray-100/50 dark:border-slate-800/30">
+      <div className="w-full md:w-64 shrink-0 flex flex-col gap-2 bg-gray-50/50 dark:bg-slate-950/20 p-4 rounded-[40px] border border-gray-300 dark:border-slate-800/30">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -159,7 +159,7 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
               ? tab.danger
                 ? 'bg-red-500 text-white shadow-lg shadow-red-500/20'
                 : 'bg-white dark:bg-slate-800 text-[#6366f1] shadow-xl shadow-indigo-100/20 dark:shadow-none ring-1 ring-gray-100 dark:ring-slate-700'
-              : 'text-gray-400 dark:text-slate-500 hover:bg-white dark:hover:bg-slate-800 hover:text-gray-600 dark:hover:text-slate-300'
+              : 'text-gray-600 dark:text-slate-500 hover:bg-white dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-slate-300'
               }`}
           >
             <tab.icon size={20} className={`${activeTab === tab.id ? '' : 'group-hover:scale-110 transition-transform'}`} />
@@ -187,11 +187,11 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
             <div className="space-y-10">
               <div>
                 <h3 className="text-2xl font-black text-gray-900 dark:text-slate-50 tracking-tightest mb-2">General Settings</h3>
-                <p className="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase tracking-widest">Update your identification and presence</p>
+                <p className="text-xs text-gray-800 dark:text-slate-400 font-bold uppercase tracking-widest">Update your identification and presence</p>
               </div>
 
               {/* Avatar Upload Section */}
-              <div className="flex flex-col sm:flex-row items-center gap-10 p-8 bg-gray-50/50 dark:bg-slate-950/20 rounded-[40px] border border-gray-100 dark:border-slate-800/50 backdrop-blur-xl group/avatar">
+              <div className="flex flex-col sm:flex-row items-center gap-10 p-8 bg-gray-50/50 dark:bg-slate-950/20 rounded-[40px] border border-gray-300 dark:border-slate-800/50 backdrop-blur-xl group/avatar">
                 <div className="relative">
                   <div className="w-32 h-32 rounded-[40px] bg-white dark:bg-slate-800 border-4 border-white dark:border-slate-800 shadow-2xl dark:shadow-none overflow-hidden flex items-center justify-center text-[#6366f1] text-4xl font-black ring-1 ring-gray-100 dark:ring-slate-700 transition-transform group-hover/avatar:scale-105 duration-500">
                     {avatarUrl ? (
@@ -219,7 +219,7 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
                 </div>
                 <div className="flex-1 text-center sm:text-left">
                   <h4 className="text-sm font-black text-gray-900 dark:text-slate-50 mb-2 uppercase tracking-widest">Workspace Avatar</h4>
-                  <p className="text-xs text-gray-400 dark:text-slate-500 font-medium italic mb-6 leading-relaxed max-w-xs">
+                  <p className="text-xs text-gray-700 dark:text-slate-400 font-medium italic mb-6 leading-relaxed max-w-xs">
                     This image will be shown alongside your tasks and messages.
                   </p>
                   <div className="flex flex-wrap items-center gap-4 justify-center sm:justify-start">
@@ -238,7 +238,7 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
                       <button
                         type="button"
                         onClick={() => setAvatarUrl('')}
-                        className="px-4 py-2 text-gray-400 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 text-[10px] font-black uppercase tracking-widest transition-all"
+                        className="px-4 py-2 text-gray-700 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 text-[10px] font-black uppercase tracking-widest transition-all"
                       >
                         Reset
                       </button>
@@ -249,7 +249,7 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
+                  <label className="block text-[10px] font-bold text-gray-900 dark:text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
                   <div className="relative group">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-300 dark:text-slate-600 group-focus-within:text-[#6366f1] transition-colors">
                       <User size={16} />
@@ -258,13 +258,13 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800/50 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-semibold text-gray-900 dark:text-slate-100 shadow-inner"
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-800/50 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-semibold text-gray-900 dark:text-slate-100 shadow-inner"
                       placeholder="Your full name"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Email Address</label>
+                  <label className="block text-[10px] font-bold text-gray-900 dark:text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Email Address</label>
                   <div className="relative group opacity-60">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-300 dark:text-slate-600">
                       <Mail size={16} />
@@ -273,10 +273,10 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
                       type="email"
                       value={email}
                       disabled
-                      className="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-700/50 rounded-2xl text-sm font-semibold text-gray-500 dark:text-slate-400 cursor-not-allowed shadow-inner"
+                      className="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700/50 rounded-2xl text-sm font-semibold text-gray-500 dark:text-slate-400 cursor-not-allowed shadow-inner"
                     />
                   </div>
-                  <p className="mt-1.5 ml-1 text-[10px] text-gray-400 dark:text-slate-500 font-medium italic">Email is used for sign-in and cannot be changed.</p>
+                  <p className="mt-1.5 ml-1 text-[10px] text-gray-800 dark:text-slate-500 font-medium italic">Email is used for sign-in and cannot be changed.</p>
                 </div>
               </div>
             </div>
@@ -286,11 +286,11 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
             <div className="space-y-10">
               <div>
                 <h3 className="text-2xl font-black text-gray-900 dark:text-slate-50 tracking-tightest mb-2">Update Password</h3>
-                <p className="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase tracking-widest">Secure your account with a unique passphrase</p>
+                <p className="text-xs text-gray-800 dark:text-slate-400 font-bold uppercase tracking-widest">Secure your account with a unique passphrase</p>
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Current Password</label>
+                  <label className="block text-[10px] font-bold text-gray-900 dark:text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Current Password</label>
                   <div className="relative group">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-300 dark:text-slate-600 group-focus-within:text-[#6366f1] transition-colors">
                       <Lock size={16} />
@@ -299,7 +299,7 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
                       type={showCurrentPassword ? 'text' : 'password'}
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800/50 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-semibold text-gray-900 dark:text-slate-100 shadow-inner"
+                      className="w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-800/50 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-semibold text-gray-900 dark:text-slate-100 shadow-inner"
                       placeholder="••••••••"
                     />
                     <button
@@ -312,7 +312,7 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">New Password</label>
+                  <label className="block text-[10px] font-bold text-gray-900 dark:text-slate-400 uppercase tracking-widest mb-1.5 ml-1">New Password</label>
                   <div className="relative group">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-300 dark:text-slate-600 group-focus-within:text-[#6366f1] transition-colors">
                       <Lock size={16} />
@@ -321,7 +321,7 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
                       type={showNewPassword ? 'text' : 'password'}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800/50 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-semibold text-gray-900 dark:text-slate-100 shadow-inner"
+                      className="w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-800/50 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-semibold text-gray-900 dark:text-slate-100 shadow-inner"
                       placeholder="••••••••"
                     />
                     <button
@@ -334,7 +334,7 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Confirm Password</label>
+                  <label className="block text-[10px] font-bold text-gray-900 dark:text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Confirm Password</label>
                   <div className="relative group">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-300 dark:text-slate-600 group-focus-within:text-[#6366f1] transition-colors">
                       <Shield size={16} />
@@ -343,7 +343,7 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800/50 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-semibold text-gray-900 dark:text-slate-100 shadow-inner"
+                      className="w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-300 dark:border-slate-800/50 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-semibold text-gray-900 dark:text-slate-100 shadow-inner"
                       placeholder="••••••••"
                     />
                     <button
@@ -363,7 +363,7 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
             <div className="space-y-10">
               <div>
                 <h3 className="text-2xl font-black text-gray-900 dark:text-slate-50 tracking-tightest mb-2">Notifications</h3>
-                <p className="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase tracking-widest">Control how Task-O reaches out to you</p>
+                <p className="text-xs text-gray-800 dark:text-slate-400 font-bold uppercase tracking-widest">Control how Task-O reaches out to you</p>
               </div>
               <div className="space-y-4">
                 {[
@@ -372,10 +372,10 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
                   { id: 'mentions', label: 'Mentions Only', desc: 'Only notify when someone mentions you' },
                   { id: 'taskUpdates', label: 'Task Activity', desc: 'Notify when tasks are moved or updated' }
                 ].map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-900/50 rounded-2xl border border-gray-100 dark:border-slate-800/50 backdrop-blur-xl">
+                  <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-900/50 rounded-2xl border border-gray-300 dark:border-slate-800/50 backdrop-blur-xl">
                     <div>
                       <p className="text-sm font-bold text-gray-900 dark:text-slate-100">{item.label}</p>
-                      <p className="text-[10px] text-gray-400 dark:text-slate-500 font-medium italic">{item.desc}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-slate-400 font-medium italic">{item.desc}</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -392,7 +392,7 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
             </div>
           )}
 
-          {activeTab === 'deactivation' && (
+          {activeTab === 'deletion' && (
             <div className="space-y-6 animate-in slide-in-from-top-2">
               <div className="p-6 bg-red-50 dark:bg-red-500/10 rounded-[32px] border border-red-100 dark:border-red-500/20 backdrop-blur-xl">
                 <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">Delete Account</h3>
@@ -404,13 +404,13 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
                   onClick={handleDeleteAccount}
                   className="px-8 py-3 bg-red-600 text-white text-xs font-bold rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-600/20 active:scale-95 uppercase tracking-widest"
                 >
-                  Confirm Deactivation
+                  Delete Account
                 </button>
               </div>
             </div>
           )}
 
-          {activeTab !== 'deactivation' && (
+          {activeTab !== 'deletion' && (
             <div className="flex justify-end pt-4 border-t border-gray-50 dark:border-slate-800/50">
               <button
                 type="submit"
