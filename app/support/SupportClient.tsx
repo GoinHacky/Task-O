@@ -15,8 +15,8 @@ export default function SupportClient({ requests, user }: { requests: any[], use
     }
 
     return (
-        <div className="max-w-6xl mx-auto p-6 lg:p-10">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+        <div className="max-w-6xl mx-auto px-4 md:px-0 py-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight mb-2">
                         Support

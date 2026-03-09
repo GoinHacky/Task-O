@@ -34,7 +34,7 @@ export default function InviteFriendsClient({ user }: InviteFriendsClientProps) 
     return (
         <DashboardLayout>
             <div className="max-w-4xl mx-auto">
-                <div className="bg-white dark:bg-slate-900 rounded-[48px] border border-gray-200 dark:border-slate-800 shadow-xl shadow-gray-100/50 dark:shadow-none min-h-[600px] overflow-hidden flex flex-col">
+                <div className="bg-white dark:bg-slate-900 rounded-[48px] border border-gray-300 dark:border-slate-800 shadow-xl shadow-gray-100/50 dark:shadow-none min-h-[600px] overflow-hidden flex flex-col">
 
                     {message && (
                         <div className={`p-10 py-4 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'} border-b font-bold text-xs flex items-center gap-3 animate-in slide-in-from-top duration-300`}>
@@ -51,7 +51,7 @@ export default function InviteFriendsClient({ user }: InviteFriendsClientProps) 
                             <p className="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase tracking-[0.2em]">Scale your workflow with more hands</p>
                         </div>
 
-                        <div className="bg-[#f3f4ff] dark:bg-emerald-500/5 rounded-[40px] p-10 mb-12 flex flex-col md:flex-row items-center gap-10 border border-indigo-100 dark:border-emerald-500/10">
+                        <div className="bg-[#f3f4ff] dark:bg-emerald-500/5 rounded-[40px] p-10 mb-12 flex flex-col md:flex-row items-center gap-10 border border-gray-300 dark:border-emerald-500/10">
                             <div className="w-48 h-48 bg-white dark:bg-slate-900 rounded-[48px] shadow-2xl dark:shadow-none flex items-center justify-center relative group">
                                 <div className="absolute inset-4 bg-indigo-50 dark:bg-emerald-500/10 rounded-[32px] flex items-center justify-center text-indigo-500 dark:text-emerald-500 group-hover:scale-110 transition-transform duration-500">
                                     <UserPlus size={48} strokeWidth={2.5} />
@@ -79,7 +79,7 @@ export default function InviteFriendsClient({ user }: InviteFriendsClientProps) 
                                             required
                                             value={inviteEmail}
                                             onChange={(e) => setInviteEmail(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-slate-950/50 border border-gray-100 dark:border-slate-800 rounded-2xl focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-sm font-bold text-gray-900 dark:text-white shadow-inner focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500"
+                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-slate-950/50 border border-gray-300 dark:border-slate-800 rounded-2xl focus:bg-white dark:focus:bg-slate-900 outline-none transition-all text-sm font-bold text-gray-900 dark:text-white shadow-inner focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500"
                                             placeholder="friend@example.com"
                                         />
                                     </div>
@@ -98,9 +98,9 @@ export default function InviteFriendsClient({ user }: InviteFriendsClientProps) 
                                 </form>
                             </div>
 
-                            <div className="pt-8 border-t border-gray-100 dark:border-slate-800">
+                            <div className="pt-8 border-t border-gray-300 dark:border-slate-800">
                                 <h4 className="text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-6">Share Referral Link</h4>
-                                <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-slate-950/50 border border-gray-100 dark:border-slate-800 rounded-2xl">
+                                <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-slate-950/50 border border-gray-300 dark:border-slate-800 rounded-2xl">
                                     <div className="flex-1 truncate text-xs font-bold text-gray-500 dark:text-slate-400 ml-2">
                                         tasko.app/join?ref={user.id.slice(0, 8)}
                                     </div>

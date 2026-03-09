@@ -17,9 +17,12 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
   const [fullName, setFullName] = useState(userProfile?.full_name || '')
   const [email, setEmail] = useState(user?.email || '')
   const [avatarUrl, setAvatarUrl] = useState(userProfile?.avatar_url || '')
+  const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -83,6 +86,9 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
 
         if (updateError) throw updateError
       } else if (activeTab === 'password') {
+        if (!currentPassword) {
+          throw new Error('Current password is required')
+        }
         if (newPassword !== confirmPassword) {
           throw new Error('Passwords do not match')
         }
@@ -90,11 +96,22 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
           throw new Error('Password must be at least 6 characters')
         }
 
+        // Verify current password first
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: user.email,
+          password: currentPassword,
+        })
+
+        if (signInError) {
+          throw new Error('Incorrect current password')
+        }
+
         const { error: passwordError } = await supabase.auth.updateUser({
           password: newPassword
         })
 
         if (passwordError) throw passwordError
+        setCurrentPassword('')
         setNewPassword('')
         setConfirmPassword('')
       } else if (activeTab === 'notifications') {
@@ -152,7 +169,7 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 p-6 md:p-10">
+      <div className="flex-1 p-6 md:p-8">
         <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in slide-in-from-right-2 duration-300">
           {error && (
             <div className="p-4 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-2xl text-red-600 dark:text-red-400 text-xs font-bold animate-in zoom-in duration-200">
@@ -273,13 +290,35 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
               </div>
               <div className="space-y-4">
                 <div>
+                  <label className="block text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Current Password</label>
+                  <div className="relative group">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-300 dark:text-slate-600 group-focus-within:text-[#6366f1] transition-colors">
+                      <Lock size={16} />
+                    </span>
+                    <input
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800/50 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-semibold text-gray-900 dark:text-slate-100 shadow-inner"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-300 dark:text-slate-600 hover:text-gray-500 dark:hover:text-slate-400 transition-colors"
+                    >
+                      {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+                <div>
                   <label className="block text-[10px] font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest mb-1.5 ml-1">New Password</label>
                   <div className="relative group">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-300 dark:text-slate-600 group-focus-within:text-[#6366f1] transition-colors">
                       <Lock size={16} />
                     </span>
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      type={showNewPassword ? 'text' : 'password'}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       className="w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800/50 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-semibold text-gray-900 dark:text-slate-100 shadow-inner"
@@ -287,10 +326,10 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
                     />
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
+                      onClick={() => setShowNewPassword(!showNewPassword)}
                       className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-300 dark:text-slate-600 hover:text-gray-500 dark:hover:text-slate-400 transition-colors"
                     >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
@@ -301,12 +340,19 @@ export default function SettingsForm({ user, userProfile }: SettingsFormProps) {
                       <Shield size={16} />
                     </span>
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      type={showConfirmPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800/50 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-semibold text-gray-900 dark:text-slate-100 shadow-inner"
+                      className="w-full pl-10 pr-12 py-3 bg-gray-50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800/50 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-semibold text-gray-900 dark:text-slate-100 shadow-inner"
                       placeholder="••••••••"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-300 dark:text-slate-600 hover:text-gray-500 dark:hover:text-slate-400 transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
                 </div>
               </div>
