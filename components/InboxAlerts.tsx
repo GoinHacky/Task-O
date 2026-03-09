@@ -105,16 +105,16 @@ export default function InboxAlerts({ notifications: initialNotifications }: Inb
     }
 
     return (
-        <div className="flex flex-col max-w-4xl mx-auto bg-white dark:bg-slate-950/40 rounded-[48px] border border-gray-100 dark:border-slate-800/50 shadow-2xl shadow-indigo-100/10 dark:shadow-none backdrop-blur-xl overflow-hidden min-h-[calc(100vh-120px)] animate-in fade-in duration-700">
+        <div className="flex flex-col max-w-4xl mx-auto bg-white dark:bg-slate-950/40 rounded-[32px] md:rounded-[48px] border border-gray-300 dark:border-slate-800/50 shadow-2xl shadow-indigo-100/10 dark:shadow-none backdrop-blur-xl overflow-hidden min-h-[calc(100vh-120px)] animate-in fade-in duration-700">
             {/* Header Area */}
-            <div className="p-10 pb-6">
-                <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-black text-gray-900 dark:text-slate-50 tracking-tightest">INBOX</h1>
+            <div className="p-6 md:p-10 pb-4 md:pb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                    <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-slate-50 tracking-tightest">INBOX</h1>
 
                     <div className="relative">
                         <button
                             onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                            className="flex items-center gap-2 px-6 py-2 bg-gray-50 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-indigo-500 transition-all"
+                            className="flex items-center gap-2 px-6 py-2 bg-gray-50 dark:bg-slate-800/50 border border-gray-300 dark:border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-indigo-500 transition-all"
                         >
                             Filter: {filter === 'all' ? 'All' : filter.charAt(0).toUpperCase() + filter.slice(1)} <ChevronDown size={14} />
                         </button>
@@ -141,15 +141,15 @@ export default function InboxAlerts({ notifications: initialNotifications }: Inb
                         <button
                             key={t}
                             onClick={() => setFilter(filter === t ? 'all' : t)}
-                            className={`px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === t
+                            className={`px-4 md:px-6 py-2 md:py-2.5 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${filter === t
                                 ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20'
-                                : 'bg-gray-50 dark:bg-slate-800/50 text-gray-400 hover:text-gray-600 dark:hover:text-slate-300'}`}
+                                : 'bg-gray-50 dark:bg-slate-800/50 text-gray-400 border border-gray-300 dark:border-slate-700/50 hover:text-gray-600 dark:hover:text-slate-300'}`}
                         >
                             {t === 'review' ? 'Approvals' : t === 'invite' ? 'Invites' : t + 's'}
                         </button>
                     ))}
 
-                    <div className="flex items-center gap-3 ml-auto px-4 py-2 bg-gray-50/50 dark:bg-slate-900/50 rounded-2xl border border-gray-100/50 dark:border-slate-800/50">
+                    <div className="flex items-center gap-3 sm:ml-auto px-4 py-2 bg-gray-50/50 dark:bg-slate-900/50 rounded-2xl border border-gray-300 dark:border-slate-800/50 w-fit">
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Unread Only</span>
                         <button
                             onClick={() => setUnreadOnly(!unreadOnly)}
@@ -164,7 +164,7 @@ export default function InboxAlerts({ notifications: initialNotifications }: Inb
             </div>
 
             {/* List Content */}
-            <div className="flex-1 overflow-y-auto px-10 pb-20 space-y-0 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto px-4 md:px-10 pb-10 md:pb-20 space-y-0 custom-scrollbar">
                 {filteredNotifications.length > 0 ? filteredNotifications.map((notif, index) => {
                     const config = getTypeConfig(notif.type, notif.message)
                     const isTask = notif.type === 'assignment' || notif.type === 'task_assignment'
@@ -173,15 +173,15 @@ export default function InboxAlerts({ notifications: initialNotifications }: Inb
 
                     return (
                         <div key={notif.id} className="relative">
-                            <div className={`group py-10 px-8 transition-all duration-500 ${!notif.read ? 'bg-transparent' : 'opacity-60'}`}>
-                                <div className="flex items-start gap-4 mb-4">
-                                    <span className="text-xl mt-0.5 leading-none shrink-0">{config.dot}</span>
+                            <div className={`group py-6 md:py-10 px-0 sm:px-4 md:px-8 transition-all duration-500 ${!notif.read ? 'bg-transparent' : 'opacity-60'}`}>
+                                <div className="flex items-start gap-3 md:gap-4 mb-4">
+                                    <span className="text-lg mt-0.5 leading-none shrink-0">{config.dot}</span>
                                     <div className="flex-1">
-                                        <div className="flex items-start justify-between gap-4 mb-1">
-                                            <h3 className={`text-lg font-black tracking-tight leading-tight ${!notif.read ? 'text-gray-900 dark:text-slate-50' : 'text-gray-500 dark:text-slate-400'}`}>
+                                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4 mb-1">
+                                            <h3 className={`text-base md:text-lg font-black tracking-tight leading-tight ${!notif.read ? 'text-gray-900 dark:text-slate-50' : 'text-gray-500 dark:text-slate-400'}`}>
                                                 {notif.message}
                                             </h3>
-                                            <span className="text-[10px] font-bold text-gray-400 dark:text-slate-600 uppercase tracking-widest whitespace-nowrap mt-1">
+                                            <span className="text-[9px] md:text-[10px] font-bold text-gray-400 dark:text-slate-600 uppercase tracking-widest whitespace-nowrap pt-1">
                                                 {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
                                             </span>
                                         </div>
@@ -204,12 +204,12 @@ export default function InboxAlerts({ notifications: initialNotifications }: Inb
 
                                 {/* Actions Row */}
                                 {!notif.read && (
-                                    <div className="flex items-center gap-3 pl-9 mt-8">
+                                    <div className="flex flex-wrap items-center gap-2 md:gap-3 pl-7 md:pl-9 mt-6 md:mt-8">
                                         {isTask && (
                                             <button
                                                 disabled={!!processingId}
                                                 onClick={() => handleAction(notif.id, 'start', notif.related_id)}
-                                                className="px-8 py-2.5 bg-[#6366f1] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#5558e3] transition-all shadow-lg shadow-[#6366f1]/20 active:scale-95 disabled:opacity-50"
+                                                className="flex-1 sm:flex-none px-4 md:px-8 py-2 md:py-2.5 bg-[#6366f1] text-white rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-[#5558e3] transition-all shadow-lg shadow-[#6366f1]/20 active:scale-95 disabled:opacity-50"
                                             >
                                                 Start
                                             </button>
@@ -217,7 +217,7 @@ export default function InboxAlerts({ notifications: initialNotifications }: Inb
                                         {isMention && (
                                             <button
                                                 onClick={() => router.push(`/projects/${notif.related_id}`)}
-                                                className="px-8 py-2.5 bg-amber-400 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 transition-all shadow-lg shadow-amber-400/20 active:scale-95"
+                                                className="flex-1 sm:flex-none px-4 md:px-8 py-2 md:py-2.5 bg-amber-400 text-white rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 transition-all shadow-lg shadow-amber-400/20 active:scale-95"
                                             >
                                                 Reply
                                             </button>
@@ -226,7 +226,7 @@ export default function InboxAlerts({ notifications: initialNotifications }: Inb
                                             <button
                                                 disabled={!!processingId}
                                                 onClick={() => handleAction(notif.id, 'approve', notif.related_id)}
-                                                className="px-8 py-2.5 bg-[#6366f1] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#5558e3] transition-all shadow-lg shadow-[#6366f1]/20 active:scale-95 disabled:opacity-50"
+                                                className="flex-1 sm:flex-none px-4 md:px-8 py-2 md:py-2.5 bg-[#6366f1] text-white rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-[#5558e3] transition-all shadow-lg shadow-[#6366f1]/20 active:scale-95 disabled:opacity-50"
                                             >
                                                 Approve
                                             </button>
@@ -236,14 +236,14 @@ export default function InboxAlerts({ notifications: initialNotifications }: Inb
                                                 <button
                                                     disabled={!!processingId}
                                                     onClick={() => handleAction(notif.id, 'accept', notif.related_id)}
-                                                    className="px-8 py-2.5 bg-green-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-600 transition-all shadow-lg shadow-green-500/20 active:scale-95 disabled:opacity-50"
+                                                    className="flex-1 sm:flex-none px-4 md:px-8 py-2 md:py-2.5 bg-green-500 text-white rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-green-600 transition-all shadow-lg shadow-green-500/20 active:scale-95 disabled:opacity-50"
                                                 >
                                                     Accept
                                                 </button>
                                                 <button
                                                     disabled={!!processingId}
                                                     onClick={() => handleAction(notif.id, 'reject', notif.related_id)}
-                                                    className="px-8 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 dark:hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50"
+                                                    className="flex-1 sm:flex-none px-4 md:px-8 py-2 md:py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-500 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 dark:hover:bg-slate-700 transition-all active:scale-95 disabled:opacity-50"
                                                 >
                                                     Decline
                                                 </button>
@@ -251,9 +251,9 @@ export default function InboxAlerts({ notifications: initialNotifications }: Inb
                                         )}
                                         {config.label !== 'Invitation' && (
                                             <button
-                                                className="px-8 py-2.5 bg-gray-50 dark:bg-slate-800 text-gray-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-slate-700 transition-all active:scale-95 flex items-center gap-2"
+                                                className="flex-1 sm:flex-none px-4 md:px-8 py-2 md:py-2.5 bg-gray-50 dark:bg-slate-800 text-gray-500 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 dark:hover:bg-slate-700 transition-all active:scale-95 flex items-center justify-center gap-2"
                                             >
-                                                <Eye size={14} /> View
+                                                <Eye size={12} /> View
                                             </button>
                                         )}
                                     </div>
