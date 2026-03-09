@@ -92,7 +92,7 @@ export default function CalendarClient({ projectId, userId }: CalendarClientProp
 
     const renderHeader = () => {
         return (
-            <div className="flex items-center justify-between mb-8 px-2">
+            <div className="flex items-center justify-between mb-6 px-2">
                 <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-[#0077B6]/10 flex items-center justify-center text-[#0077B6]">
                         <CalendarIcon size={24} />
@@ -166,7 +166,7 @@ export default function CalendarClient({ projectId, userId }: CalendarClientProp
                 days.push(
                     <div
                         key={day.toString()}
-                        className={`min-h-[120px] p-2 border-t border-l border-gray-100 dark:border-slate-800/50 transition-all relative group
+                        className={`min-h-[120px] p-2 border-t border-l border-gray-300 dark:border-slate-800/50 transition-all relative group
                             ${!isCurrentMonth ? 'bg-gray-50/30 dark:bg-slate-950/10' : 'bg-white dark:bg-slate-900/40'}
                             ${i === 6 ? 'border-r' : ''}
                             ${day >= startOfWeek(monthEnd) ? 'border-b' : ''}
@@ -224,13 +224,13 @@ export default function CalendarClient({ projectId, userId }: CalendarClientProp
             )
             days = []
         }
-        return <div className="rounded-[32px] overflow-hidden border border-gray-100 dark:border-slate-800 shadow-xl shadow-gray-100/20 dark:shadow-none">{rows}</div>
+        return <div className="rounded-[32px] overflow-hidden border border-gray-300 dark:border-slate-800 shadow-xl shadow-gray-100/20 dark:shadow-none">{rows}</div>
     }
 
     return (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             {renderHeader()}
-            <div className="bg-white dark:bg-slate-900/60 rounded-[48px] border border-gray-200 dark:border-slate-800 p-8 shadow-2xl shadow-gray-200/50 dark:shadow-none backdrop-blur-xl relative overflow-hidden">
+            <div className="bg-white dark:bg-slate-900/60 rounded-[48px] border border-gray-300 dark:border-slate-800 p-8 shadow-2xl shadow-gray-200/50 dark:shadow-none backdrop-blur-xl relative overflow-hidden">
                 {/* Decorative background elements */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#0077B6]/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full -ml-32 -mb-32 blur-3xl pointer-events-none" />
