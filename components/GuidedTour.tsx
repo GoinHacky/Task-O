@@ -89,9 +89,7 @@ const tours: Record<string, TourStep[]> = {
             title: 'Step 7: Status - Planning',
             content: 'If the project is still in the preparation phase, keep it in "Planning".',
             placement: 'top',
-            action: 'click',
-            showNext: true,
-            nextLabel: 'Next'
+            action: 'click'
         },
         {
             id: 'tour-project-status-active',
@@ -99,9 +97,7 @@ const tours: Record<string, TourStep[]> = {
             title: 'Step 8: Status - Active',
             content: 'Switch to "Active" once deployment has officially commenced.',
             placement: 'top',
-            action: 'click',
-            showNext: true,
-            nextLabel: 'Next'
+            action: 'click'
         },
         {
             id: 'tour-create-project-submit',
@@ -109,8 +105,7 @@ const tours: Record<string, TourStep[]> = {
             title: 'Step 9: Finalize',
             content: 'Once you\'re ready, click Create Project to begin!',
             placement: 'top',
-            action: 'custom',
-            showNext: true
+            action: 'custom'
         },
         {
             id: 'tour-project-card',
@@ -201,8 +196,7 @@ const tours: Record<string, TourStep[]> = {
             title: 'Step 7: Finalize',
             content: 'Click Create to finalize your team formation and onboard your members.',
             placement: 'top',
-            action: 'custom',
-            showNext: true
+            action: 'custom'
         },
         {
             id: 'tour-team-complete',
@@ -311,8 +305,7 @@ const tours: Record<string, TourStep[]> = {
             title: 'Step 12: Execute',
             content: 'Perfect! Now click Create Task to lock it in and officially start the mission.',
             placement: 'top',
-            action: 'custom',
-            showNext: true
+            action: 'custom'
         },
         {
             id: 'tour-task-complete',
@@ -329,11 +322,47 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
     const [currentStepIndex, setCurrentStepIndex] = useState(0)
     const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
     const [isFading, setIsFading] = useState(false)
+    const [isTargetFilled, setIsTargetFilled] = useState(false)
     const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const pathname = usePathname()
 
     const tourSteps = activeTourId ? tours[activeTourId] : []
     const currentStep = tourSteps[currentStepIndex]
+
+    // Check if target input is filled
+    useEffect(() => {
+        if (!currentStep) {
+            setIsTargetFilled(false)
+            return
+        }
+
+        const checkValue = () => {
+            const element = document.getElementById(currentStep.targetId) as HTMLInputElement | HTMLTextAreaElement
+            const isInput = currentStep.action === 'input'
+
+            if (element && (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA')) {
+                setIsTargetFilled(element.value.trim().length > 0)
+            } else {
+                // If it's an input step but element not found, it's NOT filled
+                // If it's NOT an input step, it's considered "ready" to progress
+                setIsTargetFilled(!isInput)
+            }
+        }
+
+        // Initial check
+        checkValue()
+
+        // Also check periodically since elements might take a moment to mount
+        const interval = setInterval(checkValue, 500)
+        
+        window.addEventListener('input', checkValue)
+        window.addEventListener('change', checkValue)
+        return () => {
+            clearInterval(interval)
+            window.removeEventListener('input', checkValue)
+            window.removeEventListener('change', checkValue)
+        }
+    }, [currentStep])
 
     const updateTargetRect = useCallback(() => {
         if (!currentStep) return
@@ -444,7 +473,7 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
         if (!currentStep || currentStep.action !== 'input') return
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && isTargetFilled) {
                 nextStep()
             }
         }
@@ -552,12 +581,15 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
         }
 
         // Keep within viewport
-        const padding = 20
+        const padding = 10
         const viewportWidth = window.innerWidth
         const viewportHeight = window.innerHeight
 
+        // Use a dynamic width for clamping (mobile-sheet style)
+        const elementWidth = viewportWidth < 640 ? viewportWidth - (padding * 2) : 320
+
         if (left < padding) left = padding
-        if (left + 320 > viewportWidth - padding) left = viewportWidth - 320 - padding
+        if (left + elementWidth > viewportWidth - padding) left = viewportWidth - elementWidth - padding
         if (top < padding) top = padding
         if (top + 200 > viewportHeight - padding) top = viewportHeight - 200 - padding
 
@@ -596,9 +628,9 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
                                 {/* Tooltip Content */}
                                 {(step.placement === 'center' || targetRect) && (
                                     <div
-                                        className={`pointer-events-auto bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border border-indigo-100 dark:border-indigo-500/20 transform transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isFading ? 'opacity-0 scale-95 translate-y-4' : 'opacity-100 scale-100 translate-y-0'} ${step.placement === 'center'
-                                            ? 'w-full max-w-[480px] p-8 text-center z-[10001]'
-                                            : 'absolute w-[320px]'
+                                        className={`pointer-events-auto bg-white dark:bg-slate-900 rounded-[24px] sm:rounded-3xl p-4 sm:p-6 shadow-2xl border border-indigo-100 dark:border-indigo-500/20 transform transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isFading ? 'opacity-0 scale-95 translate-y-4' : 'opacity-100 scale-100 translate-y-0'} ${step.placement === 'center'
+                                            ? 'w-full max-w-[90vw] sm:max-w-[480px] p-6 sm:p-8 text-center z-[10001]'
+                                            : 'absolute w-[calc(100vw-20px)] sm:w-[320px]'
                                             }`}
                                         style={step.placement === 'center' ? {} : getTooltipStyle()}
                                     >
@@ -635,27 +667,28 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
                                                             {displayTitle}
                                                         </h4>
                                                     </div>
-                                                    <p className={`font-bold text-gray-700 dark:text-slate-200 leading-relaxed ${!showControls ? 'mb-0' : 'mb-8'} ${step.placement === 'center' ? 'text-lg' : 'text-xs'}`}>
+                                                    <p className={`font-bold text-gray-700 dark:text-slate-200 leading-relaxed ${!showControls ? 'mb-0' : 'mb-6 sm:mb-8'} ${step.placement === 'center' ? 'text-base sm:text-lg' : 'text-[11px] sm:text-xs'}`}>
                                                         {displayContent}
                                                     </p>
                                                     {showControls && (
-                                                        <div className="flex items-center justify-between mt-8">
-                                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                        <div className="flex items-center justify-between mt-6 sm:mt-8">
+                                                            <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
                                                                 {step.placement === 'center' ? 'Experience points gained' : `Step ${currentStepIndex + 1} of ${tourSteps.length}`}
                                                             </span>
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="flex gap-1">
+                                                            <div className="flex items-center gap-3 sm:gap-4">
+                                                                <div className="flex gap-1 hidden xs:flex">
                                                                     {tourSteps.map((_, i) => (
-                                                                        <div key={i} className={`w-1.5 h-1.5 rounded-full ${i === currentStepIndex ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-slate-800'}`} />
+                                                                        <div key={i} className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${i === currentStepIndex ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-slate-800'}`} />
                                                                     ))}
                                                                 </div>
                                                                 {(step.showNext || (step.action !== 'click' && step.action !== 'custom' && step.placement !== 'center')) && (
                                                                     <button
                                                                         onClick={nextStep}
-                                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-indigo-500/20 active:scale-95 group"
+                                                                        disabled={step.action === 'input' && !isTargetFilled}
+                                                                        className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-indigo-500/20 active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed`}
                                                                     >
                                                                         {step.nextLabel || (step.showNext ? 'Ok' : 'Next Step')}
-                                                                        <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                                                                        <ChevronRight size={10} className="sm:w-3 sm:h-3 group-hover:translate-x-0.5 transition-transform" />
                                                                     </button>
                                                                 )}
                                                                 {step.placement === 'center' && (
