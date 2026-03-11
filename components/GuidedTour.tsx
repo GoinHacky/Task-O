@@ -637,16 +637,6 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
         }
     }, [currentStepIndex, activeTourId])
 
-    useEffect(() => {
-        const savedTour = localStorage.getItem('activeTour')
-        const savedStep = localStorage.getItem('activeTourStep')
-        if (savedTour && tours[savedTour]) {
-            setActiveTourId(savedTour)
-            if (savedStep) {
-                setCurrentStepIndex(parseInt(savedStep, 10))
-            }
-        }
-    }, [])
 
     const getTooltipStyle = () => {
         if (!targetRect || !currentStep) return {}

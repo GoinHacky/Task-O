@@ -165,7 +165,7 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
                 >
                     <Bell size={16} />
                     {unreadCount > 0 && (
-                        <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 border-2 border-white dark:border-slate-950 rounded-full"></span>
+                        <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 border-2 border-white dark:border-slate-950 rounded-full animate-annoying-glow"></span>
                     )}
                 </button>
 
