@@ -20,6 +20,7 @@ interface TourStep {
     fallbackHideControls?: boolean
     showNext?: boolean
     nextLabel?: string
+    fallbackTourId?: string
 }
 
 interface GuidedTourContextType {
@@ -314,6 +315,79 @@ const tours: Record<string, TourStep[]> = {
             content: 'Mission logged. You are now fully equipped to issue directives and manage your team operations via tasks.',
             placement: 'center'
         }
+    ],
+    'add-team-members': [
+        {
+            id: 'tour-create-dropdown',
+            targetId: 'tour-create-dropdown',
+            title: 'Step 1: Invite Personnel',
+            content: 'Click the Create button to open the global operations menu.',
+            placement: 'bottom',
+            action: 'click'
+        },
+        {
+            id: 'tour-new-member-option',
+            targetId: 'tour-new-member-option',
+            title: 'Step 2: New Member',
+            content: 'Select "New Member" to begin onboarding a new collaborator to your project.',
+            placement: 'bottom',
+            action: 'click'
+        },
+        {
+            id: 'tour-invite-project-select',
+            targetId: 'tour-invite-project-select',
+            fallbackTargetId: 'tour-invite-no-projects-link',
+            title: 'Step 3: Target Project',
+            fallbackTitle: 'No Projects Found',
+            content: 'Select the project where this new member will be deployed.',
+            fallbackContent: 'You need a project before you can invite members. Click here to start the Project Creation walkthrough!',
+            placement: 'bottom',
+            action: 'input',
+            fallbackHideControls: true,
+            fallbackTourId: 'create-project'
+        },
+        {
+            id: 'tour-invite-email-input',
+            targetId: 'tour-invite-email-input',
+            title: 'Step 4: Member Email',
+            content: 'Enter the email address of the personnel you wish to invite.',
+            placement: 'bottom',
+            action: 'input'
+        },
+        {
+            id: 'tour-invite-role-select',
+            targetId: 'tour-invite-role-select',
+            title: 'Step 5: Operational Role',
+            content: 'Define their access level—Admin, Member, or Viewer.',
+            placement: 'bottom',
+            action: 'input'
+        },
+        {
+            id: 'tour-invite-team-select',
+            targetId: 'tour-invite-team-select',
+            title: 'Step 6: Team Assignment',
+            content: 'Optional: Select one or more teams to immediately assign this member to.',
+            placement: 'left',
+            action: 'custom',
+            showNext: true,
+            nextLabel: 'Ok'
+        },
+        {
+            id: 'tour-invite-submit-btn',
+            targetId: 'tour-invite-submit-btn',
+            title: 'Step 7: Finalize Invitation',
+            content: 'Click Send Invite to officially authorize their access.',
+            placement: 'top',
+            action: 'click',
+            delay: 3000
+        },
+        {
+            id: 'tour-add-members-complete',
+            targetId: 'step-complete-no-highlight-marker',
+            title: 'Congratulations!',
+            content: 'Outstanding work! You\'ve successfully expanded your operational capability by onboarding new personnel. You\'re now ready to lead your team to victory!',
+            placement: 'center'
+        }
     ]
 }
 
@@ -389,6 +463,50 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
         }
     }, [currentStep])
 
+    const endTour = useCallback(() => {
+        setIsFading(true)
+        fadeTimeoutRef.current = setTimeout(() => {
+            setActiveTourId(null)
+            setCurrentStepIndex(0)
+            setIsFading(false)
+            fadeTimeoutRef.current = null
+            localStorage.removeItem('activeTour')
+            localStorage.removeItem('activeTourStep')
+        }, 500)
+    }, [])
+
+    const startTour = useCallback((tourId: string, skipNavigation: boolean = true) => {
+        // Clear any pending fade out to prevent the new tour from closing immediately
+        if (fadeTimeoutRef.current) {
+            clearTimeout(fadeTimeoutRef.current)
+            fadeTimeoutRef.current = null
+        }
+        setIsFading(false)
+
+        const steps = tours[tourId]
+        let startIndex = 0
+
+        // If the first step is just a navigation step and we're already there, skip it (unless forced)
+        if (skipNavigation && steps && steps.length > 0 && steps[0].path === pathname) {
+            startIndex = 1
+        }
+
+        setActiveTourId(tourId)
+        setCurrentStepIndex(startIndex)
+        localStorage.setItem('activeTour', tourId)
+        localStorage.setItem('activeTourStep', startIndex.toString())
+    }, [pathname])
+
+    const nextStep = useCallback(() => {
+        if (currentStepIndex < tourSteps.length - 1) {
+            const nextIndex = currentStepIndex + 1
+            setCurrentStepIndex(nextIndex)
+            localStorage.setItem('activeTourStep', nextIndex.toString())
+        } else {
+            endTour()
+        }
+    }, [currentStepIndex, tourSteps.length, endTour])
+
     // Silky Smooth 60FPS Tracking Loop
     useEffect(() => {
         let animationFrameId: number;
@@ -420,9 +538,6 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
         if (!currentStep) return
 
         const handleInteraction = (e: MouseEvent) => {
-            // Only auto-advance on 'click' action
-            if (currentStep.action !== 'click') return
-
             let element = document.getElementById(currentStep.targetId)
             let isFallback = false
             if (!element && currentStep.fallbackTargetId) {
@@ -431,42 +546,45 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
             }
 
             if (element && (element.contains(e.target as Node) || e.target === element)) {
-                // If we clicked a fallback link that leads elsewhere, end the tour or let it handle its own state
+                // If we clicked a fallback link
                 if (isFallback) {
-                    endTour()
+                    if (currentStep.fallbackTourId) {
+                        // Small delay to allow InviteMemberModal to close and navigation to settle
+                        setTimeout(() => {
+                            if (currentStep.fallbackTourId) {
+                                startTour(currentStep.fallbackTourId, false) // Don't skip navigation step on redirect
+                            }
+                        }, 300)
+                    } else {
+                        endTour()
+                    }
                     return
                 }
 
-                if (currentStepIndex < tourSteps.length - 1) {
-                    const nextIndex = currentStepIndex + 1
-                    if (currentStep.delay) {
-                        setTimeout(() => {
+                // Normal action handling (only for 'click')
+                if (currentStep.action === 'click') {
+                    if (currentStepIndex < tourSteps.length - 1) {
+                        const nextIndex = currentStepIndex + 1
+                        if (currentStep.delay) {
+                            setTimeout(() => {
+                                setCurrentStepIndex(nextIndex)
+                                localStorage.setItem('activeTourStep', nextIndex.toString())
+                            }, currentStep.delay)
+                        } else {
                             setCurrentStepIndex(nextIndex)
                             localStorage.setItem('activeTourStep', nextIndex.toString())
-                        }, currentStep.delay)
+                        }
                     } else {
-                        setCurrentStepIndex(nextIndex)
-                        localStorage.setItem('activeTourStep', nextIndex.toString())
+                        endTour()
                     }
-                } else {
-                    endTour()
                 }
             }
         }
 
         document.addEventListener('mousedown', handleInteraction)
         return () => document.removeEventListener('mousedown', handleInteraction)
-    }, [currentStep, currentStepIndex, tourSteps.length])
+    }, [currentStep, currentStepIndex, tourSteps.length, startTour, endTour])
 
-    const nextStep = useCallback(() => {
-        if (currentStepIndex < tourSteps.length - 1) {
-            const nextIndex = currentStepIndex + 1
-            setCurrentStepIndex(nextIndex)
-            localStorage.setItem('activeTourStep', nextIndex.toString())
-        } else {
-            endTour()
-        }
-    }, [currentStepIndex, tourSteps.length])
 
     // Keyboard interaction: press 'Enter' to advance on 'input' steps
     useEffect(() => {
@@ -508,39 +626,6 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
         return () => clearTimeout(timer)
     }, [currentStepIndex, activeTourId, currentStep])
 
-    const startTour = useCallback((tourId: string) => {
-        // Clear any pending fade out to prevent the new tour from closing immediately
-        if (fadeTimeoutRef.current) {
-            clearTimeout(fadeTimeoutRef.current)
-            fadeTimeoutRef.current = null
-        }
-        setIsFading(false)
-
-        const steps = tours[tourId]
-        let startIndex = 0
-
-        // If the first step is just a navigation step and we're already there, skip it
-        if (steps && steps.length > 0 && steps[0].path === pathname) {
-            startIndex = 1
-        }
-
-        setActiveTourId(tourId)
-        setCurrentStepIndex(startIndex)
-        localStorage.setItem('activeTour', tourId)
-        localStorage.setItem('activeTourStep', startIndex.toString())
-    }, [pathname])
-
-    const endTour = useCallback(() => {
-        setIsFading(true)
-        fadeTimeoutRef.current = setTimeout(() => {
-            setActiveTourId(null)
-            setCurrentStepIndex(0)
-            setIsFading(false)
-            fadeTimeoutRef.current = null
-            localStorage.removeItem('activeTour')
-            localStorage.removeItem('activeTourStep')
-        }, 500)
-    }, [])
 
     // Auto-fade timer for 'center' placement
     useEffect(() => {
@@ -650,11 +735,14 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
                                                 </div>
                                                 <div className="space-y-1">
                                                     <h4 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tightest leading-none">
-                                                        {activeTourId === 'create-project' ? 'Create Project' :
-                                                            activeTourId === 'create-task' ? 'Create Task' :
-                                                                activeTourId === 'create-team' ? 'Create Team' : 'Mission'} Tutorial Completed
+                                                        {currentStepIndex === tourSteps.length - 1 ? (
+                                                            `${activeTourId === 'create-project' ? 'Create Project' :
+                                                                activeTourId === 'create-task' ? 'Create Task' :
+                                                                    activeTourId === 'create-team' ? 'Create Team' : 'Mission'} Tutorial Completed`
+                                                        ) : (
+                                                            step.title
+                                                        )}
                                                     </h4>
-                                                    {/* Removed redundant sub-label */}
                                                 </div>
                                             </div>
                                         )}
@@ -700,7 +788,7 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
                                                                         <ChevronRight size={10} className="sm:w-3 sm:h-3 group-hover:translate-x-0.5 transition-transform" />
                                                                     </button>
                                                                 )}
-                                                                {step.placement === 'center' && (
+                                                                {step.placement === 'center' && currentStepIndex === tourSteps.length - 1 && (
                                                                     <button
                                                                         onClick={endTour}
                                                                         className="px-8 py-3.5 bg-indigo-500 hover:bg-indigo-600 text-white text-[12px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-indigo-500/20 active:scale-95"

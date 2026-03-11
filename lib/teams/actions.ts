@@ -121,11 +121,33 @@ export async function deleteTeam(id: string) {
 
     if (!user) throw new Error('Unauthorized')
 
+    // Check if user is team owner
+    const { data: team } = await supabase
+        .from('teams')
+        .select('owner_id, project_id')
+        .eq('id', id)
+        .single()
+
+    if (!team) throw new Error('Team not found')
+
+    // Check if user is project admin/owner
+    const { data: projectMembership } = await supabase
+        .from('project_members')
+        .select('role')
+        .eq('project_id', team.project_id)
+        .eq('user_id', user.id)
+        .single()
+
+    const isProjectAdmin = ['admin', 'owner'].includes(projectMembership?.role || '')
+
+    if (team.owner_id !== user.id && !isProjectAdmin) {
+        throw new Error('Unauthorized: Only the team owner or project administrator can delete this unit')
+    }
+
     const { error } = await supabase
         .from('teams')
         .delete()
         .eq('id', id)
-        .eq('owner_id', user.id)
 
     if (error) throw error
 

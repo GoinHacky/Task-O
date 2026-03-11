@@ -84,7 +84,7 @@ export default function TeamAssignmentDrawer({
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {availableMembers.map((user) => (
+                    {availableMembers.map((user, index) => (
                         <div
                             key={user.id}
                             className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800/50 rounded-2xl group hover:border-[#6366f1]/20 transition-all"
@@ -109,6 +109,7 @@ export default function TeamAssignmentDrawer({
                                 </div>
                             </div>
                             <button
+                                id={index === 0 ? "tour-assign-member-btn" : undefined}
                                 onClick={() => handleAssign(user.id)}
                                 disabled={!!processingId}
                                 className="p-2 text-gray-300 hover:text-[#6366f1] hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all"

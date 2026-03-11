@@ -1,14 +1,42 @@
 'use client'
 
-import { Users, LayoutDashboard, MoreHorizontal, ChevronRight } from 'lucide-react'
+import { Users, LayoutDashboard, MoreHorizontal, ChevronRight, Trash2 } from 'lucide-react'
 import Link from 'next/link'
+import { useState } from 'react'
+import { deleteTeam } from '@/lib/teams/actions'
+import DeleteTeamModal from '@/components/teams/DeleteTeamModal'
 
 interface TeamTableProps {
     teams: any[]
     projectId: string
+    currentUserId: string
+    isAdmin: boolean
 }
 
-export default function TeamTable({ teams, projectId }: TeamTableProps) {
+export default function TeamTable({ teams, projectId, currentUserId, isAdmin }: TeamTableProps) {
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+    const [teamToDelete, setTeamToDelete] = useState<any>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
+
+    const handleDeleteClick = (team: any) => {
+        setTeamToDelete(team)
+        setIsDeleteModalOpen(true)
+    }
+
+    const handleConfirmDelete = async () => {
+        if (!teamToDelete) return
+        setIsDeleting(true)
+        try {
+            await deleteTeam(teamToDelete.id)
+            setIsDeleteModalOpen(false)
+            setTeamToDelete(null)
+        } catch (error) {
+            console.error('Failed to delete team:', error)
+            alert('Failed to delete team')
+        } finally {
+            setIsDeleting(false)
+        }
+    }
     return (
         <div className="w-full overflow-x-auto scrollbar-hide">
             <table className="w-full border-collapse">
@@ -21,7 +49,7 @@ export default function TeamTable({ teams, projectId }: TeamTableProps) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-slate-800/20">
-                    {teams.map((team) => (
+                    {teams.map((team, index) => (
                         <tr
                             key={team.id}
                             className="group hover:bg-gray-50/50 dark:hover:bg-slate-800/20 transition-all"
@@ -57,13 +85,23 @@ export default function TeamTable({ teams, projectId }: TeamTableProps) {
                                     </div>
                                 </div>
                             </td>
-                            <td className="px-6 py-5 text-right">
+                            <td className="px-6 py-5 text-right flex items-center justify-end gap-2">
                                 <Link
+                                    id={index === 0 ? "tour-review-unit-btn" : undefined}
                                     href={`/projects/${projectId}/teams/${team.id}`}
                                     className="px-6 py-2.5 bg-gray-50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 border border-transparent hover:border-gray-100 dark:hover:border-slate-700 rounded-xl text-[10px] font-black text-gray-400 hover:text-gray-900 dark:hover:text-slate-100 uppercase tracking-widest transition-all"
                                 >
                                     Review Unit
                                 </Link>
+                                {(isAdmin || team.owner_id === currentUserId) && (
+                                    <button
+                                        onClick={() => handleDeleteClick(team)}
+                                        className="p-2.5 bg-rose-50/50 dark:bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white rounded-xl transition-all active:scale-95 border border-rose-100 dark:border-rose-500/20"
+                                        title="Delete Team"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                )}
                             </td>
                         </tr>
                     ))}
@@ -79,6 +117,16 @@ export default function TeamTable({ teams, projectId }: TeamTableProps) {
                     )}
                 </tbody>
             </table>
+
+            {teamToDelete && (
+                <DeleteTeamModal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                    onConfirm={handleConfirmDelete}
+                    teamName={teamToDelete.name}
+                    loading={isDeleting}
+                />
+            )}
         </div>
     )
 }

@@ -130,6 +130,7 @@ export default function InviteMemberModal({ isOpen, onClose, projectId: initialP
                     </button>
                     {!noProjects && (
                         <button
+                            id="tour-invite-submit-btn"
                             onClick={handleSubmit}
                             disabled={loading || !email || !projectId}
                             className="flex-1 py-4 text-[10px] font-black text-[#6366f1] uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-slate-900 transition-all disabled:opacity-50"
@@ -161,6 +162,7 @@ export default function InviteMemberModal({ isOpen, onClose, projectId: initialP
                     </p>
                     <Link
                         href="/projects"
+                        id="tour-invite-no-projects-link"
                         onClick={onClose}
                         className="inline-flex items-center gap-2 px-8 py-3 bg-[#6366f1] text-white text-[10px] font-black rounded-xl hover:bg-[#5558e3] transition-all shadow-lg shadow-indigo-500/20 active:scale-95 uppercase tracking-[0.2em]"
                     >
@@ -181,6 +183,7 @@ export default function InviteMemberModal({ isOpen, onClose, projectId: initialP
                             <label className="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Parent Project *</label>
                             <div className="relative group">
                                 <select
+                                    id="tour-invite-project-select"
                                     required
                                     value={projectId}
                                     onChange={(e) => setProjectId(e.target.value)}
@@ -198,6 +201,7 @@ export default function InviteMemberModal({ isOpen, onClose, projectId: initialP
                         <div className="space-y-2">
                             <label className="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Email *</label>
                             <input
+                                id="tour-invite-email-input"
                                 autoFocus
                                 required
                                 type="email"
@@ -212,6 +216,7 @@ export default function InviteMemberModal({ isOpen, onClose, projectId: initialP
                             <label className="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Role *</label>
                             <div className="relative group">
                                 <select
+                                    id="tour-invite-role-select"
                                     value={role}
                                     onChange={(e) => setRole(e.target.value as any)}
                                     className="w-full px-5 py-3 bg-gray-50/50 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-800 rounded-2xl focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-[#6366f1]/10 focus:border-[#6366f1] outline-none transition-all text-sm font-bold text-gray-900 dark:text-slate-100 appearance-none"
@@ -228,9 +233,10 @@ export default function InviteMemberModal({ isOpen, onClose, projectId: initialP
                             <div className="space-y-3">
                                 <label className="block text-[10px] font-black text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Assign to Teams</label>
                                 <div className="max-h-32 overflow-y-auto pr-2 space-y-2 scrollbar-hide">
-                                    {teams.map(team => (
+                                    {teams.map((team, index) => (
                                         <button
                                             key={team.id}
+                                            id={index === 0 ? "tour-invite-team-select" : undefined}
                                             type="button"
                                             onClick={() => toggleTeam(team.id)}
                                             className={`w-full flex items-center justify-between p-2 rounded-xl border transition-all ${selectedTeamIds.includes(team.id)

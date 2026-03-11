@@ -41,6 +41,7 @@ export default function ProjectNav({ projectId, role }: ProjectNavProps) {
                 return (
                     <Link
                         key={tab.href}
+                        id={tab.label === 'Teams' ? 'tour-teams-tab' : undefined}
                         href={tab.href}
                         className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300 ${isActive
                             ? 'bg-white dark:bg-slate-800 text-[#6366f1] shadow-sm ring-1 ring-gray-300 dark:ring-slate-700'

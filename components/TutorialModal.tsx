@@ -12,7 +12,8 @@ import {
     CheckCircle2,
     Play,
     Users2,
-    Briefcase
+    Briefcase,
+    UserPlus
 } from 'lucide-react'
 import { useGuidedTour } from '@/components/GuidedTour'
 
@@ -125,7 +126,7 @@ export default function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
 
                     {currentSlide === slides.length - 1 ? (
                         <div className="flex flex-col items-center mb-8">
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+                            <div className="grid grid-cols-2 gap-3 w-full">
                                 <button
                                     onClick={() => {
                                         setSelectedTour('create-project')
@@ -137,6 +138,20 @@ export default function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
                                         <FolderKanban size={16} />
                                     </div>
                                     <h4 className="text-[9px] font-black text-gray-900 dark:text-white uppercase tracking-widest mb-1">Create Project</h4>
+                                    <p className="text-[7px] font-bold text-gray-400 uppercase tracking-widest leading-tight">Guided Walkthrough</p>
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        setSelectedTour('add-team-members')
+                                        setShowPrompt(false)
+                                    }}
+                                    className={`p-4 rounded-[24px] border transition-all group text-left ${selectedTour === 'add-team-members' ? 'border-orange-500 bg-orange-50 dark:bg-orange-500/20 ring-2 ring-orange-500/20' : 'border-orange-100 dark:border-orange-500/20 bg-orange-50/50 dark:bg-orange-500/5 hover:border-orange-500'}`}
+                                >
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 transition-transform ${selectedTour === 'add-team-members' ? 'bg-orange-500 text-white scale-110' : 'bg-orange-100 dark:bg-orange-500/10 text-orange-500 group-hover:scale-110'}`}>
+                                        <UserPlus size={16} />
+                                    </div>
+                                    <h4 className="text-[9px] font-black text-gray-900 dark:text-white uppercase tracking-widest mb-1">Invite Members</h4>
                                     <p className="text-[7px] font-bold text-gray-400 uppercase tracking-widest leading-tight">Guided Walkthrough</p>
                                 </button>
 

@@ -307,6 +307,7 @@ export default function HeaderActions({ currentUser }: HeaderActionsProps) {
                             New Team
                         </button>
                         <button
+                            id="tour-new-member-option"
                             onClick={() => {
                                 setIsMemberModalOpen(true)
                                 setIsCreateOpen(false)

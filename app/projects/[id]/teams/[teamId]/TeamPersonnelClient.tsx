@@ -81,6 +81,7 @@ export default function TeamPersonnelClient({ team, projectId, isAdmin, tasks }:
                 {isAdmin && (
                     <div className="mt-8 pt-6 border-t border-gray-50 dark:border-slate-800/50">
                         <button
+                            id="tour-deploy-personnel-btn"
                             onClick={() => setIsAssignmentOpen(true)}
                             className="w-full py-4 bg-gray-50 dark:bg-slate-800/50 hover:bg-[#6366f1]/5 text-[10px] font-black text-gray-400 hover:text-[#6366f1] uppercase tracking-widest rounded-2xl transition-all border border-transparent hover:border-[#6366f1]/20 shadow-sm flex items-center justify-center gap-2"
                         >

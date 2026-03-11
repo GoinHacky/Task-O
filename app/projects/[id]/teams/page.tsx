@@ -51,7 +51,7 @@ export default async function ProjectTeamsPage({
             </div>
 
             <div className="bg-white dark:bg-slate-900/40 rounded-[40px] border border-gray-100 dark:border-slate-800/50 shadow-sm p-2 backdrop-blur-xl">
-                <TeamTable teams={teams || []} projectId={id} />
+                <TeamTable teams={teams || []} projectId={id} currentUserId={user.id} isAdmin={isAdmin} />
             </div>
         </div>
     )
