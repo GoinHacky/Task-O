@@ -22,13 +22,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <GuidedTourProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <SidebarProvider>
+        <SidebarProvider>
+          <GuidedTourProvider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               {children}
-            </SidebarProvider>
-          </ThemeProvider>
-        </GuidedTourProvider>
+            </ThemeProvider>
+          </GuidedTourProvider>
+        </SidebarProvider>
       </body>
     </html>
   )

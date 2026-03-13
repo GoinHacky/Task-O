@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { X, ChevronRight, Play } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import Portal from '@/components/ui/Portal'
+import { useSidebar } from './SidebarContext'
 
 interface TourStep {
     id: string
@@ -399,9 +400,11 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
     const [isTargetFilled, setIsTargetFilled] = useState(false)
     const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const pathname = usePathname()
+    const { setIsMobileOpen } = useSidebar()
 
     const tourSteps = activeTourId ? tours[activeTourId] : []
     const currentStep = tourSteps[currentStepIndex]
+    const isActive = !!activeTourId
 
     // Check if target input is filled
     useEffect(() => {
@@ -534,6 +537,13 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
         }
     }, [pathname, currentStep, currentStepIndex])
 
+    // Auto-open sidebar if target is in sidebar and we are on mobile
+    useEffect(() => {
+        if (isActive && currentStep?.targetId?.startsWith('sidebar-') && window.innerWidth < 1024) {
+            setIsMobileOpen(true)
+        }
+    }, [isActive, currentStep, setIsMobileOpen])
+
     useEffect(() => {
         if (!currentStep) return
 
@@ -641,24 +651,30 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
     const getTooltipStyle = () => {
         if (!targetRect || !currentStep) return {}
 
+        const viewportWidth = window.innerWidth
+        const isMobile = viewportWidth < 1024
+        const isSidebarItem = currentStep.targetId.startsWith('sidebar-')
+
         let top = targetRect.top
         let left = targetRect.left + (targetRect.width / 2) - 160
 
-        if (currentStep.placement === 'bottom') {
+        // On mobile, if it's a sidebar item, we almost always want it below
+        const effectivePlacement = (isMobile && isSidebarItem) ? 'bottom' : currentStep.placement
+
+        if (effectivePlacement === 'bottom') {
             top = targetRect.bottom + 20
-        } else if (currentStep.placement === 'top') {
-            top = targetRect.top - 220 // Increased buffer
-        } else if (currentStep.placement === 'right') {
+        } else if (effectivePlacement === 'top') {
+            top = targetRect.top - 220 
+        } else if (effectivePlacement === 'right') {
             top = targetRect.top
             left = targetRect.right + 20
-        } else if (currentStep.placement === 'left') {
+        } else if (effectivePlacement === 'left') {
             top = targetRect.top
             left = targetRect.left - 300
         }
 
         // Keep within viewport
         const padding = 10
-        const viewportWidth = window.innerWidth
         const viewportHeight = window.innerHeight
 
         // Use a dynamic width for clamping (mobile-sheet style)
@@ -666,6 +682,12 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
 
         if (left < padding) left = padding
         if (left + elementWidth > viewportWidth - padding) left = viewportWidth - elementWidth - padding
+        
+        // Prevent overlapping the target vertically if forced to bottom
+        if (isMobile && isSidebarItem && top < targetRect.bottom + 10) {
+            top = targetRect.bottom + 10
+        }
+
         if (top < padding) top = padding
         if (top + 200 > viewportHeight - padding) top = viewportHeight - 200 - padding
 

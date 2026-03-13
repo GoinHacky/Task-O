@@ -106,30 +106,39 @@ export default function TutorialModal({ isOpen, onClose, isDismissed, onToggleDi
                 onClick={handleClose}
             />
 
-            <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-[40px] border border-gray-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div 
+                className="relative w-full max-w-[calc(100vw-32px)] sm:max-w-lg bg-white dark:bg-slate-900 rounded-[32px] sm:rounded-[40px] border border-gray-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
+                onClick={() => setSelectedTour(null)}
+            >
                 <button
-                    onClick={handleClose}
-                    className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 dark:text-gray-500 transition-colors z-20"
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        handleClose()
+                    }}
+                    className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 dark:text-gray-500 transition-colors z-20"
                 >
                     <X size={20} />
                 </button>
 
-                <div className="p-10 text-center">
-                    <div className={`w-24 h-24 rounded-3xl ${slides[currentSlide].color} flex items-center justify-center mx-auto mb-8 animate-in zoom-in duration-500`}>
+                <div className="p-6 sm:p-10 text-center">
+                    <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-3xl ${slides[currentSlide].color} flex items-center justify-center mx-auto mb-6 sm:mb-8 animate-in zoom-in duration-500`}>
                         {slides[currentSlide].icon}
                     </div>
 
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-4 tracking-tightest">
+                    <h2 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white mb-3 sm:mb-4 tracking-tightest">
                         {slides[currentSlide].title}
                     </h2>
 
-                    <p className="text-sm text-gray-500 dark:text-slate-400 font-medium leading-relaxed mb-10 min-h-[60px]">
+                    <p className="text-sm text-gray-500 dark:text-slate-400 font-medium leading-relaxed mb-6 sm:mb-10 min-h-[60px]">
                         {slides[currentSlide].description}
                     </p>
 
                     {currentSlide === 0 && (
                         <div className="flex items-center justify-center gap-3 mb-8 animate-in slide-in-from-top-4 duration-500 delay-300">
-                            <label className="flex items-center gap-2 cursor-pointer group">
+                            <label 
+                                className="flex items-center gap-2 cursor-pointer group"
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 <div className="relative">
                                     <input
                                         type="checkbox"
@@ -161,11 +170,12 @@ export default function TutorialModal({ isOpen, onClose, isDismissed, onToggleDi
                         <div className="flex flex-col items-center mb-8">
                             <div className="grid grid-cols-2 gap-3 w-full">
                                 <button
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                        e.stopPropagation()
                                         setSelectedTour('create-project')
                                         setShowPrompt(false)
                                     }}
-                                    className={`p-4 rounded-[24px] border transition-all group text-left ${selectedTour === 'create-project' ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/20 ring-2 ring-blue-500/20' : 'border-blue-100 dark:border-blue-500/20 bg-blue-50/50 dark:bg-blue-500/5 hover:border-blue-500'}`}
+                                    className={`p-4 rounded-[24px] border transition-all group text-left ${selectedTour === 'create-project' ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/20 ring-2 ring-blue-500/20' : 'border-transparent bg-blue-50/50 dark:bg-blue-500/5 hover:border-blue-500'}`}
                                 >
                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 transition-transform ${selectedTour === 'create-project' ? 'bg-blue-500 text-white scale-110' : 'bg-blue-100 dark:bg-blue-500/10 text-blue-500 group-hover:scale-110'}`}>
                                         <FolderKanban size={16} />
@@ -175,11 +185,12 @@ export default function TutorialModal({ isOpen, onClose, isDismissed, onToggleDi
                                 </button>
 
                                 <button
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                        e.stopPropagation()
                                         setSelectedTour('add-team-members')
                                         setShowPrompt(false)
                                     }}
-                                    className={`p-4 rounded-[24px] border transition-all group text-left ${selectedTour === 'add-team-members' ? 'border-orange-500 bg-orange-50 dark:bg-orange-500/20 ring-2 ring-orange-500/20' : 'border-orange-100 dark:border-orange-500/20 bg-orange-50/50 dark:bg-orange-500/5 hover:border-orange-500'}`}
+                                    className={`p-4 rounded-[24px] border transition-all group text-left ${selectedTour === 'add-team-members' ? 'border-orange-500 bg-orange-50 dark:bg-orange-500/20 ring-2 ring-orange-500/20' : 'border-transparent bg-orange-50/50 dark:bg-orange-500/5 hover:border-orange-500'}`}
                                 >
                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 transition-transform ${selectedTour === 'add-team-members' ? 'bg-orange-500 text-white scale-110' : 'bg-orange-100 dark:bg-orange-500/10 text-orange-500 group-hover:scale-110'}`}>
                                         <UserPlus size={16} />
@@ -189,11 +200,12 @@ export default function TutorialModal({ isOpen, onClose, isDismissed, onToggleDi
                                 </button>
 
                                 <button
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                        e.stopPropagation()
                                         setSelectedTour('create-team')
                                         setShowPrompt(false)
                                     }}
-                                    className={`p-4 rounded-[24px] border transition-all group text-left ${selectedTour === 'create-team' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 ring-2 ring-indigo-500/20' : 'border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/5 hover:border-indigo-500'}`}
+                                    className={`p-4 rounded-[24px] border transition-all group text-left ${selectedTour === 'create-team' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 ring-2 ring-indigo-500/20' : 'border-transparent bg-indigo-50/50 dark:bg-indigo-500/5 hover:border-indigo-500'}`}
                                 >
                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 transition-transform ${selectedTour === 'create-team' ? 'bg-indigo-500 text-white scale-110' : 'bg-indigo-100 dark:bg-indigo-500/10 text-indigo-500 group-hover:scale-110'}`}>
                                         <Users2 size={16} />
@@ -203,11 +215,12 @@ export default function TutorialModal({ isOpen, onClose, isDismissed, onToggleDi
                                 </button>
 
                                 <button
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                        e.stopPropagation()
                                         setSelectedTour('create-task')
                                         setShowPrompt(false)
                                     }}
-                                    className={`p-4 rounded-[24px] border transition-all group text-left ${selectedTour === 'create-task' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/20 ring-2 ring-emerald-500/20' : 'border-emerald-100 dark:border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-500/5 hover:border-emerald-500'}`}
+                                    className={`p-4 rounded-[24px] border transition-all group text-left ${selectedTour === 'create-task' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/20 ring-2 ring-emerald-500/20' : 'border-transparent bg-emerald-50/50 dark:bg-emerald-500/5 hover:border-emerald-500'}`}
                                 >
                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 transition-transform ${selectedTour === 'create-task' ? 'bg-emerald-500 text-white scale-110' : 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-500 group-hover:scale-110'}`}>
                                         <Briefcase size={16} />
@@ -230,14 +243,17 @@ export default function TutorialModal({ isOpen, onClose, isDismissed, onToggleDi
 
                     <div className="flex items-center justify-between gap-4">
                         <button
-                            onClick={prevSlide}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                prevSlide()
+                            }}
                             disabled={currentSlide === 0}
-                            className={`flex items-center gap-2 px-6 py-3 text-[11px] font-black uppercase tracking-widest transition-all ${currentSlide === 0
+                            className={`flex items-center gap-1 sm:gap-2 px-4 py-2 sm:px-6 sm:py-3 text-[10px] sm:text-[11px] font-black uppercase tracking-widest transition-all ${currentSlide === 0
                                 ? 'opacity-0 pointer-events-none'
                                 : 'text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                 }`}
                         >
-                            <ChevronLeft size={16} /> Previous
+                            <ChevronLeft size={16} className="w-4 h-4 sm:w-5 sm:h-5" /> Previous
                         </button>
 
                         <div className="flex gap-2">
@@ -253,13 +269,16 @@ export default function TutorialModal({ isOpen, onClose, isDismissed, onToggleDi
                         </div>
 
                         <button
-                            onClick={nextSlide}
-                            className="flex items-center gap-2 px-8 py-3.5 bg-indigo-600 dark:bg-white text-white dark:text-indigo-950 text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-700 dark:hover:bg-gray-50 transition-all shadow-lg shadow-indigo-200 dark:shadow-none"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                nextSlide()
+                            }}
+                            className="flex items-center gap-1 sm:gap-2 px-6 py-3 sm:px-8 sm:py-3.5 bg-indigo-600 dark:bg-white text-white dark:text-indigo-950 text-[10px] sm:text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-700 dark:hover:bg-gray-50 transition-all shadow-lg shadow-indigo-200 dark:shadow-none"
                         >
                             {currentSlide === slides.length - 1
                                 ? (selectedTour ? 'Learn Walkthrough' : 'Get Started')
                                 : 'Next'}
-                            {currentSlide < slides.length - 1 && <ChevronRight size={16} />}
+                            {currentSlide < slides.length - 1 && <ChevronRight size={16} className="w-4 h-4 sm:w-5 sm:h-5" />}
                         </button>
                     </div>
                 </div>
