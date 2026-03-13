@@ -8,6 +8,7 @@ import HeaderActions from '@/components/HeaderActions'
 import { useRouter } from 'next/navigation'
 import { Search, Menu } from 'lucide-react'
 import { useSidebar } from './SidebarContext'
+import GlobalSearch from './GlobalSearch'
 
 export default function DashboardLayout({
   children,
