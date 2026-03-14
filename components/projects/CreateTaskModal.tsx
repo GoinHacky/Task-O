@@ -157,10 +157,10 @@ users: user_id(
             })
             setSuccess(true)
             resetForm()
+            if (isActive) nextStep()
             setTimeout(() => {
                 setSuccess(false)
                 onClose()
-                if (isActive) nextStep()
                 if (onSuccess) onSuccess()
             }, 2000)
         } catch (err: any) {

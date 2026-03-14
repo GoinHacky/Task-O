@@ -7,6 +7,7 @@ import { Calendar, User } from 'lucide-react'
 import { format } from 'date-fns'
 import Modal from './ui/Modal'
 import TaskDetailDrawer from './projects/TaskDetailDrawer'
+import { useGuidedTour } from './GuidedTour'
 
 // StrictDroppable for React 18 + react-beautiful-dnd
 import { DroppableProps } from 'react-beautiful-dnd'
@@ -64,6 +65,7 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const { activeTourId, nextStep, currentStep } = useGuidedTour()
 
   const fetchUserContext = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -126,6 +128,25 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
     }
   }, [projectId, teamId, userId, initialTasks, fetchTasks, fetchUserContext])
 
+  // Tutorial Ghost Task Injection
+  useEffect(() => {
+    if (activeTourId === 'kanban-basics' && !loading) {
+      setTasks(prev => {
+        const hasGhost = prev.some(t => t.id === 'tutorial-ghost-task')
+        if (hasGhost) return prev
+        const ghostTask: Task = {
+          id: 'tutorial-ghost-task',
+          title: 'Tactical Objective: Move Me!',
+          description: 'This is a tutorial task. Drag this card to the "In Progress" column to see how the board works.',
+          status: 'pending',
+          priority: 'high',
+          teams: { name: 'Technical' }
+        }
+        return [ghostTask, ...prev]
+      })
+    }
+  }, [activeTourId, loading])
+
   const onDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId } = result
 
@@ -167,6 +188,18 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
       )
     )
 
+    // Unified Drag-and-Drop handling
+    if (draggableId === 'tutorial-ghost-task') {
+      if (destination.droppableId === 'in_progress' && task.status === 'pending') {
+        setTasks((prev) => prev.map(t => t.id === draggableId ? { ...t, status: 'in_progress' } : t))
+        nextStep() // Advance tutorial
+      } else if (destination.droppableId === 'completed' && task.status === 'in_progress') {
+        setTasks((prev) => prev.map(t => t.id === draggableId ? { ...t, status: 'completed' } : t))
+        nextStep() // Advance tutorial to final step
+      }
+      return // Don't sync to DB
+    }
+
     try {
       const { error } = await supabase
         .from('tasks')
@@ -207,7 +240,7 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div id="tour-kanban-board" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {COLUMNS.map((column) => {
           const columnTasks = tasks.filter((t) => t.status === column.id)
 
@@ -235,13 +268,14 @@ export default function KanbanBoard({ projectId, teamId, userId, tasks: initialT
                         <Draggable key={task.id} draggableId={task.id} index={index}>
                           {(provided, snapshot) => (
                             <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              className={`group bg-white dark:bg-slate-950 p-6 rounded-[28px] shadow-sm ${getPriorityColor(
-                                task.priority
-                              )} ${snapshot.isDragging ? 'shadow-2xl rotate-2 scale-105 ring-2 ring-[#6366f1]/20' : ''} border border-gray-100 dark:border-slate-800 transition-all hover:border-[#6366f1]/30 cursor-pointer`}
-                              onClick={() => setSelectedTask(task)}
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                id={task.id}
+                                className={`group bg-white dark:bg-slate-950 p-6 rounded-[28px] shadow-sm ${getPriorityColor(
+                                  task.priority
+                                )} ${snapshot.isDragging ? 'shadow-2xl rotate-2 scale-105 ring-2 ring-[#6366f1]/20' : ''} border border-gray-100 dark:border-slate-800 transition-all hover:border-[#6366f1]/30 cursor-pointer`}
+                                onClick={() => task.id !== 'tutorial-ghost-task' && setSelectedTask(task)}
                             >
                               <div className="flex flex-col gap-3">
                                 <h4 className="text-[14px] font-black text-gray-900 dark:text-slate-100 mb-1 leading-tight group-hover:text-[#6366f1] transition-colors uppercase tracking-tightest">
