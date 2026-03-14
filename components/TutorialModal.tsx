@@ -228,6 +228,21 @@ export default function TutorialModal({ isOpen, onClose, isDismissed, onToggleDi
                                     <h4 className="text-[9px] font-black text-gray-900 dark:text-white uppercase tracking-widest mb-1">Create Task</h4>
                                     <p className="text-[7px] font-bold text-gray-400 uppercase tracking-widest leading-tight">Guided Walkthrough</p>
                                 </button>
+
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        setSelectedTour('kanban-basics')
+                                        setShowPrompt(false)
+                                    }}
+                                    className={`p-4 rounded-[24px] border transition-all group text-left ${selectedTour === 'kanban-basics' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/20 ring-2 ring-indigo-500/20' : 'border-transparent bg-indigo-50/50 dark:bg-indigo-500/5 hover:border-indigo-500'}`}
+                                >
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 transition-transform ${selectedTour === 'kanban-basics' ? 'bg-indigo-500 text-white scale-110' : 'bg-indigo-100 dark:bg-indigo-500/10 text-indigo-500 group-hover:scale-110'}`}>
+                                        <FolderKanban size={16} />
+                                    </div>
+                                    <h4 className="text-[9px] font-black text-gray-900 dark:text-white uppercase tracking-widest mb-1">Kanban Basics</h4>
+                                    <p className="text-[7px] font-bold text-gray-400 uppercase tracking-widest leading-tight">Interactive Demo</p>
+                                </button>
                             </div>
 
                             {showPrompt && (

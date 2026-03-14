@@ -6,6 +6,7 @@ import Modal from '@/components/ui/Modal'
 import { inviteUserToWorkspace } from '@/lib/users/actions'
 import { supabase } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { useGuidedTour } from '@/components/GuidedTour'
 
 interface InviteMemberModalProps {
     isOpen: boolean
@@ -28,6 +29,7 @@ export default function InviteMemberModal({ isOpen, onClose, projectId: initialP
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [isFetchingInitial, setIsFetchingInitial] = useState(true)
+    const { nextStep, isActive, startTour } = useGuidedTour()
 
     const fetchInitialData = useCallback(async () => {
         setIsFetchingInitial(true)
@@ -84,6 +86,7 @@ export default function InviteMemberModal({ isOpen, onClose, projectId: initialP
             setSuccess(true)
             resetForm()
             if (onSuccess) onSuccess()
+            if (isActive) nextStep()
             setTimeout(() => {
                 setSuccess(false)
                 onClose()

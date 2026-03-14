@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { X, ChevronRight, Play } from 'lucide-react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Portal from '@/components/ui/Portal'
 import { useSidebar } from './SidebarContext'
 
@@ -30,6 +30,7 @@ interface GuidedTourContextType {
     nextStep: () => void
     currentStep: number
     isActive: boolean
+    activeTourId: string | null
 }
 
 const GuidedTourContext = createContext<GuidedTourContextType | undefined>(undefined)
@@ -379,8 +380,7 @@ const tours: Record<string, TourStep[]> = {
             title: 'Step 7: Finalize Invitation',
             content: 'Click Send Invite to officially authorize their access.',
             placement: 'top',
-            action: 'click',
-            delay: 3000
+            action: 'custom'
         },
         {
             id: 'tour-add-members-complete',
@@ -389,17 +389,84 @@ const tours: Record<string, TourStep[]> = {
             content: 'Outstanding work! You\'ve successfully expanded your operational capability by onboarding new personnel. You\'re now ready to lead your team to victory!',
             placement: 'center'
         }
+    ],
+    'kanban-basics': [
+        {
+            id: 'sidebar-projects',
+            targetId: 'sidebar-projects',
+            title: 'Step 1: Go to Projects',
+            content: 'First, let\'s head over to the Projects section to find a tactical board.',
+            placement: 'right',
+            path: '/projects',
+            action: 'click'
+        },
+        {
+            id: 'tour-kanban-project-select',
+            targetId: 'tour-project-card',
+            fallbackTargetId: 'tour-invite-no-projects-link',
+            title: 'Step 2: Select a Project',
+            fallbackTitle: 'No Projects Found',
+            content: 'Select a project to view its Kanban board.',
+            fallbackContent: 'You need a project first. Click here to start the Project Creation walkthrough!',
+            placement: 'bottom',
+            action: 'click',
+            fallbackHideControls: true,
+            fallbackTourId: 'create-project'
+        },
+        {
+            id: 'tour-tasks-tab',
+            targetId: 'tour-tasks-tab',
+            title: 'Step 3: Tactical Board',
+            content: 'Open the Tasks tab to access your Kanban board.',
+            placement: 'bottom',
+            action: 'click'
+        },
+        {
+            id: 'tutorial-ghost-task',
+            targetId: 'tutorial-ghost-task',
+            title: 'Move your first task',
+            content: 'To advance an objective, simply click and drag this task card to the "In Progress" column.',
+            placement: 'right',
+            action: 'custom'
+        },
+        {
+            id: 'tutorial-ghost-task-2',
+            targetId: 'tutorial-ghost-task',
+            title: 'Complete the objective',
+            content: 'Excellent! Now move the task to "Done" to officially complete the objective.',
+            placement: 'right',
+            action: 'custom'
+        },
+        {
+            id: 'kanban-complete',
+            targetId: 'step-complete-no-highlight-marker',
+            title: 'Great Job!',
+            content: 'You\'ve mastered the basics of Kanban movement. Your team integrity will grow as you move tasks to completion!',
+            placement: 'center'
+        }
     ]
 }
 
 export function GuidedTourProvider({ children }: { children: React.ReactNode }) {
-    const [activeTourId, setActiveTourId] = useState<string | null>(null)
-    const [currentStepIndex, setCurrentStepIndex] = useState(0)
+    const [activeTourId, setActiveTourId] = useState<string | null>(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('activeTour')
+        }
+        return null
+    })
+    const [currentStepIndex, setCurrentStepIndex] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('activeTourStep')
+            return saved ? parseInt(saved, 10) : 0
+        }
+        return 0
+    })
     const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
     const [isFading, setIsFading] = useState(false)
     const [isTargetFilled, setIsTargetFilled] = useState(false)
     const fadeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const pathname = usePathname()
+    const router = useRouter()
     const { setIsMobileOpen } = useSidebar()
 
     const tourSteps = activeTourId ? tours[activeTourId] : []
@@ -431,7 +498,7 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
 
         // Also check periodically since elements might take a moment to mount
         const interval = setInterval(checkValue, 500)
-        
+
         window.addEventListener('input', checkValue)
         window.addEventListener('change', checkValue)
         return () => {
@@ -573,19 +640,16 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
 
                 // Normal action handling (only for 'click')
                 if (currentStep.action === 'click') {
-                    if (currentStepIndex < tourSteps.length - 1) {
-                        const nextIndex = currentStepIndex + 1
-                        if (currentStep.delay) {
-                            setTimeout(() => {
-                                setCurrentStepIndex(nextIndex)
-                                localStorage.setItem('activeTourStep', nextIndex.toString())
-                            }, currentStep.delay)
-                        } else {
-                            setCurrentStepIndex(nextIndex)
-                            localStorage.setItem('activeTourStep', nextIndex.toString())
-                        }
+                    if (currentStep.delay) {
+                        setTimeout(() => {
+                            nextStep()
+                        }, currentStep.delay)
+                    } else if (currentStep.id === 'tour-tasks-tab') {
+                        // For the tasks tab, we want to advance immediately before navigation finishes
+                        // to ensure the tooltip doesn't wait for the new page load
+                        nextStep()
                     } else {
-                        endTour()
+                        nextStep()
                     }
                 }
             }
@@ -593,7 +657,7 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
 
         document.addEventListener('mousedown', handleInteraction)
         return () => document.removeEventListener('mousedown', handleInteraction)
-    }, [currentStep, currentStepIndex, tourSteps.length, startTour, endTour])
+    }, [currentStep, currentStepIndex, tourSteps.length, startTour, endTour, nextStep])
 
 
     // Keyboard interaction: press 'Enter' to advance on 'input' steps
@@ -637,19 +701,20 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
     }, [currentStepIndex, activeTourId, currentStep])
 
 
-    // Auto-fade timer for 'center' placement
+    // Auto-fade timer for 'center' placement (Only for completion step)
     useEffect(() => {
-        if (currentStep?.placement === 'center' && activeTourId) {
+        const isLastStep = currentStepIndex === tourSteps.length - 1
+        if (currentStep?.placement === 'center' && activeTourId && isLastStep) {
             const timer = setTimeout(() => {
                 endTour()
             }, 5000)
             return () => clearTimeout(timer)
         }
-    }, [currentStepIndex, activeTourId, currentStep?.placement, endTour])
+    }, [currentStepIndex, activeTourId, currentStep?.placement, endTour, tourSteps.length])
 
 
     const getTooltipStyle = () => {
-        if (!targetRect || !currentStep) return {}
+        if (!targetRect || !currentStep || currentStep.placement === 'center') return {}
 
         const viewportWidth = window.innerWidth
         const isMobile = viewportWidth < 1024
@@ -662,9 +727,9 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
         const effectivePlacement = (isMobile && isSidebarItem) ? 'bottom' : currentStep.placement
 
         if (effectivePlacement === 'bottom') {
-            top = targetRect.bottom + 20
+            top = targetRect.bottom + 26
         } else if (effectivePlacement === 'top') {
-            top = targetRect.top - 220 
+            top = targetRect.top - 220
         } else if (effectivePlacement === 'right') {
             top = targetRect.top
             left = targetRect.right + 20
@@ -682,7 +747,7 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
 
         if (left < padding) left = padding
         if (left + elementWidth > viewportWidth - padding) left = viewportWidth - elementWidth - padding
-        
+
         // Prevent overlapping the target vertically if forced to bottom
         if (isMobile && isSidebarItem && top < targetRect.bottom + 10) {
             top = targetRect.bottom + 10
@@ -699,7 +764,8 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
         endTour,
         nextStep,
         currentStep: currentStepIndex,
-        isActive: !!activeTourId
+        isActive: !!activeTourId,
+        activeTourId
     }), [startTour, endTour, nextStep, currentStepIndex, activeTourId])
 
     return (
@@ -709,7 +775,7 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
                 const step = tourSteps[currentStepIndex];
                 return (
                     <Portal>
-                        <div key={activeTourId} className={`fixed inset-0 z-[9999] pointer-events-none transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
+                        <div key={activeTourId} className={`fixed inset-0 z-[99999] pointer-events-none transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
                             {/* THE BACKDROP */}
                             <div className={`absolute inset-0 transition-colors duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${step.placement === 'center'
                                 ? 'bg-slate-950/80 dark:bg-slate-950/90 pointer-events-auto'
@@ -730,92 +796,88 @@ export function GuidedTourProvider({ children }: { children: React.ReactNode }) 
                             )}
 
                             {/* OVERLAY CONTAINER: Handles centering for celebration modal and alignment for tooltips */}
-                            <div className={`absolute inset-0 flex p-4 ${step.placement === 'center' ? 'items-center justify-center' : 'items-start justify-start'}`}>
+                            <div className={`absolute inset-0 flex p-4 pointer-events-none ${step.placement === 'center' ? 'items-center justify-center' : 'items-start justify-start'}`}>
                                 {/* Tooltip Content */}
-                                {(step.placement === 'center' || targetRect) && (
-                                    <div
-                                        className={`pointer-events-auto bg-white dark:bg-slate-900 rounded-[24px] sm:rounded-3xl p-4 sm:p-6 shadow-2xl border border-indigo-100 dark:border-indigo-500/20 transform transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isFading ? 'opacity-0 scale-95 translate-y-4' : 'opacity-100 scale-100 translate-y-0'} ${step.placement === 'center'
-                                            ? 'w-full max-w-[90vw] sm:max-w-[480px] p-6 sm:p-8 text-center z-[10001]'
-                                            : 'absolute w-[calc(100vw-20px)] sm:w-[320px]'
-                                            }`}
-                                        style={step.placement === 'center' ? {} : getTooltipStyle()}
-                                    >
-                                        {step.placement === 'center' && (
-                                            <div className="flex flex-col items-center mb-6">
-                                                <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-500/10 rounded-[32px] flex items-center justify-center text-indigo-500 mb-6 animate-bounce">
-                                                    <Play size={40} fill="currentColor" />
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <h4 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tightest leading-none">
-                                                        {currentStepIndex === tourSteps.length - 1 ? (
-                                                            `${activeTourId === 'create-project' ? 'Create Project' :
-                                                                activeTourId === 'create-task' ? 'Create Task' :
-                                                                    activeTourId === 'create-team' ? 'Create Team' : 'Mission'} Tutorial Completed`
-                                                        ) : (
-                                                            step.title
-                                                        )}
+                                <div
+                                    className={`pointer-events-auto bg-white dark:bg-slate-900 rounded-[24px] sm:rounded-3xl p-4 sm:p-6 shadow-2xl border border-indigo-100 dark:border-indigo-500/20 transform transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isFading || (!targetRect && step.placement !== 'center') ? 'opacity-0 scale-95 translate-y-4 pointer-events-none' : 'opacity-100 scale-100 translate-y-0'} ${step.placement === 'center' || !targetRect
+                                        ? 'relative w-full max-w-[90vw] sm:max-w-[480px] p-6 sm:p-8 text-center z-[10001]'
+                                        : 'absolute w-[calc(100vw-20px)] sm:w-[320px]'
+                                        }`}
+                                    style={step.placement === 'center' || !targetRect ? {} : getTooltipStyle()}
+                                >
+                                    {step.placement === 'center' && currentStepIndex === tourSteps.length - 1 && (
+                                        <div className="flex flex-col items-center mb-6">
+                                            <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-500/10 rounded-[32px] flex items-center justify-center text-indigo-500 mb-6 animate-bounce">
+                                                <Play size={40} fill="currentColor" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <h4 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tightest leading-none text-center">
+                                                    {`${activeTourId === 'create-project' ? 'Create Project' :
+                                                        activeTourId === 'create-task' ? 'Create Task' :
+                                                            activeTourId === 'create-team' ? 'Create Team' :
+                                                                activeTourId === 'kanban-basics' ? 'Kanban' :
+                                                                    activeTourId === 'add-team-members' ? 'Invite Members' : 'Mission'} Tutorial Completed`}
+                                                </h4>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {/* Close Button - Now absolutely positioned in the corner */}
+                                    <button onClick={endTour} className="absolute top-6 right-6 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full z-10">
+                                        <X size={step.placement === 'center' ? 24 : 16} />
+                                    </button>
+
+                                    {(() => {
+                                        const isFallback = !document.getElementById(step.targetId) && !!step.fallbackTargetId;
+                                        const showControls = !(isFallback && step.fallbackHideControls);
+                                        const displayTitle = (isFallback && step.fallbackTitle) ? step.fallbackTitle : step.title;
+                                        const displayContent = (isFallback && step.fallbackContent) ? step.fallbackContent : step.content;
+
+                                        return (
+                                            <div className={!showControls ? 'text-center' : ''}>
+                                                <div className={`flex items-center mb-4 ${!showControls || step.placement === 'center' ? 'justify-center' : 'justify-between'}`}>
+                                                    <h4 className={`font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest ${step.placement === 'center' && currentStepIndex === tourSteps.length - 1 ? 'hidden' : 'text-sm'}`}>
+                                                        {displayTitle}
                                                     </h4>
                                                 </div>
-                                            </div>
-                                        )}
-                                        {/* Close Button - Now absolutely positioned in the corner */}
-                                        <button onClick={endTour} className="absolute top-6 right-6 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors p-1.5 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full z-10">
-                                            <X size={step.placement === 'center' ? 24 : 16} />
-                                        </button>
-
-                                        {(() => {
-                                            const isFallback = !document.getElementById(step.targetId) && !!step.fallbackTargetId;
-                                            const showControls = !(isFallback && step.fallbackHideControls);
-                                            const displayTitle = (isFallback && step.fallbackTitle) ? step.fallbackTitle : step.title;
-                                            const displayContent = (isFallback && step.fallbackContent) ? step.fallbackContent : step.content;
-
-                                            return (
-                                                <div className={!showControls ? 'text-center' : ''}>
-                                                    <div className={`flex items-center justify-between mb-4 ${!showControls ? 'justify-center' : ''}`}>
-                                                        <h4 className={`font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest ${step.placement === 'center' ? 'hidden' : 'text-sm'}`}>
-                                                            {displayTitle}
-                                                        </h4>
-                                                    </div>
-                                                    <p className={`font-bold text-gray-700 dark:text-slate-200 leading-relaxed ${!showControls ? 'mb-0' : 'mb-6 sm:mb-8'} ${step.placement === 'center' ? 'text-base sm:text-lg' : 'text-[11px] sm:text-xs'}`}>
-                                                        {displayContent}
-                                                    </p>
-                                                    {showControls && (
-                                                        <div className="flex items-center justify-between mt-6 sm:mt-8">
-                                                            <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
-                                                                {step.placement === 'center' ? 'Experience points gained' : `Step ${currentStepIndex + 1} of ${tourSteps.length}`}
-                                                            </span>
-                                                            <div className="flex items-center gap-3 sm:gap-4">
-                                                                <div className="flex gap-1 hidden xs:flex">
-                                                                    {tourSteps.map((_, i) => (
-                                                                        <div key={i} className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${i === currentStepIndex ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-slate-800'}`} />
-                                                                    ))}
-                                                                </div>
-                                                                {(step.showNext || (step.action !== 'click' && step.action !== 'custom' && step.placement !== 'center')) && (
-                                                                    <button
-                                                                        onClick={nextStep}
-                                                                        disabled={step.action === 'input' && !isTargetFilled}
-                                                                        className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-indigo-500/20 active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed`}
-                                                                    >
-                                                                        {step.nextLabel || (step.showNext ? 'Ok' : 'Next Step')}
-                                                                        <ChevronRight size={10} className="sm:w-3 sm:h-3 group-hover:translate-x-0.5 transition-transform" />
-                                                                    </button>
-                                                                )}
-                                                                {step.placement === 'center' && currentStepIndex === tourSteps.length - 1 && (
-                                                                    <button
-                                                                        onClick={endTour}
-                                                                        className="px-8 py-3.5 bg-indigo-500 hover:bg-indigo-600 text-white text-[12px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-indigo-500/20 active:scale-95"
-                                                                    >
-                                                                        Dismiss
-                                                                    </button>
-                                                                )}
+                                                <p className={`font-bold text-gray-700 dark:text-slate-200 leading-relaxed ${!showControls ? 'mb-0' : 'mb-6 sm:mb-8'} ${step.placement === 'center' ? 'text-base sm:text-lg text-center' : 'text-[11px] sm:text-xs'}`}>
+                                                    {displayContent}
+                                                </p>
+                                                {showControls && (
+                                                    <div className="flex items-center justify-between mt-6 sm:mt-8">
+                                                        <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">
+                                                            {(step.placement === 'center' && currentStepIndex === tourSteps.length - 1) ? 'Experience points gained' : `Step ${currentStepIndex + 1} of ${tourSteps.length}`}
+                                                        </span>
+                                                        <div className="flex items-center gap-3 sm:gap-4">
+                                                            <div className="flex gap-1 hidden xs:flex">
+                                                                {tourSteps.map((_, i) => (
+                                                                    <div key={i} className={`w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full ${i === currentStepIndex ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-slate-800'}`} />
+                                                                ))}
                                                             </div>
+                                                            {(step.showNext || (step.action !== 'click' && step.action !== 'custom' && step.placement !== 'center')) && (
+                                                                <button
+                                                                    onClick={nextStep}
+                                                                    disabled={step.action === 'input' && !isTargetFilled}
+                                                                    className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 bg-indigo-500 hover:bg-indigo-600 text-white text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-indigo-500/20 active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed`}
+                                                                >
+                                                                    {step.nextLabel || (step.showNext ? 'Ok' : 'Next Step')}
+                                                                    <ChevronRight size={10} className="sm:w-3 sm:h-3 group-hover:translate-x-0.5 transition-transform" />
+                                                                </button>
+                                                            )}
+                                                            {step.placement === 'center' && currentStepIndex === tourSteps.length - 1 && (
+                                                                <button
+                                                                    onClick={endTour}
+                                                                    className="px-8 py-3.5 bg-indigo-500 hover:bg-indigo-600 text-white text-[12px] font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-xl shadow-indigo-500/20 active:scale-95"
+                                                                >
+                                                                    Dismiss
+                                                                </button>
+                                                            )}
                                                         </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })()}
-                                    </div>
-                                )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
                             </div>
                         </div>
                     </Portal>
@@ -833,7 +895,8 @@ export const useGuidedTour = () => {
             endTour: () => { },
             nextStep: () => { },
             currentStep: 0,
-            isActive: false
+            isActive: false,
+            activeTourId: null
         }
     }
     return context
