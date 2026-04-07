@@ -10,24 +10,52 @@ type Option = {
 type Props = {
   visible: boolean
   title: string
+  placeholderLabel?: string
+  allowDefaultSelect?: boolean
   options: Option[]
   selectedValue: string | null
-  onSelect: (value: string) => void
+  onSelect: (value: string | null) => void
   onClose: () => void
 }
 
-export function SelectorModal({ visible, title, options, selectedValue, onSelect, onClose }: Props) {
+export function SelectorModal({
+  visible,
+  title,
+  placeholderLabel,
+  allowDefaultSelect = false,
+  options,
+  selectedValue,
+  onSelect,
+  onClose,
+}: Props) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>
-        <View style={styles.sheet}>
+        <View style={styles.dialog} onStartShouldSetResponder={() => true}>
           <View style={styles.header}>
             <Text style={styles.title}>{title}</Text>
-            <Pressable onPress={onClose} hitSlop={12}>
-              <Ionicons name="close" size={24} color="#94a3b8" />
-            </Pressable>
           </View>
           <ScrollView contentContainerStyle={styles.list}>
+            {placeholderLabel ? (
+              allowDefaultSelect ? (
+                <Pressable
+                  style={[styles.item, styles.defaultItem, !selectedValue && styles.itemActive]}
+                  onPress={() => {
+                    onSelect(null)
+                    onClose()
+                  }}
+                >
+                  <Text style={[styles.itemText, styles.placeholderText, !selectedValue && styles.itemTextActive]}>
+                    {placeholderLabel}
+                  </Text>
+                  {!selectedValue && <Ionicons name="checkmark-circle" size={20} color={palette.primaryMid} />}
+                </Pressable>
+              ) : (
+                <View style={styles.placeholderRow}>
+                  <Text style={styles.placeholderText}>{placeholderLabel}</Text>
+                </View>
+              )
+            ) : null}
             {options.map((opt) => {
               const isActive = opt.id === selectedValue
               return (
@@ -54,35 +82,45 @@ export function SelectorModal({ visible, title, options, selectedValue, onSelect
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: 20,
   },
-  sheet: {
+  dialog: {
     backgroundColor: '#fff',
     borderRadius: 24,
-    width: '100%',
-    maxWidth: 340,
-    maxHeight: '60%',
+    width: '85%',
+    maxWidth: 360,
+    maxHeight: '70%',
     shadowColor: '#000',
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 20,
-    elevation: 8,
+    elevation: 10,
     overflow: 'hidden',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 18,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-    backgroundColor: '#f8fafc',
+    paddingHorizontal: 18,
+    paddingTop: 16,
+    paddingBottom: 12,
   },
-  title: { fontSize: 13, fontWeight: '900', color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 },
-  list: { padding: 8 },
+  title: { fontSize: 17, fontWeight: '800', color: palette.text, textAlign: 'center' },
+  list: { padding: 10 },
+  placeholderRow: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  placeholderText: {
+    fontSize: 13,
+    color: palette.muted,
+    fontWeight: '600',
+  },
+  defaultItem: {
+    borderWidth: 1,
+    borderColor: 'rgba(148,163,184,0.18)',
+    backgroundColor: '#fff',
+  },
   item: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -90,9 +128,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 14,
-    marginBottom: 4,
+    marginBottom: 6,
+    backgroundColor: '#f8fafc',
   },
-  itemActive: { backgroundColor: '#f5f3ff' },
+  itemActive: { backgroundColor: '#f3f4ff' },
   itemText: { fontSize: 15, fontWeight: '600', color: '#1e293b' },
-  itemTextActive: { color: '#6366f1', fontWeight: '800' },
+  itemTextActive: { color: palette.primaryMid, fontWeight: '800' },
 })

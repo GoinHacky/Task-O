@@ -39,9 +39,11 @@ export function InviteMemberModal({ visible, onClose, onCreated, onCreateProject
   // Selector state
   const [selVisible, setSelVisible] = useState(false)
   const [selTitle, setSelTitle] = useState('')
+  const [selPlaceholder, setSelPlaceholder] = useState('')
+  const [selAllowDefault, setSelAllowDefault] = useState(false)
   const [selOptions, setSelOptions] = useState<{ id: string; label: string }[]>([])
   const [selVal, setSelVal] = useState<string | null>(null)
-  const [onSel, setOnSel] = useState<(v: string) => void>(() => {})
+  const [onSel, setOnSel] = useState<(v: string | null) => void>(() => {})
 
   const fetchInitialData = useCallback(async () => {
     setLoadingInitial(true)
@@ -89,8 +91,17 @@ export function InviteMemberModal({ visible, onClose, onCreated, onCreateProject
     })()
   }, [projectId, visible])
 
-  const openSelector = (title: string, options: any[], value: string | null, setter: (v: any) => void) => {
+  const openSelector = (
+    title: string,
+    options: any[],
+    value: string | null,
+    setter: (v: any) => void,
+    placeholder = '',
+    allowDefault = false
+  ) => {
     setSelTitle(title)
+    setSelPlaceholder(placeholder)
+    setSelAllowDefault(allowDefault)
     setSelOptions(options)
     setSelVal(value)
     setOnSel(() => setter)
@@ -174,9 +185,6 @@ export function InviteMemberModal({ visible, onClose, onCreated, onCreateProject
             <Text style={styles.headerTitle}>Invite Member</Text>
             <Text style={styles.headerSub}>INVITE COLLABORATORS TO YOUR PROJECT</Text>
           </View>
-          <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={12}>
-            <Ionicons name="close" size={24} color="#94a3b8" />
-          </Pressable>
         </View>
 
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
@@ -210,7 +218,9 @@ export function InviteMemberModal({ visible, onClose, onCreated, onCreateProject
                   'Select Project',
                   projects.map(p => ({ id: p.id, label: p.name })),
                   projectId,
-                  setProjectId
+                  setProjectId,
+                  'Select project...',
+                  true
                 )}
                 style={styles.select}
               >
@@ -286,6 +296,8 @@ export function InviteMemberModal({ visible, onClose, onCreated, onCreateProject
         <SelectorModal
           visible={selVisible}
           title={selTitle}
+          placeholderLabel={selPlaceholder}
+          allowDefaultSelect={selAllowDefault}
           options={selOptions}
           selectedValue={selVal}
           onSelect={onSel}
@@ -310,7 +322,6 @@ const styles = StyleSheet.create({
   headerContent: { flex: 1, alignItems: 'center' },
   headerTitle: { fontSize: 26, fontWeight: '900', color: '#1e293b', letterSpacing: -1 },
   headerSub: { fontSize: 11, fontWeight: '900', color: '#94a3b8', marginTop: 8, letterSpacing: 1 },
-  closeBtn: { position: 'absolute', right: 24, top: 24, padding: 4 },
   body: { paddingHorizontal: 24, paddingBottom: 60 },
   label: {
     fontSize: 10,

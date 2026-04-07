@@ -17,7 +17,6 @@ export default function DrawerLayout() {
       <Drawer.Screen name="calendar" />
       <Drawer.Screen name="settings" />
       <Drawer.Screen name="support" />
-      <Drawer.Screen name="more" />
     </Drawer>
   )
 }

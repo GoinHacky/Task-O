@@ -22,7 +22,6 @@ export default function RootLayout() {
           <Stack.Screen name="task/new" />
           <Stack.Screen name="task/[id]" />
           <Stack.Screen name="invite" />
-          <Stack.Screen name="search" />
           <Stack.Screen name="admin-support" />
         </Stack>
       </SessionProvider>

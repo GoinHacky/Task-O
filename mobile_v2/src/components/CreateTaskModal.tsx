@@ -3,7 +3,9 @@ import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,8 +14,9 @@ import {
   View,
 } from 'react-native'
 import { SelectorModal } from './SelectorModal'
-import DateTimePicker from '@react-native-community/datetimepicker'
 
+import { DatePickerDialog, TimePickerDialog } from '@/src/components/PickerDialog'
+import { formatDateForInput, parseInputDate } from '@/src/lib/dateInput'
 import { fetchProjectsForCurrentUser } from '@/src/lib/fetchUserProjects'
 import { supabase } from '@/src/lib/supabase'
 import { ProjectItem } from '@/src/types'
@@ -53,12 +56,13 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
 
-  // Selector state
   const [selVisible, setSelVisible] = useState(false)
   const [selTitle, setSelTitle] = useState('')
+  const [selPlaceholder, setSelPlaceholder] = useState('')
+  const [selAllowDefault, setSelAllowDefault] = useState(false)
   const [selOptions, setSelOptions] = useState<{ id: string; label: string }[]>([])
   const [selVal, setSelVal] = useState<string | null>(null)
-  const [onSel, setOnSel] = useState<(v: string) => void>(() => {})
+  const [onSel, setOnSel] = useState<(v: string | null) => void>(() => {})
 
   useEffect(() => {
     if (!visible) return
@@ -72,18 +76,14 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
       
       if (!cancelled) {
         setProjects((pData || []) as ProjectItem[])
-        
-        // Defaults
-        if (pData?.length) setProjectId(pData[0].id)
-        setAssigneeId(user.id)
-        
+        setProjectId(null)
+        setAssigneeId(null)
         setLoadingInitial(false)
       }
     })()
     return () => { cancelled = true }
   }, [visible])
 
-  // Fetch project members and teams when project changes
   useEffect(() => {
     if (!projectId || !visible) {
       setMembers([])
@@ -92,8 +92,6 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
     }
     let cancelled = false
     ;(async () => {
-      // Fetch Project Members
-      // Fetch Teams for project
       const [{ data: mData }, { data: tData }] = await Promise.all([
         supabase
           .from('project_members')
@@ -111,25 +109,8 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
         const memberList = (mData || []).map((m: any) => m.user).filter(Boolean)
         setMembers(memberList)
         setTeams(tData || [])
-
-        // Manage teamId selection
-        if (tData?.length) {
-          setTeamId(tData[0].id)
-        } else {
-          setTeamId(null)
-        }
-
-        // Manage assigneeId selection
-        const { data: { user } } = await supabase.auth.getUser()
-        const isUserMember = memberList.find(m => m.id === user?.id)
-        
-        if (isUserMember) {
-           setAssigneeId(user?.id || null)
-        } else if (memberList.length > 0) {
-           setAssigneeId(memberList[0].id)
-        } else {
-           setAssigneeId(null)
-        }
+        setTeamId(null)
+        setAssigneeId(null)
       }
     })()
     return () => { cancelled = true }
@@ -154,7 +135,7 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
       team_id: teamId,
       assigned_to: assigneeId,
       created_by: user.id,
-      due_date: dueDate || null,
+      due_date: dueDate ? parseInputDate(dueDate)?.toISOString() ?? null : null,
       due_time: dueTime || null,
     })
     setLoading(false)
@@ -168,8 +149,17 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
     onCreated?.()
   }
 
-  const openSelector = (title: string, options: any[], value: string | null, setter: (v: any) => void) => {
+  const openSelector = (
+    title: string,
+    options: any[],
+    value: string | null,
+    setter: (v: any) => void,
+    placeholder = '',
+    allowDefault = false
+  ) => {
     setSelTitle(title)
+    setSelPlaceholder(placeholder)
+    setSelAllowDefault(allowDefault)
     setSelOptions(options)
     setSelVal(value)
     setOnSel(() => setter)
@@ -178,33 +168,24 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
 
   const noProjects = !loadingInitial && projects.length === 0
 
-  const onDateChange = (_: any, selectedDate?: Date) => {
-    setShowDatePicker(false)
-    if (selectedDate) {
-      setDueDate(selectedDate.toISOString().split('T')[0])
-    }
+  const openDatePicker = () => {
+    setShowTimePicker(false)
+    setShowDatePicker(true)
   }
 
-  const onTimeChange = (_: any, selectedTime?: Date) => {
-    setShowTimePicker(false)
-    if (selectedTime) {
-      const hours = selectedTime.getHours().toString().padStart(2, '0')
-      const minutes = selectedTime.getMinutes().toString().padStart(2, '0')
-      setDueTime(`${hours}:${minutes}`)
-    }
+  const openTimePicker = () => {
+    setShowDatePicker(false)
+    setShowTimePicker(true)
   }
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={styles.sheet}>
+      <KeyboardAvoidingView style={styles.sheet} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <Text style={styles.headerTitle}>Create Task</Text>
             <Text style={styles.headerSub}>DEFINE YOUR TASK PARAMETERS AND TIMELINE</Text>
           </View>
-          <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={12}>
-            <Ionicons name="close" size={24} color="#94a3b8" />
-          </Pressable>
         </View>
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           {loadingInitial ? (
@@ -231,7 +212,6 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
             </View>
           ) : (
             <>
-              {/* Row 1: Title & Project */}
               <View style={styles.grid}>
                 <View style={styles.col}>
                   <Text style={styles.label}>Title *</Text>
@@ -249,7 +229,9 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
                       'Select Project', 
                       projects.map(p => ({ id: p.id, label: p.name })), 
                       projectId, 
-                      setProjectId
+                      setProjectId,
+                      'Select Project',
+                      true
                     )}
                     style={styles.select}
                   >
@@ -261,7 +243,6 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
                 </View>
               </View>
 
-              {/* Row 2: Team & Assignee */}
               <View style={styles.grid}>
                 <View style={styles.col}>
                   <Text style={styles.label}>Team</Text>
@@ -270,7 +251,9 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
                       'Select Team', 
                       teams.map(t => ({ id: t.id, label: t.name })), 
                       teamId, 
-                      setTeamId
+                      setTeamId,
+                      'Select Team',
+                      true
                     )}
                     style={styles.select}
                   >
@@ -287,7 +270,9 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
                       'Select Assignee', 
                       members.map(m => ({ id: m.id, label: m.full_name || m.email })), 
                       assigneeId, 
-                      setAssigneeId
+                      setAssigneeId,
+                      'Select Assignee',
+                      true
                     )}
                     style={styles.select}
                   >
@@ -299,7 +284,6 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
                 </View>
               </View>
 
-              {/* Row 3: Status & Priority */}
               <View style={styles.grid}>
                 <View style={styles.col}>
                   <Text style={styles.label}>Status</Text>
@@ -333,11 +317,10 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
                 </View>
               </View>
 
-              {/* Row 4: Due Date & Time */}
               <View style={styles.grid}>
                 <View style={styles.col}>
                   <Text style={styles.label}>Due Date</Text>
-                  <Pressable onPress={() => setShowDatePicker(true)} style={styles.select} hitSlop={8}>
+                  <Pressable onPress={openDatePicker} style={styles.select} hitSlop={8}>
                     <Text pointerEvents="none" style={[styles.selectText, !dueDate && { color: palette.muted }]}>
                       {dueDate || 'mm/dd/yyyy'}
                     </Text>
@@ -346,7 +329,7 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
                 </View>
                 <View style={styles.col}>
                   <Text style={styles.label}>Due Time</Text>
-                  <Pressable onPress={() => setShowTimePicker(true)} style={styles.select} hitSlop={8}>
+                  <Pressable onPress={openTimePicker} style={styles.select} hitSlop={8}>
                     <Text pointerEvents="none" style={[styles.selectText, !dueTime && { color: palette.muted }]}>
                       {dueTime || '--:-- --'}
                     </Text>
@@ -354,25 +337,6 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
                   </Pressable>
                 </View>
               </View>
-
-              {showDatePicker && (
-                <DateTimePicker
-                  value={dueDate ? new Date(dueDate) : new Date()}
-                  mode="date"
-                  display="default"
-                  onChange={onDateChange}
-                />
-              )}
-
-              {showTimePicker && (
-                <DateTimePicker
-                  value={new Date()}
-                  mode="time"
-                  display="default"
-                  is24Hour={false}
-                  onChange={onTimeChange}
-                />
-              )}
 
               <Text style={styles.label}>Description</Text>
               <TextInput
@@ -396,12 +360,37 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject }
         <SelectorModal
           visible={selVisible}
           title={selTitle}
+          placeholderLabel={selPlaceholder}
+          allowDefaultSelect={selAllowDefault}
           options={selOptions}
           selectedValue={selVal}
           onSelect={onSel}
           onClose={() => setSelVisible(false)}
         />
-      </View>
+      </KeyboardAvoidingView>
+
+      <DatePickerDialog
+        visible={showDatePicker}
+        value={dueDate ? parseInputDate(dueDate) ?? new Date() : new Date()}
+        title="Select Due Date"
+        onConfirm={(d) => {
+          setShowDatePicker(false)
+          setDueDate(formatDateForInput(d))
+        }}
+        onCancel={() => setShowDatePicker(false)}
+      />
+      <TimePickerDialog
+        visible={showTimePicker}
+        value={new Date()}
+        title="Select Due Time"
+        onConfirm={(d) => {
+          setShowTimePicker(false)
+          const hours = d.getHours().toString().padStart(2, '0')
+          const minutes = d.getMinutes().toString().padStart(2, '0')
+          setDueTime(`${hours}:${minutes}`)
+        }}
+        onCancel={() => setShowTimePicker(false)}
+      />
     </Modal>
   )
 }
@@ -420,7 +409,6 @@ const styles = StyleSheet.create({
   headerContent: { flex: 1, alignItems: 'center' },
   headerTitle: { fontSize: 26, fontWeight: '900', color: '#1e293b', letterSpacing: -1 },
   headerSub: { fontSize: 11, fontWeight: '900', color: '#94a3b8', marginTop: 8, letterSpacing: 1 },
-  closeBtn: { position: 'absolute', right: 24, top: 24, padding: 4 },
   body: { paddingHorizontal: 24, paddingBottom: 60 },
   grid: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   col: { flex: 1 },

@@ -3,7 +3,9 @@ import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,8 +13,9 @@ import {
   TextInput,
   View,
 } from 'react-native'
-import DateTimePicker from '@react-native-community/datetimepicker'
 
+import { DatePickerDialog } from '@/src/components/PickerDialog'
+import { formatDateForInput, parseInputDate } from '@/src/lib/dateInput'
 import { supabase } from '@/src/lib/supabase'
 import { palette } from '@/src/theme'
 
@@ -56,15 +59,14 @@ export function CreateProjectModal({ visible, onClose, onCreated }: Props) {
 
     setLoading(true)
 
-    // Create the project
     const { data: project, error: projError } = await supabase
       .from('projects')
       .insert({
         name: name.trim(),
         description: description.trim() || null,
         status,
-        start_date: startDate || null,
-        end_date: endDate || null,
+        start_date: startDate ? parseInputDate(startDate)?.toISOString().split('T')[0] ?? null : null,
+        end_date: endDate ? parseInputDate(endDate)?.toISOString().split('T')[0] ?? null : null,
         owner_id: user.id,
       })
       .select('id')
@@ -76,7 +78,6 @@ export function CreateProjectModal({ visible, onClose, onCreated }: Props) {
       return
     }
 
-    // Add owner as project member with admin role
     const { error: memError } = await supabase.from('project_members').insert({
       project_id: project.id,
       user_id: user.id,
@@ -94,27 +95,24 @@ export function CreateProjectModal({ visible, onClose, onCreated }: Props) {
     onCreated?.()
   }
 
-  const onStartChange = (_: any, date?: Date) => {
-    setShowStartPicker(false)
-    if (date) setStartDate(date.toISOString().split('T')[0])
+  const openStartPicker = () => {
+    setShowEndPicker(false)
+    setShowStartPicker(true)
   }
 
-  const onEndChange = (_: any, date?: Date) => {
-    setShowEndPicker(false)
-    if (date) setEndDate(date.toISOString().split('T')[0])
+  const openEndPicker = () => {
+    setShowStartPicker(false)
+    setShowEndPicker(true)
   }
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={styles.sheet}>
+      <KeyboardAvoidingView style={styles.sheet} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <Text style={styles.headerTitle}>Create Project</Text>
             <Text style={styles.headerSub}>DEFINE YOUR PROJECT SCOPE AND TIMELINE</Text>
           </View>
-          <Pressable onPress={onClose} style={styles.closeBtn} hitSlop={12}>
-            <Ionicons name="close" size={24} color="#94a3b8" />
-          </Pressable>
         </View>
 
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
@@ -140,7 +138,7 @@ export function CreateProjectModal({ visible, onClose, onCreated }: Props) {
           <View style={styles.grid}>
             <View style={styles.col}>
               <Text style={styles.label}>Start Date</Text>
-              <Pressable onPress={() => setShowStartPicker(true)} style={styles.select} hitSlop={8}>
+              <Pressable onPress={openStartPicker} style={styles.select} hitSlop={8}>
                 <Text pointerEvents="none" style={[styles.selectText, !startDate && { color: '#9ca3af' }]}>
                   {startDate || 'mm/dd/yyyy'}
                 </Text>
@@ -149,7 +147,7 @@ export function CreateProjectModal({ visible, onClose, onCreated }: Props) {
             </View>
             <View style={styles.col}>
               <Text style={styles.label}>End Date</Text>
-              <Pressable onPress={() => setShowEndPicker(true)} style={styles.select} hitSlop={8}>
+              <Pressable onPress={openEndPicker} style={styles.select} hitSlop={8}>
                 <Text pointerEvents="none" style={[styles.selectText, !endDate && { color: '#9ca3af' }]}>
                   {endDate || 'mm/dd/yyyy'}
                 </Text>
@@ -157,24 +155,6 @@ export function CreateProjectModal({ visible, onClose, onCreated }: Props) {
               </Pressable>
             </View>
           </View>
-
-          {showStartPicker && (
-            <DateTimePicker
-              value={startDate ? new Date(startDate) : new Date()}
-              mode="date"
-              display="default"
-              onChange={onStartChange}
-            />
-          )}
-
-          {showEndPicker && (
-            <DateTimePicker
-              value={endDate ? new Date(endDate) : new Date()}
-              mode="date"
-              display="default"
-              onChange={onEndChange}
-            />
-          )}
 
           <Text style={styles.label}>Project Status</Text>
           <View style={styles.statusRow}>
@@ -202,7 +182,33 @@ export function CreateProjectModal({ visible, onClose, onCreated }: Props) {
             )}
           </Pressable>
         </ScrollView>
-      </View>
+      </KeyboardAvoidingView>
+
+      <DatePickerDialog
+        visible={showStartPicker}
+        value={startDate ? parseInputDate(startDate) ?? new Date() : new Date()}
+        title="Select Start Date"
+        minimumDate={new Date()}
+        onConfirm={(d) => {
+          setShowStartPicker(false)
+          const formatted = formatDateForInput(d)
+          setStartDate(formatted)
+          const parsedEnd = endDate ? parseInputDate(endDate) : null
+          if (parsedEnd && parsedEnd < d) setEndDate('')
+        }}
+        onCancel={() => setShowStartPicker(false)}
+      />
+      <DatePickerDialog
+        visible={showEndPicker}
+        value={endDate ? parseInputDate(endDate) ?? new Date() : (startDate ? parseInputDate(startDate) ?? new Date() : new Date())}
+        title="Select End Date"
+        minimumDate={startDate ? parseInputDate(startDate) ?? new Date() : new Date()}
+        onConfirm={(d) => {
+          setShowEndPicker(false)
+          setEndDate(formatDateForInput(d))
+        }}
+        onCancel={() => setShowEndPicker(false)}
+      />
     </Modal>
   )
 }
@@ -221,7 +227,6 @@ const styles = StyleSheet.create({
   headerContent: { flex: 1, alignItems: 'center' },
   headerTitle: { fontSize: 26, fontWeight: '900', color: '#1e293b', letterSpacing: -1 },
   headerSub: { fontSize: 11, fontWeight: '900', color: '#94a3b8', marginTop: 8, letterSpacing: 1 },
-  closeBtn: { position: 'absolute', right: 24, top: 24, padding: 4 },
   body: { paddingHorizontal: 24, paddingBottom: 60 },
   label: {
     fontSize: 10,

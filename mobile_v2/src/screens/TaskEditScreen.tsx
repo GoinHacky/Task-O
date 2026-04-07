@@ -1,8 +1,11 @@
+import { Ionicons } from '@expo/vector-icons'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,7 +15,9 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { DatePickerDialog } from '@/src/components/PickerDialog'
 import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { formatDateForInput, parseInputDate } from '@/src/lib/dateInput'
 import { supabase } from '@/src/lib/supabase'
 import { TaskItem } from '@/src/types'
 import { palette } from '@/src/theme'
@@ -34,6 +39,7 @@ export default function TaskEditScreen() {
   const [assignedTo, setAssignedTo] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [showDatePicker, setShowDatePicker] = useState(false)
 
   const load = useCallback(async () => {
     if (!id) {
@@ -57,7 +63,7 @@ export default function TaskEditScreen() {
     setDescription(t.description || '')
     setStatus(t.status)
     setPriority((t.priority as NonNullable<TaskItem['priority']>) || 'medium')
-    setDueDate(t.due_date ? String(t.due_date).split('T')[0] : '')
+    setDueDate(t.due_date ? formatDateForInput(new Date(t.due_date)) : '')
     setAssignedTo(t.assigned_to || '')
     setProjectId(t.project_id || '')
 
@@ -124,7 +130,7 @@ export default function TaskEditScreen() {
         description: description.trim() || null,
         status,
         priority,
-        due_date: dueDate ? new Date(dueDate).toISOString() : null,
+        due_date: dueDate ? parseInputDate(dueDate)?.toISOString() ?? null : null,
         project_id: projectId || null,
         assigned_to: assignedTo || null,
         updated_at: new Date().toISOString(),
@@ -147,9 +153,13 @@ export default function TaskEditScreen() {
   const priorities: NonNullable<TaskItem['priority']>[] = ['low', 'medium', 'high']
 
   return (
-    <View style={[styles.safe, { paddingTop: insets.top }]}>
+    <KeyboardAvoidingView
+      style={[styles.safe, { paddingTop: insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={8}
+    >
       <ScreenHeader title="Edit task" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <Text style={styles.label}>Project</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {projects.map(p => (
@@ -192,8 +202,13 @@ export default function TaskEditScreen() {
           ))}
         </View>
 
-        <Text style={styles.label}>Due date (YYYY-MM-DD)</Text>
-        <TextInput value={dueDate} onChangeText={setDueDate} style={styles.input} />
+        <Text style={styles.label}>Due date</Text>
+        <Pressable onPress={() => setShowDatePicker(true)} style={styles.dateBtn}>
+          <Text style={[styles.dateBtnText, !dueDate && { color: palette.muted }]}>
+            {dueDate || 'mm/dd/yyyy'}
+          </Text>
+          <Ionicons name="calendar-outline" size={18} color={palette.primaryMid} />
+        </Pressable>
 
         <Text style={styles.label}>Assignee</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
@@ -214,7 +229,18 @@ export default function TaskEditScreen() {
           {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Save changes</Text>}
         </Pressable>
       </ScrollView>
-    </View>
+
+      <DatePickerDialog
+        visible={showDatePicker}
+        value={dueDate ? parseInputDate(dueDate) ?? new Date() : new Date()}
+        title="Select Due Date"
+        onConfirm={(d) => {
+          setShowDatePicker(false)
+          setDueDate(formatDateForInput(d))
+        }}
+        onCancel={() => setShowDatePicker(false)}
+      />
+    </KeyboardAvoidingView>
   )
 }
 
@@ -262,4 +288,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveText: { color: '#fff', fontWeight: '900', fontSize: 15 },
+  dateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: 14,
+    padding: 12,
+    backgroundColor: palette.surface,
+  },
+  dateBtnText: { fontSize: 15, fontWeight: '700', color: palette.text },
 })
