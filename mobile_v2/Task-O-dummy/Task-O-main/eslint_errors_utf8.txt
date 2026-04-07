@@ -1,0 +1,13 @@
+﻿
+C:\Users\Kenneth\Desk
+top\Task-O\components
+\teams\InviteMemberMo
+dal.tsx: line 58, 
+col 31, Error - `'` 
+can be escaped with 
+`&apos;`, `&lsquo;`, 
+`&#39;`, `&rsquo;`. (
+react/no-unescaped-en
+tities)
+
+

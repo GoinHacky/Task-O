@@ -1,22 +1,32 @@
 import { Session } from '@supabase/supabase-js'
-import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from 'react'
+import * as Linking from 'expo-linking'
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
+import { applyAuthDeepLink } from '../lib/authDeepLink'
 import { devError, devLog } from '../lib/devLog'
 import { supabase } from '../lib/supabase'
 
 type SessionContextValue = {
   session: Session | null
   loading: boolean
+  /** True after PASSWORD_RECOVERY deep link — user should set a new password */
+  recoveryMode: boolean
+  clearRecoveryMode: () => void
 }
 
 const SessionContext = createContext<SessionContextValue>({
   session: null,
   loading: true,
+  recoveryMode: false,
+  clearRecoveryMode: () => {},
 })
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [recoveryMode, setRecoveryMode] = useState(false)
+
+  const clearRecoveryMode = useCallback(() => setRecoveryMode(false), [])
 
   useEffect(() => {
     let mounted = true
@@ -48,12 +58,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         hasSession: !!nextSession,
         userId: nextSession?.user?.id,
       })
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true)
       setSession(nextSession)
+    })
+
+    async function handleIncomingUrl(url: string | null) {
+      if (!url) return
+      const { ok, isRecovery } = await applyAuthDeepLink(url)
+      if (ok) {
+        devLog('auth', 'session from deep link applied')
+        if (isRecovery) setRecoveryMode(true)
+      }
+    }
+
+    Linking.getInitialURL().then(handleIncomingUrl)
+    const linkSub = Linking.addEventListener('url', ({ url }) => {
+      handleIncomingUrl(url)
     })
 
     return () => {
       mounted = false
       subscription.unsubscribe()
+      linkSub.remove()
     }
   }, [])
 
@@ -61,8 +87,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     () => ({
       session,
       loading,
+      recoveryMode,
+      clearRecoveryMode,
     }),
-    [session, loading],
+    [session, loading, recoveryMode, clearRecoveryMode],
   )
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>
