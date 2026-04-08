@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,6 +14,7 @@ import {
   TextInput,
   View,
 } from 'react-native'
+import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
@@ -242,7 +242,7 @@ export default function SettingsScreen() {
               <View style={styles.avatarWrap}>
                 <View style={styles.avatarBox}>
                   {avatarUrl ? (
-                    <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                    <Image source={{ uri: avatarUrl }} style={styles.avatarImage} contentFit="cover" transition={200} />
                   ) : (
                     <Text style={styles.avatarLetter}>{avatarInitial}</Text>
                   )}

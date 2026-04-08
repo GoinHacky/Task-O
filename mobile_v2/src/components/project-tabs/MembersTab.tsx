@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Image } from 'expo-image'
 
 import { FadeIn } from '@/src/components/FadeIn'
 import { UserAvatar } from '@/src/components/UserAvatar'
@@ -266,7 +267,7 @@ export function MembersTab({ projectId }: { projectId: string }) {
             <View style={s.detailProfileWrap}>
               <View style={s.detailAvatar}>
                 {selectedMember?.users?.avatar_url ? (
-                  <Image source={{ uri: selectedMember.users.avatar_url }} style={s.detailAvatarImage} />
+                  <Image source={{ uri: selectedMember.users.avatar_url }} style={s.detailAvatarImage} contentFit="cover" transition={200} />
                 ) : (
                   <Text style={s.detailAvatarFallback}>
                     {(selectedMember?.users?.full_name || selectedMember?.users?.email || 'U').charAt(0).toUpperCase()}

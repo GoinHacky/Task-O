@@ -1,4 +1,5 @@
-import { Image, StyleSheet, Text, View, type ViewStyle } from 'react-native'
+import { StyleSheet, Text, View, type ViewStyle } from 'react-native'
+import { Image } from 'expo-image'
 import { palette } from '@/src/theme'
 
 type Props = {
@@ -22,7 +23,7 @@ export function UserAvatar({ uri, name, size = 40, style }: Props) {
       ]}
     >
       {uri ? (
-        <Image source={{ uri }} style={[s.img, { borderRadius: r }]} />
+        <Image source={{ uri }} style={[s.img, { borderRadius: r }]} contentFit="cover" transition={200} />
       ) : (
         <Text style={[s.letter, { fontSize: fs }]}>{initial}</Text>
       )}
