@@ -1,9 +1,15 @@
 import { Drawer } from 'expo-router/drawer'
-import { usePathname } from 'expo-router'
+import { Redirect, usePathname } from 'expo-router'
 import { CustomDrawerContent } from '@/src/components/CustomDrawerContent'
+import { useSession } from '@/src/context/SessionContext'
 
 export default function DrawerLayout() {
   const pathname = usePathname()
+  const { session, loading } = useSession()
+
+  if (!loading && !session) {
+    return <Redirect href="/(auth)/login" />
+  }
 
   // Enable swipe-to-open only for the drawer's top-level screens.
   // Keep it disabled for nested/detail screens (e.g. /project/*, /task/*, etc.).

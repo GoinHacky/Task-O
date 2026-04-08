@@ -88,29 +88,34 @@ export default function RegisterScreen() {
 
   if (success) {
     return (
-      <View style={[styles.safe, { paddingTop: insets.top }]}>
-        <Pressable style={[styles.backBtn, { top: insets.top + 10 }]} onPress={() => router.replace('/landing')} hitSlop={20}>
-          <Ionicons name="chevron-back" size={24} color={palette.text} />
-        </Pressable>
-        <AuthBackdrop />
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <View style={styles.successIcon}>
-            <Ionicons name="checkmark-circle" size={48} color="#22c55e" />
+      <View style={[styles.confirmSafe, { paddingTop: insets.top }]}>
+        <View style={styles.bgOrbTopLeft} />
+        <View style={styles.bgOrbBottomRight} />
+        <View style={styles.bgSoftCenter} />
+
+        <View style={styles.confirmCardWrap}>
+          <View style={styles.successIconButton}>
+            <Ionicons name="checkmark" size={30} color="#fff" />
           </View>
-          <Text style={styles.title}>Check your email</Text>
-          <Text style={styles.subtitle}>A confirmation link has been sent</Text>
-          <View style={styles.successCard}>
+          <Text style={styles.confirmTitle}>Check your email</Text>
+          <Text style={styles.confirmSubtitle}>A confirmation link has been sent</Text>
+
+          <LinearGradient
+            colors={['rgba(255,255,255,0.95)', 'rgba(235,244,255,0.9)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.confirmGlassCard}
+          >
             <Text style={styles.successBody}>
-              We sent a link to <Text style={{ fontWeight: '800', color: '#111827' }}>{email}</Text>. Click it to verify and
-              get started.
+              We sent a link to <Text style={styles.successEmail}>{email}</Text>. Click it to verify and get started.
             </Text>
             <Link href="/login" asChild>
-              <Pressable style={styles.successLink}>
-                <Text style={styles.successLinkText}>Back to sign in</Text>
+              <Pressable>
+                <Text style={styles.confirmLink}>Back to sign in</Text>
               </Pressable>
             </Link>
-          </View>
-        </ScrollView>
+          </LinearGradient>
+        </View>
       </View>
     )
   }
@@ -338,4 +343,61 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  confirmSafe: { flex: 1, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20, overflow: 'hidden' },
+  bgOrbTopLeft: {
+    position: 'absolute',
+    top: -120,
+    left: -120,
+    width: 420,
+    height: 420,
+    borderRadius: 210,
+    backgroundColor: 'rgba(0,82,204,0.08)',
+  },
+  bgOrbBottomRight: {
+    position: 'absolute',
+    bottom: -140,
+    right: -140,
+    width: 460,
+    height: 460,
+    borderRadius: 230,
+    backgroundColor: 'rgba(99,179,237,0.14)',
+  },
+  bgSoftCenter: {
+    position: 'absolute',
+    width: 680,
+    height: 360,
+    borderRadius: 220,
+    backgroundColor: 'rgba(0,82,204,0.05)',
+  },
+  confirmCardWrap: { width: '100%', maxWidth: 420, alignItems: 'center' },
+  successIconButton: {
+    width: 58,
+    height: 58,
+    borderRadius: 16,
+    backgroundColor: '#22c55e',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+    shadowColor: '#22c55e',
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
+    elevation: 10,
+  },
+  confirmTitle: { fontSize: 30, fontWeight: '900', color: '#111827', letterSpacing: -0.8, textAlign: 'center' },
+  confirmSubtitle: { fontSize: 14, color: '#6b7280', marginTop: 6, marginBottom: 18, fontWeight: '600', textAlign: 'center' },
+  confirmGlassCard: {
+    width: '100%',
+    borderRadius: 24,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,82,204,0.15)',
+    shadowColor: '#0052CC',
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  successEmail: { fontWeight: '800', color: '#111827' },
+  confirmLink: { marginTop: 10, fontSize: 14, color: '#0052CC', fontWeight: '800' },
 })
