@@ -139,19 +139,21 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                   PROJECTS
                 </Text>
               </Pressable>
-              <Pressable
-                onPress={() => setProjectsExpanded(e => !e)}
-                hitSlop={12}
-                style={styles.projectsChevronBtn}
-                accessibilityRole="button"
-                accessibilityLabel={projectsExpanded ? 'Collapse projects' : 'Expand projects'}
-              >
-                <Ionicons
-                  name={projectsExpanded ? 'chevron-down' : 'chevron-forward'}
-                  size={18}
-                  color={isProjectsHeaderActive ? drawerColors.selectedAccent : drawerColors.chevron}
-                />
-              </Pressable>
+              {projects.length > 0 ? (
+                <Pressable
+                  onPress={() => setProjectsExpanded(e => !e)}
+                  hitSlop={12}
+                  style={styles.projectsChevronBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel={projectsExpanded ? 'Collapse projects' : 'Expand projects'}
+                >
+                  <Ionicons
+                    name={projectsExpanded ? 'chevron-down' : 'chevron-forward'}
+                    size={18}
+                    color={isProjectsHeaderActive ? drawerColors.selectedAccent : drawerColors.chevron}
+                  />
+                </Pressable>
+              ) : null}
             </View>
 
             {projectsExpanded && projects.length > 0 && (
