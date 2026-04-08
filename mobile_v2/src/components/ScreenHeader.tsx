@@ -1,15 +1,19 @@
 import { Ionicons } from '@expo/vector-icons'
-import { useState, type ReactNode } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { useNavigation } from 'expo-router'
+import { useRef, useState, type ReactNode } from 'react'
+import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native'
+import { DrawerActions } from '@react-navigation/native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { palette } from '@/src/theme'
+import { NotificationPopover } from './NotificationPopover'
 import { QuickActionsModal } from './QuickActionsModal'
 
 type Props = {
   title?: string
   onBack?: () => void
   onMenu?: () => void
-  onNotification?: () => void
+  showNotification?: boolean
   onAddTask?: () => void
   onAddProject?: () => void
   onAddTeam?: () => void
@@ -18,12 +22,44 @@ type Props = {
 }
 
 export function ScreenHeader({ 
-  title, onBack, onMenu, onNotification, 
+  title, onBack, onMenu, showNotification = true, 
   onAddTask, onAddProject, onAddTeam, onAddMember,
   right 
 }: Props) {
+  const insets = useSafeAreaInsets()
   const [menuVisible, setMenuVisible] = useState(false)
+  const [notifVisible, setNotifVisible] = useState(false)
+  const [notifAnchorTop, setNotifAnchorTop] = useState<number | undefined>(undefined)
+  const [notifAnchorRight, setNotifAnchorRight] = useState<number | undefined>(undefined)
+  const notifBtnRef = useRef<View | null>(null)
+
   const hasAddActions = onAddTask || onAddProject || onAddTeam || onAddMember
+
+  function toggleNotifications() {
+    if (notifVisible) {
+      setNotifVisible(false)
+      return
+    }
+
+    const target = notifBtnRef.current as any
+    const winW = Dimensions.get('window').width
+
+    // Prefer anchoring directly under the bell icon.
+    if (target?.measureInWindow) {
+      target.measureInWindow((x: number, y: number, w: number, h: number) => {
+        const nextTop = Math.max(insets.top + 52, y + h + 0)
+        const nextRight = Math.max(12, winW - (x + w))
+        setNotifAnchorTop(nextTop)
+        setNotifAnchorRight(nextRight)
+        setNotifVisible(true)
+      })
+    } else {
+      // Fallback: close enough under the header row.
+      setNotifAnchorTop(insets.top + 88)
+      setNotifAnchorRight(70)
+      setNotifVisible(true)
+    }
+  }
   return (
     <View style={styles.container}>
       <View style={styles.left}>
@@ -44,8 +80,13 @@ export function ScreenHeader({
 
       <View style={styles.right}>
         {right}
-        {onNotification && (
-          <Pressable onPress={onNotification} style={[styles.iconBox, styles.whiteBox]} hitSlop={12}>
+        {showNotification && (
+          <Pressable
+            ref={notifBtnRef}
+            onPress={toggleNotifications}
+            style={[styles.iconBox, styles.whiteBox]}
+            hitSlop={12}
+          >
             <Ionicons name="notifications-outline" size={22} color={palette.textMuted} />
           </Pressable>
         )}
@@ -54,8 +95,14 @@ export function ScreenHeader({
             <Ionicons name="add" size={26} color="#fff" />
           </Pressable>
         )}
-        {!onNotification && !hasAddActions && !right && <View style={{ width: 48 }} />}
+        {!showNotification && !hasAddActions && !right && <View style={{ width: 48 }} />}
       </View>
+      <NotificationPopover
+        visible={notifVisible}
+        onClose={() => setNotifVisible(false)}
+        anchorTop={notifAnchorTop}
+        anchorRight={notifAnchorRight}
+      />
       <QuickActionsModal
         visible={menuVisible}
         onClose={() => setMenuVisible(false)}
@@ -105,3 +152,17 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 })
+
+/**
+ * Same as ScreenHeader but opens the drawer menu — use on all main drawer stack screens
+ * so you don’t repeat `navigation.dispatch(DrawerActions.openDrawer())` everywhere.
+ */
+export function DrawerScreenHeader(props: Omit<Props, 'onMenu'>) {
+  const navigation = useNavigation()
+  return (
+    <ScreenHeader
+      {...props}
+      onMenu={() => navigation.dispatch(DrawerActions.openDrawer())}
+    />
+  )
+}

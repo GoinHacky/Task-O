@@ -1,18 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { FadeIn } from '@/src/components/FadeIn'
 import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { ListSkeleton } from '@/src/components/Skeleton'
 import { supabase } from '@/src/lib/supabase'
 import { palette } from '@/src/theme'
 
@@ -157,18 +150,14 @@ export default function ProjectMembersScreen() {
     load()
   }
 
-  if (loading) {
-    return (
-      <View style={[styles.loader, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
-  }
-
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
       <ScreenHeader title="Members" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.body}>
+      {loading ? (
+        <ListSkeleton />
+      ) : (
+      <FadeIn>
+        <ScrollView contentContainerStyle={styles.body}>
         {canAdmin ? (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Invite by email</Text>
@@ -220,7 +209,9 @@ export default function ProjectMembersScreen() {
             </View>
           )
         })}
-      </ScrollView>
+        </ScrollView>
+      </FadeIn>
+      )}
     </View>
   )
 }

@@ -1,19 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { FadeIn } from '@/src/components/FadeIn'
 import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { CardSkeleton } from '@/src/components/Skeleton'
 import { supabase } from '@/src/lib/supabase'
 import { SupportComment, SupportRequest } from '@/src/types'
 import { palette } from '@/src/theme'
@@ -97,15 +89,16 @@ export default function AdminSupportDetailScreen() {
     else load()
   }
 
-  if (loading) {
+  if (!loading && !id) {
     return (
-      <View style={[styles.loader, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
+      <View style={[styles.safe, { paddingTop: insets.top }]}>
+        <ScreenHeader title="Ticket" onBack={() => router.back()} />
+        <Text style={styles.denied}>Ticket not found.</Text>
       </View>
     )
   }
 
-  if (!allowed) {
+  if (!loading && allowed === false) {
     return (
       <View style={[styles.safe, { paddingTop: insets.top }]}>
         <ScreenHeader title="Admin" onBack={() => router.back()} />
@@ -114,7 +107,7 @@ export default function AdminSupportDetailScreen() {
     )
   }
 
-  if (!req) {
+  if (!loading && allowed && !req) {
     return (
       <View style={[styles.safe, { paddingTop: insets.top }]}>
         <ScreenHeader title="Ticket" onBack={() => router.back()} />
@@ -126,7 +119,11 @@ export default function AdminSupportDetailScreen() {
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
       <ScreenHeader title="Admin" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.body}>
+      {loading || !req ? (
+        <CardSkeleton />
+      ) : (
+      <FadeIn>
+        <ScrollView contentContainerStyle={styles.body}>
         <Text style={styles.title}>{req.title}</Text>
         <Text style={styles.meta}>
           {req.ticket_id || req.id.slice(0, 8)} · {req.status} · {req.category} · {req.severity}
@@ -171,14 +168,15 @@ export default function AdminSupportDetailScreen() {
         <Pressable style={styles.sendBtn} onPress={send}>
           <Text style={styles.sendBtnText}>Send</Text>
         </Pressable>
-      </ScrollView>
+        </ScrollView>
+      </FadeIn>
+      )}
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: palette.bg },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: palette.bg },
   denied: { padding: 24, fontSize: 15, color: palette.muted, fontWeight: '600' },
   body: { padding: 16, paddingBottom: 40 },
   title: { fontSize: 22, fontWeight: '900', color: palette.text },

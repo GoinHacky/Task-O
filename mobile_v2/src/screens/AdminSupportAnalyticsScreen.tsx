@@ -1,9 +1,11 @@
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { FadeIn } from '@/src/components/FadeIn'
 import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { CardSkeleton } from '@/src/components/Skeleton'
 import { supabase } from '@/src/lib/supabase'
 import { SupportRequest } from '@/src/types'
 import { palette } from '@/src/theme'
@@ -45,18 +47,10 @@ export default function AdminSupportAnalyticsScreen() {
   const critical = rows.filter(r => r.severity === 'Critical').length
   const uniqueUsers = new Set(rows.map(r => (r as SupportRequest & { user_id?: string }).user_id).filter(Boolean)).size
 
-  if (loading) {
-    return (
-      <View style={[styles.loader, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
-  }
-
-  if (!allowed) {
+  if (!loading && allowed === false) {
     return (
       <View style={[styles.safe, { paddingTop: insets.top }]}>
-        <ScreenHeader title="Analytics" onBack={() => router.back()} />
+        <ScreenHeader title="Support analytics" onBack={() => router.back()} />
         <Text style={styles.denied}>Access denied.</Text>
       </View>
     )
@@ -72,15 +66,21 @@ export default function AdminSupportAnalyticsScreen() {
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
       <ScreenHeader title="Support analytics" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.body}>
-        <Text style={styles.lead}>Platform support volume and severity (from existing tickets).</Text>
-        <View style={styles.grid}>
-          {stat('Total volume', total)}
-          {stat('Open / pending', open)}
-          {stat('Critical', critical)}
-          {stat('Unique reporters', uniqueUsers)}
-        </View>
-      </ScrollView>
+      {loading ? (
+        <CardSkeleton />
+      ) : (
+        <FadeIn>
+          <ScrollView contentContainerStyle={styles.body}>
+            <Text style={styles.lead}>Platform support volume and severity (from existing tickets).</Text>
+            <View style={styles.grid}>
+              {stat('Total volume', total)}
+              {stat('Open / pending', open)}
+              {stat('Critical', critical)}
+              {stat('Unique reporters', uniqueUsers)}
+            </View>
+          </ScrollView>
+        </FadeIn>
+      )}
     </View>
   )
 }

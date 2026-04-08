@@ -13,34 +13,30 @@ import {
   TextInput,
   View,
 } from 'react-native'
+
 import { SelectorModal } from './SelectorModal'
 
 import { DatePickerDialog, TimePickerDialog } from '@/src/components/PickerDialog'
 import { formatDateForInput, parseInputDate } from '@/src/lib/dateInput'
-import { fetchProjectsForCurrentUser } from '@/src/lib/fetchUserProjects'
 import { supabase } from '@/src/lib/supabase'
-import { ProjectItem } from '@/src/types'
 import { palette } from '@/src/theme'
 
 type Props = {
   visible: boolean
+  taskId: string
   onClose: () => void
-  onCreated?: () => void
-  onCreateProject?: () => void
-  /** When set, project picker defaults to this project (e.g. from project workspace). */
-  defaultProjectId?: string | null
+  onUpdated?: () => void
 }
 
 const PRIORITIES = ['low', 'medium', 'high'] as const
 const STATUSES = ['pending', 'in_progress', 'review', 'completed'] as const
 
-export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject, defaultProjectId }: Props) {
-  const [projects, setProjects] = useState<ProjectItem[]>([])
+export function EditTaskModal({ visible, taskId, onClose, onUpdated }: Props) {
   const [projectId, setProjectId] = useState<string | null>(null)
-  
+
   const [teams, setTeams] = useState<any[]>([])
   const [teamId, setTeamId] = useState<string | null>(null)
-  
+
   const [members, setMembers] = useState<any[]>([])
   const [assigneeId, setAssigneeId] = useState<string | null>(null)
 
@@ -48,13 +44,13 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject, 
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState<(typeof STATUSES)[number]>('pending')
   const [priority, setPriority] = useState<(typeof PRIORITIES)[number]>('medium')
-  
+
   const [dueDate, setDueDate] = useState('')
   const [dueTime, setDueTime] = useState('')
 
   const [loading, setLoading] = useState(false)
   const [loadingInitial, setLoadingInitial] = useState(true)
-  
+
   const [showDatePicker, setShowDatePicker] = useState(false)
   const [showTimePicker, setShowTimePicker] = useState(false)
 
@@ -67,91 +63,102 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject, 
   const [onSel, setOnSel] = useState<(v: string | null) => void>(() => {})
 
   useEffect(() => {
-    if (!visible) return
+    if (!visible || !taskId) return
     let cancelled = false
     ;(async () => {
       setLoadingInitial(true)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      // Load task details
+      const { data: t, error: tErr } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('id', taskId)
+        .single()
+      if (tErr || !t || cancelled) {
+        setLoadingInitial(false)
+        if (tErr) Alert.alert('Error', tErr.message)
+        return
+      }
 
-      const pData = await fetchProjectsForCurrentUser('name_asc')
-      
+      const task = t as any
+      setTitle(task.title || '')
+      setDescription(task.description || '')
+      setStatus((task.status || 'pending') as (typeof STATUSES)[number])
+      setPriority((task.priority || 'medium') as (typeof PRIORITIES)[number])
+
+      const projId = task.project_id || null
+      setProjectId(projId)
+      setTeamId(task.team_id || null)
+      setAssigneeId(task.assigned_to || null)
+
+      if (task.due_date) {
+        const d = new Date(task.due_date)
+        setDueDate(formatDateForInput(d))
+      } else {
+        setDueDate('')
+      }
+      setDueTime(task.due_time || '')
+
+      // Load members + teams for this project
+      if (projId) {
+        const [{ data: mData }, { data: tData }] = await Promise.all([
+          supabase
+            .from('project_members')
+            .select('user:user_id(id, full_name, email)')
+            .eq('project_id', projId)
+            .eq('status', 'accepted'),
+          supabase
+            .from('teams')
+            .select('id, name')
+            .eq('project_id', projId)
+            .order('name'),
+        ])
+        if (!cancelled) {
+          const memberList = (mData || []).map((m: any) => m.user).filter(Boolean)
+          setMembers(memberList)
+          setTeams(tData || [])
+        }
+      } else {
+        setMembers([])
+        setTeams([])
+      }
+
       if (!cancelled) {
-        const list = (pData || []) as ProjectItem[]
-        setProjects(list)
-        const initial =
-          defaultProjectId && list.some(p => p.id === defaultProjectId) ? defaultProjectId : null
-        setProjectId(initial)
-        setAssigneeId(null)
         setLoadingInitial(false)
       }
     })()
-    return () => { cancelled = true }
-  }, [visible, defaultProjectId])
 
-  useEffect(() => {
-    if (!projectId || !visible) {
-      setMembers([])
-      setTeams([])
-      return
-    }
-    let cancelled = false
-    ;(async () => {
-      const [{ data: mData }, { data: tData }] = await Promise.all([
-        supabase
-          .from('project_members')
-          .select('user:user_id(id, full_name, email)')
-          .eq('project_id', projectId)
-          .eq('status', 'accepted'),
-        supabase
-          .from('teams')
-          .select('id, name')
-          .eq('project_id', projectId)
-          .order('name')
-      ])
-
-      if (!cancelled) {
-        const memberList = (mData || []).map((m: any) => m.user).filter(Boolean)
-        setMembers(memberList)
-        setTeams(tData || [])
-        setTeamId(null)
-        setAssigneeId(null)
-      }
-    })()
     return () => { cancelled = true }
-  }, [projectId, visible])
+  }, [visible, taskId])
 
   async function submit() {
-    if (!projectId || !title.trim()) {
-      Alert.alert('Missing fields', 'Choose a project and enter a task title.')
+    if (!title.trim()) {
+      Alert.alert('Missing fields', 'Enter a task title.')
       return
     }
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return
     setLoading(true)
-    const { error } = await supabase.from('tasks').insert({
-      title: title.trim(),
-      description: description.trim() || null,
-      status,
-      priority,
-      project_id: projectId,
-      team_id: teamId,
-      assigned_to: assigneeId,
-      created_by: user.id,
-      due_date: dueDate ? parseInputDate(dueDate)?.toISOString() ?? null : null,
-      due_time: dueTime || null,
-    })
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        title: title.trim(),
+        description: description.trim() || null,
+        status,
+        priority,
+        project_id: projectId,
+        team_id: teamId,
+        assigned_to: assigneeId,
+        due_date: dueDate ? parseInputDate(dueDate)?.toISOString() ?? null : null,
+        due_time: dueTime || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', taskId)
+
     setLoading(false)
     if (error) {
-      Alert.alert('Could not create task', error.message)
+      Alert.alert('Could not update task', error.message)
       return
     }
-    setTitle('')
-    setDescription('')
+    onUpdated?.()
     onClose()
-    onCreated?.()
   }
 
   const openSelector = (
@@ -160,7 +167,7 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject, 
     value: string | null,
     setter: (v: any) => void,
     placeholder = '',
-    allowDefault = false
+    allowDefault = false,
   ) => {
     setSelTitle(title)
     setSelPlaceholder(placeholder)
@@ -170,8 +177,6 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject, 
     setOnSel(() => setter)
     setSelVisible(true)
   }
-
-  const noProjects = !loadingInitial && projects.length === 0
 
   const openDatePicker = () => {
     setShowTimePicker(false)
@@ -185,100 +190,48 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject, 
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <KeyboardAvoidingView style={styles.sheet} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={8}>
+      <KeyboardAvoidingView
+        style={styles.sheet}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={8}
+      >
         <View style={styles.header}>
           <View style={styles.headerContent}>
-            <Text style={styles.headerTitle}>New Task</Text>
-            <Text style={styles.headerSub}>DEFINE YOUR TASK PARAMETERS AND TIMELINE</Text>
+            <Text style={styles.headerTitle}>Update Task</Text>
+            <Text style={styles.headerSub}>Adjust mission parameters</Text>
           </View>
         </View>
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           {loadingInitial ? (
             <ActivityIndicator color={palette.primary} style={{ marginTop: 40 }} />
-          ) : noProjects ? (
-            <View style={styles.emptyState}>
-              <View style={styles.emptyIcon}>
-                <Ionicons name="grid-outline" size={36} color="#cbd5e1" />
-              </View>
-              <Text style={styles.emptyTitle}>No Projects Found</Text>
-              <Text style={styles.emptyDesc}>
-                Missions require a project context. Create one first to begin tasking.
-              </Text>
-              <Pressable
-                style={styles.emptyAction}
-                onPress={() => {
-                  onClose()
-                  onCreateProject?.()
-                }}
-              >
-                <Ionicons name="add" size={16} color="#fff" />
-                <Text style={styles.emptyActionText}>Create My First Project</Text>
-              </Pressable>
-            </View>
           ) : (
             <>
               <View style={styles.grid}>
                 <View style={styles.col}>
                   <Text style={styles.label}>Title *</Text>
-                  <TextInput 
-                    value={title} 
-                    onChangeText={setTitle} 
-                    style={[styles.input, title.length > 0 && styles.inputActive]} 
-                    placeholder="Task title..." 
+                  <TextInput
+                    value={title}
+                    onChangeText={setTitle}
+                    style={[styles.input, title.length > 0 && styles.inputActive]}
+                    placeholder="Task title..."
                   />
-                </View>
-                <View style={styles.col}>
-                  <Text style={styles.label}>Project</Text>
-                  <Pressable 
-                    onPress={() => openSelector(
-                      'Select Project', 
-                      projects.map(p => ({ id: p.id, label: p.name })), 
-                      projectId, 
-                      setProjectId,
-                      'Select Project',
-                      true
-                    )}
-                    style={styles.select}
-                  >
-                    <Text style={[styles.selectText, !projectId && { color: '#9ca3af' }]}>
-                      {projects.find(p => p.id === projectId)?.name || 'Select Project...'}
-                    </Text>
-                    <Ionicons name="chevron-down" size={16} color="#94a3b8" />
-                  </Pressable>
                 </View>
               </View>
 
               <View style={styles.grid}>
                 <View style={styles.col}>
-                  <Text style={styles.label}>Team</Text>
-                  <Pressable 
-                    onPress={() => openSelector(
-                      'Select Team', 
-                      teams.map(t => ({ id: t.id, label: t.name })), 
-                      teamId, 
-                      setTeamId,
-                      'Select Team',
-                      true
-                    )}
-                    style={styles.select}
-                  >
-                    <Text style={[styles.selectText, !teamId && { color: '#9ca3af' }]}>
-                      {teams.find(t => t.id === teamId)?.name || 'Select Team...'}
-                    </Text>
-                    <Ionicons name="chevron-down" size={16} color="#94a3b8" />
-                  </Pressable>
-                </View>
-                <View style={styles.col}>
-                  <Text style={styles.label}>Assignee *</Text>
-                  <Pressable 
-                    onPress={() => openSelector(
-                      'Select Assignee', 
-                      members.map(m => ({ id: m.id, label: m.full_name || m.email })), 
-                      assigneeId, 
-                      setAssigneeId,
-                      'Select Assignee',
-                      true
-                    )}
+                  <Text style={styles.label}>Assignee</Text>
+                  <Pressable
+                    onPress={() =>
+                      openSelector(
+                        'Select Assignee',
+                        members.map(m => ({ id: m.id, label: m.full_name || m.email })),
+                        assigneeId,
+                        setAssigneeId,
+                        'Select Assignee',
+                        true,
+                      )
+                    }
                     style={styles.select}
                   >
                     <Text style={[styles.selectText, !assigneeId && { color: '#9ca3af' }]}>
@@ -292,28 +245,39 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject, 
               <View style={styles.grid}>
                 <View style={styles.col}>
                   <Text style={styles.label}>Status</Text>
-                  <Pressable 
-                    onPress={() => openSelector(
-                      'Select Status', 
-                      STATUSES.map(s => ({ id: s, label: s === 'pending' ? 'To Do' : s.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) })), 
-                      status, 
-                      setStatus as any
-                    )}
+                  <Pressable
+                    onPress={() =>
+                      openSelector(
+                        'Select Status',
+                        STATUSES.map(s => ({
+                          id: s,
+                          label: s === 'pending' ? 'To Do' : s.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                        })),
+                        status,
+                        setStatus as any,
+                      )
+                    }
                     style={styles.select}
                   >
-                    <Text style={styles.selectText}>{status === 'pending' ? 'To Do' : status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</Text>
+                    <Text style={styles.selectText}>
+                      {status === 'pending'
+                        ? 'To Do'
+                        : status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </Text>
                     <Ionicons name="chevron-down" size={16} color="#94a3b8" />
                   </Pressable>
                 </View>
                 <View style={styles.col}>
                   <Text style={styles.label}>Priority</Text>
-                  <Pressable 
-                    onPress={() => openSelector(
-                      'Select Priority', 
-                      PRIORITIES.map(p => ({ id: p, label: p.charAt(0).toUpperCase() + p.slice(1) })), 
-                      priority, 
-                      setPriority as any
-                    )}
+                  <Pressable
+                    onPress={() =>
+                      openSelector(
+                        'Select Priority',
+                        PRIORITIES.map(p => ({ id: p, label: p.charAt(0).toUpperCase() + p.slice(1) })),
+                        priority,
+                        setPriority as any,
+                      )
+                    }
                     style={styles.select}
                   >
                     <Text style={[styles.selectText, { textTransform: 'capitalize' }]}>{priority}</Text>
@@ -326,7 +290,10 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject, 
                 <View style={styles.col}>
                   <Text style={styles.label}>Due Date</Text>
                   <Pressable onPress={openDatePicker} style={styles.select} hitSlop={8}>
-                    <Text pointerEvents="none" style={[styles.selectText, !dueDate && { color: palette.muted }]}>
+                    <Text
+                      pointerEvents="none"
+                      style={[styles.selectText, !dueDate && { color: palette.muted }]}
+                    >
                       {dueDate || 'mm/dd/yyyy'}
                     </Text>
                     <Ionicons name="calendar-outline" size={18} color="#6366f1" pointerEvents="none" />
@@ -335,7 +302,10 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject, 
                 <View style={styles.col}>
                   <Text style={styles.label}>Due Time</Text>
                   <Pressable onPress={openTimePicker} style={styles.select} hitSlop={8}>
-                    <Text pointerEvents="none" style={[styles.selectText, !dueTime && { color: palette.muted }]}>
+                    <Text
+                      pointerEvents="none"
+                      style={[styles.selectText, !dueTime && { color: palette.muted }]}
+                    >
                       {dueTime || '--:-- --'}
                     </Text>
                     <Ionicons name="time-outline" size={18} color="#6366f1" pointerEvents="none" />
@@ -356,7 +326,7 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject, 
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.ctaText}>Create Task</Text>
+                  <Text style={styles.ctaText}>Save Changes</Text>
                 )}
               </Pressable>
             </>
@@ -378,7 +348,7 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject, 
         visible={showDatePicker}
         value={dueDate ? parseInputDate(dueDate) ?? new Date() : new Date()}
         title="Select Due Date"
-        onConfirm={(d) => {
+        onConfirm={d => {
           setShowDatePicker(false)
           setDueDate(formatDateForInput(d))
         }}
@@ -388,7 +358,7 @@ export function CreateTaskModal({ visible, onClose, onCreated, onCreateProject, 
         visible={showTimePicker}
         value={new Date()}
         title="Select Due Time"
-        onConfirm={(d) => {
+        onConfirm={d => {
           setShowTimePicker(false)
           const hours = d.getHours().toString().padStart(2, '0')
           const minutes = d.getMinutes().toString().padStart(2, '0')
@@ -487,20 +457,23 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 4,
   },
-  emptyTitle: { fontSize: 18, fontWeight: '900', color: '#1e293b', textTransform: 'uppercase', letterSpacing: -0.5, marginBottom: 8 },
-  emptyDesc: { fontSize: 11, fontWeight: '700', color: '#94a3b8', textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.8, lineHeight: 18, marginBottom: 24 },
-  emptyAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#6366f1',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 16,
-    shadowColor: '#6366f1',
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 4,
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#1e293b',
+    textTransform: 'uppercase',
+    letterSpacing: -0.5,
+    marginBottom: 8,
   },
-  emptyActionText: { color: '#fff', fontSize: 11, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1 },
+  emptyDesc: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94a3b8',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    lineHeight: 18,
+    marginBottom: 24,
+  },
 })
+

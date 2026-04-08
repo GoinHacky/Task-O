@@ -15,6 +15,7 @@ import {
 } from 'react-native'
 
 import { SelectorModal } from './SelectorModal'
+import { UserAvatar } from './UserAvatar'
 import { supabase } from '@/src/lib/supabase'
 import { palette } from '@/src/theme'
 
@@ -87,7 +88,7 @@ export function CreateTeamModal({ visible, onClose, onCreated, onCreateProject }
     ;(async () => {
       const { data } = await supabase
         .from('project_members')
-        .select('user:user_id(id, full_name, email)')
+        .select('user:user_id(id, full_name, email, avatar_url)')
         .eq('project_id', projectId)
         .eq('status', 'accepted')
 
@@ -273,9 +274,7 @@ export function CreateTeamModal({ visible, onClose, onCreated, onCreateProject }
                           style={[styles.memberItem, isSelected && styles.memberItemActive]}
                           onPress={() => toggleMember(member.id)}
                         >
-                          <View style={styles.memberAvatar}>
-                            <Ionicons name="person" size={14} color="#94a3b8" />
-                          </View>
+                          <UserAvatar uri={member.avatar_url} name={member.full_name || member.email} size={28} />
                           <Text style={styles.memberName}>{member.full_name || member.email}</Text>
                           {isSelected && (
                             <View style={styles.checkMark}>
@@ -289,7 +288,7 @@ export function CreateTeamModal({ visible, onClose, onCreated, onCreateProject }
                 </>
               )}
 
-              <Text style={styles.label}>Description</Text>
+              <Text style={styles.label}>Team Description</Text>
               <TextInput
                 value={description}
                 onChangeText={setDescription}

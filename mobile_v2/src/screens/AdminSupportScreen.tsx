@@ -1,17 +1,11 @@
 import { Ionicons } from '@expo/vector-icons'
 import { type Href, useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { FadeIn } from '@/src/components/FadeIn'
+import { ListSkeleton } from '@/src/components/Skeleton'
 import { supabase } from '@/src/lib/supabase'
 import { SupportRequest } from '@/src/types'
 import { palette } from '@/src/theme'
@@ -56,15 +50,7 @@ export default function AdminSupportScreen() {
     else load()
   }
 
-  if (loading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
-  }
-
-  if (!allowed) {
+  if (!loading && allowed === false) {
     return (
       <View style={[styles.safe, { paddingTop: insets.top }]}>
         <View style={styles.head}>
@@ -88,23 +74,29 @@ export default function AdminSupportScreen() {
           <Ionicons name="analytics-outline" size={22} color={palette.primaryMid} />
         </Pressable>
       </View>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-        {rows.map(r => (
-          <View key={r.id} style={styles.card}>
-            <Pressable onPress={() => router.push(`/admin-support/${r.id}` as Href)}>
-              <Text style={styles.cardTitle}>{r.title}</Text>
-              <Text style={styles.cardMeta}>{r.ticket_id || r.id.slice(0, 8)} · current: {r.status}</Text>
-            </Pressable>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 12 }}>
-              {STATUSES.map(s => (
-                <Pressable key={s} style={[styles.stChip, r.status === s && styles.stChipOn]} onPress={() => setStatus(r.id, s)}>
-                  <Text style={[styles.stText, r.status === s && styles.stTextOn]}>{s}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
-        ))}
-      </ScrollView>
+      {loading ? (
+        <ListSkeleton />
+      ) : (
+      <FadeIn>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+          {rows.map(r => (
+            <View key={r.id} style={styles.card}>
+              <Pressable onPress={() => router.push(`/admin-support/${r.id}` as Href)}>
+                <Text style={styles.cardTitle}>{r.title}</Text>
+                <Text style={styles.cardMeta}>{r.ticket_id || r.id.slice(0, 8)} · current: {r.status}</Text>
+              </Pressable>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginTop: 12 }}>
+                {STATUSES.map(s => (
+                  <Pressable key={s} style={[styles.stChip, r.status === s && styles.stChipOn]} onPress={() => setStatus(r.id, s)}>
+                    <Text style={[styles.stText, r.status === s && styles.stTextOn]}>{s}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          ))}
+        </ScrollView>
+      </FadeIn>
+      )}
     </View>
   )
 }

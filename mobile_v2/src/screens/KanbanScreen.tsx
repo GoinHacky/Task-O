@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,7 +13,9 @@ import { ScreenHeader } from '@/src/components/ScreenHeader'
 import { CreateTaskModal } from '@/src/components/CreateTaskModal'
 import { CreateProjectModal } from '@/src/components/CreateProjectModal'
 import { CreateTeamModal } from '@/src/components/CreateTeamModal'
+import { FadeIn } from '@/src/components/FadeIn'
 import { InviteMemberModal } from '@/src/components/InviteMemberModal'
+import { BoardSkeleton } from '@/src/components/Skeleton'
 
 import { fetchProjectsForCurrentUser } from '@/src/lib/fetchUserProjects'
 import { supabase } from '@/src/lib/supabase'
@@ -80,44 +81,25 @@ export default function KanbanScreen() {
     if (!error) loadTasks()
   }
 
-  if (loading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
-  }
-
-  if (projects.length === 0) {
-    return (
-      <View style={[styles.safe, { paddingTop: insets.top }]}>
-      <ScreenHeader
-        onBack={() => router.back()}
-        onNotification={() => router.push('/notifications')}
-        onAddTask={() => setTaskModal(true)}
-        onAddProject={() => setProjectModal(true)}
-        onAddTeam={() => setTeamModal(true)}
-        onAddMember={() => setMemberModal(true)}
-      />
-        <View style={styles.emptyBig}>
-          <Text style={styles.emptyBigTitle}>No projects</Text>
-          <Text style={styles.emptyBigText}>Join a project to use the board.</Text>
-        </View>
-      </View>
-    )
-  }
-
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
       <ScreenHeader
         onBack={() => router.back()}
-        onNotification={() => router.push('/notifications')}
         onAddTask={() => setTaskModal(true)}
         onAddProject={() => setProjectModal(true)}
         onAddTeam={() => setTeamModal(true)}
         onAddMember={() => setMemberModal(true)}
       />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.projectPick}>
+      {loading ? (
+        <BoardSkeleton />
+      ) : projects.length === 0 ? (
+        <View style={styles.emptyBig}>
+          <Text style={styles.emptyBigTitle}>No projects</Text>
+          <Text style={styles.emptyBigText}>Join a project to use the board.</Text>
+        </View>
+      ) : (
+      <FadeIn>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.projectPick}>
         {projects.map(p => (
           <Pressable
             key={p.id}
@@ -129,8 +111,8 @@ export default function KanbanScreen() {
             </Text>
           </Pressable>
         ))}
-      </ScrollView>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.board}>
+        </ScrollView>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.board}>
         {COLS.map(col => (
           <View key={col.id} style={[styles.column, { borderTopColor: col.color }]}>
             <View style={styles.colHead}>
@@ -160,7 +142,9 @@ export default function KanbanScreen() {
             </ScrollView>
           </View>
         ))}
-      </ScrollView>
+        </ScrollView>
+      </FadeIn>
+      )}
 
       <CreateTaskModal visible={taskModal} onClose={() => setTaskModal(false)} onCreated={loadTasks} onCreateProject={() => setProjectModal(true)} />
       <CreateProjectModal visible={projectModal} onClose={() => setProjectModal(false)} onCreated={loadTasks} />
@@ -172,7 +156,6 @@ export default function KanbanScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: palette.bg },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',

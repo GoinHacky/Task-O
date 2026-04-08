@@ -15,8 +15,10 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { FadeIn } from '@/src/components/FadeIn'
 import { DatePickerDialog } from '@/src/components/PickerDialog'
 import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { FormSkeleton } from '@/src/components/Skeleton'
 import { formatDateForInput, parseInputDate } from '@/src/lib/dateInput'
 import { supabase } from '@/src/lib/supabase'
 import { TaskItem } from '@/src/types'
@@ -141,14 +143,6 @@ export default function TaskEditScreen() {
     else router.replace(`/task/${id}` as never)
   }
 
-  if (loading) {
-    return (
-      <View style={[styles.loader, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
-  }
-
   const statuses: TaskItem['status'][] = ['pending', 'in_progress', 'review', 'completed']
   const priorities: NonNullable<TaskItem['priority']>[] = ['low', 'medium', 'high']
 
@@ -159,7 +153,11 @@ export default function TaskEditScreen() {
       keyboardVerticalOffset={8}
     >
       <ScreenHeader title="Edit task" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
+      {loading ? (
+        <FormSkeleton />
+      ) : (
+      <FadeIn>
+        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <Text style={styles.label}>Project</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {projects.map(p => (
@@ -228,7 +226,9 @@ export default function TaskEditScreen() {
         <Pressable style={styles.save} onPress={submit} disabled={saving}>
           {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Save changes</Text>}
         </Pressable>
-      </ScrollView>
+        </ScrollView>
+      </FadeIn>
+      )}
 
       <DatePickerDialog
         visible={showDatePicker}

@@ -1,13 +1,15 @@
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { ScreenHeader } from '@/src/components/ScreenHeader'
 import { CreateTaskModal } from '@/src/components/CreateTaskModal'
 import { CreateProjectModal } from '@/src/components/CreateProjectModal'
 import { CreateTeamModal } from '@/src/components/CreateTeamModal'
+import { FadeIn } from '@/src/components/FadeIn'
 import { InviteMemberModal } from '@/src/components/InviteMemberModal'
+import { CardSkeleton } from '@/src/components/Skeleton'
 import { supabase } from '@/src/lib/supabase'
 import { palette } from '@/src/theme'
 
@@ -55,14 +57,6 @@ export default function ReportsScreen() {
     load()
   }, [load])
 
-  if (loading) {
-    return (
-      <View style={[styles.loader, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
-  }
-
   const boxes = [
     ['Total tasks', stats.totalTasks],
     ['Completed', stats.completed],
@@ -76,13 +70,16 @@ export default function ReportsScreen() {
     <View style={[styles.safe, { paddingTop: insets.top }]}>
       <ScreenHeader
         onBack={() => router.back()}
-        onNotification={() => router.push('/notifications')}
         onAddTask={() => setTaskModal(true)}
         onAddProject={() => setProjectModal(true)}
         onAddTeam={() => setTeamModal(true)}
         onAddMember={() => setMemberModal(true)}
       />
-      <ScrollView contentContainerStyle={styles.body}>
+      {loading ? (
+        <CardSkeleton count={4} />
+      ) : (
+      <FadeIn>
+        <ScrollView contentContainerStyle={styles.body}>
         <Text style={styles.lead}>Insights for work assigned to you and projects you own.</Text>
         <View style={styles.grid}>
           {boxes.map(([k, v]) => (
@@ -92,7 +89,9 @@ export default function ReportsScreen() {
             </View>
           ))}
         </View>
-      </ScrollView>
+        </ScrollView>
+      </FadeIn>
+      )}
 
       <CreateTaskModal visible={taskModal} onClose={() => setTaskModal(false)} onCreated={load} onCreateProject={() => setProjectModal(true)} />
       <CreateProjectModal visible={projectModal} onClose={() => setProjectModal(false)} onCreated={load} />
@@ -104,7 +103,6 @@ export default function ReportsScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: palette.bg },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: palette.bg },
   body: { padding: 16, paddingBottom: 40 },
   lead: { fontSize: 14, color: palette.muted, fontWeight: '600', marginBottom: 16, lineHeight: 20 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },

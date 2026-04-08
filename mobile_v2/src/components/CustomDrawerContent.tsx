@@ -1,12 +1,14 @@
 import { Ionicons } from '@expo/vector-icons'
 import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer'
-import { useRouter, usePathname } from 'expo-router'
-import { useEffect, useState } from 'react'
+import { useRouter, usePathname, useSegments } from 'expo-router'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { TaskOLogo } from './TaskOLogo'
 import { useSession } from '../context/SessionContext'
+import { fetchProjectsForCurrentUser } from '../lib/fetchUserProjects'
 import { supabase } from '../lib/supabase'
+import { ProjectItem } from '../types'
 import { palette } from '../theme'
 
 type MenuItem = {
@@ -18,7 +20,6 @@ type MenuItem = {
 
 const MENU_ITEMS: MenuItem[] = [
   { label: 'HOME', icon: 'home-outline', path: '/dashboard' },
-  { label: 'PROJECTS', icon: 'grid-outline', path: '/projects' },
   { label: 'INBOX', icon: 'mail-outline', path: '/inbox' },
   { label: 'CALENDAR', icon: 'calendar-outline', path: '/calendar' },
   { label: 'SETTINGS', icon: 'settings-outline', path: '/settings' },
@@ -28,24 +29,78 @@ const MENU_ITEMS: MenuItem[] = [
 export function CustomDrawerContent(props: DrawerContentComponentProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const segments = useSegments()
   const { session } = useSession()
-  const [profile, setProfile] = useState<{ full_name: string | null; email: string | null } | null>(null)
+
+  const activeProjectIdFromRoute = useMemo(() => {
+    const i = segments.findIndex(s => s === 'project')
+    if (i >= 0 && segments[i + 1]) return String(segments[i + 1])
+    return null
+  }, [segments])
+  const [projects, setProjects] = useState<ProjectItem[]>([])
+  const [projectsExpanded, setProjectsExpanded] = useState(true)
+
+  const loadProjects = useCallback(async () => {
+    if (!session?.user) {
+      setProjects([])
+      return
+    }
+    const data = await fetchProjectsForCurrentUser('name_asc')
+    setProjects((data || []) as ProjectItem[])
+  }, [session?.user])
 
   useEffect(() => {
     if (session?.user) {
-      supabase
-        .from('users')
-        .select('full_name')
-        .eq('id', session.user.id)
-        .single()
-        .then(({ data }) => {
-          setProfile({
-            full_name: data?.full_name || 'User',
-            email: session.user.email || '',
-          })
-        })
+      loadProjects()
+    } else {
+      setProjects([])
     }
-  }, [session])
+  }, [session, loadProjects])
+
+  // Keep project names in the drawer in sync when a project is renamed (or updated) elsewhere.
+  useEffect(() => {
+    if (!session?.user) return
+
+    const sortNameAsc = (list: ProjectItem[]) =>
+      [...list].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+
+    const channel = supabase
+      .channel('drawer-projects')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'projects' },
+        payload => {
+          const row = payload.new as ProjectItem | null
+          if (!row?.id) return
+          setProjects(prev => {
+            if (!prev.some(p => p.id === row.id)) return prev
+            const next = prev.map(p => (p.id === row.id ? { ...p, ...row } : p))
+            return sortNameAsc(next)
+          })
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'projects' },
+        payload => {
+          const id = (payload.old as { id?: string })?.id
+          if (!id) return
+          setProjects(prev => prev.filter(p => p.id !== id))
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'projects' },
+        () => {
+          loadProjects()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [session?.user, loadProjects])
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -57,23 +112,30 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
     router.push(path as any)
   }
 
+  const pathBase = pathname?.split('?')[0] ?? ''
+
+  const isProjectActive = (id: string) => {
+    if (activeProjectIdFromRoute === id) return true
+    return pathBase === `/project/${id}` || pathBase.startsWith(`/project/${id}/`)
+  }
+
+  /** Highlight PROJECTS row on the list screen or when inside any project (matches drawer reference). */
+  const isProjectsHeaderActive =
+    pathBase === '/projects' || pathBase.startsWith('/projects/') || pathBase.startsWith('/project/')
+
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.brand}>
           <TaskOLogo size={42} noBox />
           <Text style={styles.brandText}>Task-O</Text>
         </View>
-        <Pressable onPress={() => props.navigation.closeDrawer()} style={styles.closeBtn}>
-          <Ionicons name="close" size={24} color={palette.muted} />
-        </Pressable>
       </View>
 
       <DrawerContentScrollView {...props} contentContainerStyle={styles.scrollContent}>
         <View style={styles.menu}>
-          {MENU_ITEMS.map((item) => {
-            const isActive = pathname === item.path
+          {MENU_ITEMS.slice(0, 1).map(item => {
+            const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`)
             return (
               <Pressable
                 key={item.label}
@@ -83,12 +145,85 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                 <Ionicons
                   name={item.icon}
                   size={20}
-                  color={isActive ? palette.primary : palette.text}
+                  color={isActive ? drawerColors.selectedAccent : palette.text}
                   style={styles.menuIcon}
                 />
-                <Text style={[styles.menuText, isActive && styles.activeMenuText]}>
-                  {item.label}
+                <Text style={[styles.menuText, isActive && styles.activeMenuText]}>{item.label}</Text>
+                {item.hasDot && <View style={styles.redDot} />}
+              </Pressable>
+            )
+          })}
+
+          {/* Collapsible PROJECTS (matches reference: grid icon, title, chevron, list with dot + pill) */}
+          <View style={styles.projectsSection}>
+            <View style={[styles.projectsHeaderRow, isProjectsHeaderActive && styles.activeMenuItem]}>
+              <Pressable
+                style={styles.projectsHeaderLeft}
+                onPress={() => navigate('/projects')}
+                accessibilityRole="button"
+                accessibilityLabel="Open all projects"
+              >
+                <Ionicons
+                  name="grid-outline"
+                  size={20}
+                  color={isProjectsHeaderActive ? drawerColors.selectedAccent : drawerColors.projectsHeaderIcon}
+                  style={styles.menuIcon}
+                />
+                <Text style={[styles.projectsHeaderTitle, isProjectsHeaderActive && styles.projectsHeaderTitleActive]}>
+                  PROJECTS
                 </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setProjectsExpanded(e => !e)}
+                hitSlop={12}
+                style={styles.projectsChevronBtn}
+                accessibilityRole="button"
+                accessibilityLabel={projectsExpanded ? 'Collapse projects' : 'Expand projects'}
+              >
+                <Ionicons
+                  name={projectsExpanded ? 'chevron-down' : 'chevron-forward'}
+                  size={18}
+                  color={isProjectsHeaderActive ? drawerColors.selectedAccent : drawerColors.chevron}
+                />
+              </Pressable>
+            </View>
+
+            {projectsExpanded && projects.length > 0 && (
+              <View style={styles.projectsList}>
+                {projects.map(p => {
+                  const active = isProjectActive(p.id)
+                  return (
+                    <Pressable
+                      key={p.id}
+                      onPress={() => navigate(`/project/${p.id}`)}
+                      style={[styles.projectRow, active && styles.projectRowActive]}
+                    >
+                      <View style={[styles.projectDot, !active && styles.projectDotInactive]} />
+                      <Text style={[styles.projectRowText, active && styles.projectRowTextActive]} numberOfLines={1}>
+                        {(p.name || 'Untitled').toUpperCase()}
+                      </Text>
+                    </Pressable>
+                  )
+                })}
+              </View>
+            )}
+          </View>
+
+          {MENU_ITEMS.slice(1).map(item => {
+            const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`)
+            return (
+              <Pressable
+                key={item.label}
+                onPress={() => navigate(item.path)}
+                style={[styles.menuItem, isActive && styles.activeMenuItem]}
+              >
+                <Ionicons
+                  name={item.icon}
+                  size={20}
+                  color={isActive ? drawerColors.selectedAccent : palette.text}
+                  style={styles.menuIcon}
+                />
+                <Text style={[styles.menuText, isActive && styles.activeMenuText]}>{item.label}</Text>
                 {item.hasDot && <View style={styles.redDot} />}
               </Pressable>
             )
@@ -100,27 +235,18 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
           </Pressable>
         </View>
       </DrawerContentScrollView>
-
-      {/* Footer Profile */}
-      <View style={styles.footer}>
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {profile?.full_name?.[0]?.toUpperCase() || profile?.email?.[0]?.toUpperCase() || 'U'}
-            </Text>
-          </View>
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName} numberOfLines={1}>
-              {profile?.full_name || 'User'}
-            </Text>
-            <Text style={styles.profileEmail} numberOfLines={1}>
-              {profile?.email || 'user@example.com'}
-            </Text>
-          </View>
-        </View>
-      </View>
     </View>
   )
+}
+
+const drawerColors = {
+  projectsHeaderIcon: '#1e3a5f',
+  projectsHeaderTitle: '#1e3a5f',
+  chevron: '#94a3b8',
+  /** Same highlight for menu items + selected project row */
+  selectedBg: 'rgba(0, 119, 182, 0.16)',
+  selectedAccent: palette.primaryMid,
+  projectDotInactive: '#cbd5e1',
 }
 
 const styles = StyleSheet.create({
@@ -135,7 +261,6 @@ const styles = StyleSheet.create({
   },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   brandText: { fontSize: 24, fontWeight: '900', color: palette.text, letterSpacing: -0.5 },
-  closeBtn: { padding: 4 },
   scrollContent: { paddingTop: 0 },
   menu: { paddingHorizontal: 16, gap: 4 },
   menuItem: {
@@ -146,10 +271,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     position: 'relative',
   },
-  activeMenuItem: { backgroundColor: '#f3f4ff' },
+  activeMenuItem: { backgroundColor: drawerColors.selectedBg },
   menuIcon: { marginRight: 16 },
   menuText: { fontSize: 13, fontWeight: '800', color: palette.text, letterSpacing: 0.8 },
-  activeMenuText: { color: palette.primary, fontWeight: '900' },
+  activeMenuText: { color: drawerColors.selectedAccent, fontWeight: '900' },
   redDot: {
     position: 'absolute',
     right: 16,
@@ -158,23 +283,74 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: '#ef4444',
   },
-  footer: {
-    padding: 24,
-    borderTopWidth: 1,
-    borderTopColor: palette.border,
-    paddingBottom: 40,
+  projectsSection: {
+    marginBottom: 4,
   },
-  profileCard: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: palette.primary,
+  projectsHeaderRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 14,
   },
-  avatarText: { color: '#fff', fontSize: 16, fontWeight: '900' },
-  profileInfo: { flex: 1 },
-  profileName: { fontSize: 14, fontWeight: '800', color: palette.text },
-  profileEmail: { fontSize: 11, fontWeight: '600', color: palette.muted, marginTop: 2 },
+  projectsHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  projectsChevronBtn: {
+    padding: 4,
+  },
+  projectsHeaderTitle: {
+    fontSize: 13,
+    fontWeight: '900',
+    color: drawerColors.projectsHeaderTitle,
+    letterSpacing: 1,
+  },
+  projectsHeaderTitleActive: {
+    color: drawerColors.selectedAccent,
+  },
+  projectsList: {
+    paddingLeft: 8,
+    paddingRight: 8,
+    paddingBottom: 4,
+    gap: 6,
+  },
+  projectRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'transparent',
+    gap: 10,
+  },
+  projectRowActive: {
+    backgroundColor: drawerColors.selectedBg,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 119, 182, 0.35)',
+  },
+  projectDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: drawerColors.selectedAccent,
+  },
+  projectDotInactive: {
+    backgroundColor: drawerColors.projectDotInactive,
+  },
+  projectRowText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '800',
+    color: palette.text,
+    letterSpacing: 0.6,
+  },
+  projectRowTextActive: {
+    fontWeight: '900',
+    color: drawerColors.selectedAccent,
+  },
 })

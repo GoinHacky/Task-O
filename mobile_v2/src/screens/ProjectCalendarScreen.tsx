@@ -1,9 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { FadeIn } from '@/src/components/FadeIn'
 import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { ScreenSkeleton } from '@/src/components/Skeleton'
 import { supabase } from '@/src/lib/supabase'
 import { TaskItem } from '@/src/types'
 import { palette } from '@/src/theme'
@@ -44,46 +46,44 @@ export default function ProjectCalendarScreen() {
     }, {})
   }, [tasks])
 
-  if (loading) {
-    return (
-      <View style={[styles.loader, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
-  }
-
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
       <ScreenHeader title="Project calendar" onBack={() => router.back()} />
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={async () => {
-              setRefreshing(true)
-              await load()
-              setRefreshing(false)
-            }}
-          />
-        }
-      >
-        {Object.keys(grouped).length === 0 ? (
-          <Text style={styles.empty}>No scheduled tasks for this project.</Text>
-        ) : (
-          Object.entries(grouped).map(([day, dayTasks]) => (
-            <View key={day} style={styles.dayCard}>
-              <Text style={styles.dayTitle}>{day}</Text>
-              {dayTasks.map(t => (
-                <View key={t.id} style={styles.task}>
-                  <Text style={styles.taskTitle}>{t.title}</Text>
-                  <Text style={styles.taskMeta}>{t.status}</Text>
-                </View>
-              ))}
-            </View>
-          ))
-        )}
-      </ScrollView>
+      {loading ? (
+        <ScreenSkeleton />
+      ) : (
+      <FadeIn>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={async () => {
+                setRefreshing(true)
+                await load()
+                setRefreshing(false)
+              }}
+            />
+          }
+        >
+          {Object.keys(grouped).length === 0 ? (
+            <Text style={styles.empty}>No scheduled tasks for this project.</Text>
+          ) : (
+            Object.entries(grouped).map(([day, dayTasks]) => (
+              <View key={day} style={styles.dayCard}>
+                <Text style={styles.dayTitle}>{day}</Text>
+                {dayTasks.map(t => (
+                  <View key={t.id} style={styles.task}>
+                    <Text style={styles.taskTitle}>{t.title}</Text>
+                    <Text style={styles.taskMeta}>{t.status}</Text>
+                  </View>
+                ))}
+              </View>
+            ))
+          )}
+        </ScrollView>
+      </FadeIn>
+      )}
     </View>
   )
 }

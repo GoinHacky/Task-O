@@ -1,4 +1,4 @@
-import { type Href, useLocalSearchParams, useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
 import {
   ActivityIndicator,
@@ -12,7 +12,9 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { FadeIn } from '@/src/components/FadeIn'
 import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { FormSkeleton } from '@/src/components/Skeleton'
 import { supabase } from '@/src/lib/supabase'
 import { palette } from '@/src/theme'
 
@@ -74,24 +76,20 @@ export default function ProjectSettingsScreen() {
         onPress: async () => {
           const { error } = await supabase.from('projects').delete().eq('id', projectId)
           if (error) Alert.alert('Error', error.message)
-          else router.replace('/(drawer)/projects' as Href)
+          else router.dismissTo('/projects')
         },
       },
     ])
   }
 
-  if (loading) {
-    return (
-      <View style={[styles.loader, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
-  }
-
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
       <ScreenHeader title="Project settings" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      {loading ? (
+        <FormSkeleton />
+      ) : (
+      <FadeIn>
+        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <Text style={styles.section}>General</Text>
         <Text style={styles.label}>Name</Text>
         <TextInput
@@ -124,7 +122,9 @@ export default function ProjectSettingsScreen() {
             </Pressable>
           </>
         ) : null}
-      </ScrollView>
+        </ScrollView>
+      </FadeIn>
+      )}
     </View>
   )
 }

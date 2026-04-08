@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons'
-import { format, formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 import { useCallback, useEffect, useState } from 'react'
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   RefreshControl,
@@ -11,12 +10,12 @@ import {
   Text,
   View,
 } from 'react-native'
-import { type Href, useRouter, useNavigation } from 'expo-router'
-import { DrawerActions } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated'
 
-import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { FadeIn } from '@/src/components/FadeIn'
+import { DrawerScreenHeader } from '@/src/components/ScreenHeader'
+import { ListSkeleton } from '@/src/components/Skeleton'
 import { CreateTaskModal } from '@/src/components/CreateTaskModal'
 import { CreateProjectModal } from '@/src/components/CreateProjectModal'
 import { CreateTeamModal } from '@/src/components/CreateTeamModal'
@@ -28,8 +27,6 @@ import { palette } from '@/src/theme'
 type Filter = 'all' | 'assigned' | 'mention' | 'review' | 'system' | 'invite'
 
 export default function InboxScreen() {
-  const router = useRouter()
-  const navigation = useNavigation()
   const insets = useSafeAreaInsets()
   const [items, setItems] = useState<NotificationItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -79,8 +76,17 @@ export default function InboxScreen() {
     if (filter === 'all') return true
     if (filter === 'assigned') return n.type === 'assignment' || n.type === 'task_assignment'
     if (filter === 'mention') return n.type === 'mention'
-    if (filter === 'review') return n.type === 'review_required'
+    if (filter === 'review')
+      return (
+        n.type === 'review_required' ||
+        (n.type === 'task_status_change' && String(n.message || '').toLowerCase().includes('review'))
+      )
     if (filter === 'invite') return ['invite', 'workspace_invite', 'project_invite', 'team_invitation'].includes(n.type)
+    if (filter === 'system')
+      return (
+        n.type === 'alert' ||
+        (n.type === 'task_status_change' && !String(n.message || '').toLowerCase().includes('review'))
+      )
     return true
   })
 
@@ -89,80 +95,115 @@ export default function InboxScreen() {
     setItems(prev => prev.map(x => (x.id === id ? { ...x, read: true } : x)))
   }
 
-  async function markAllRead() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id)
-    load()
-  }
-
-  async function clearAll() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    Alert.alert('Clear Inbox', 'Delete all items?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Clear All', style: 'destructive', onPress: async () => {
-          await supabase.from('notifications').delete().eq('user_id', user.id)
-          setItems([])
-        }
-      },
-    ])
-  }
-
-  if (loading) {
-    return <View style={styles.loader}><ActivityIndicator color={palette.primary} /></View>
-  }
-
-  const filters: Filter[] = ['all', 'assigned', 'mention', 'review', 'invite']
-  const unreadCount = items.filter(n => !n.read).length
+  const filterTabs: { id: Filter; label: string }[] = [
+    { id: 'assigned', label: 'assigneds' },
+    { id: 'mention', label: 'mentions' },
+    { id: 'review', label: 'approvals' },
+    { id: 'invite', label: 'invites' },
+    { id: 'system', label: 'systems' },
+  ]
 
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
-      <ScreenHeader
-        onMenu={() => navigation.dispatch(DrawerActions.openDrawer())}
-        onNotification={() => {}} // Already on Inbox, maybe just refresh
+      <DrawerScreenHeader
         onAddTask={() => setTaskModal(true)}
         onAddProject={() => setProjectModal(true)}
         onAddTeam={() => setTeamModal(true)}
         onAddMember={() => setMemberModal(true)}
-        right={
-          <View style={styles.headerActions}>
-            <Pressable onPress={markAllRead} style={styles.hBtn}>
-              <Ionicons name="checkmark-done" size={18} color={palette.primary} />
-            </Pressable>
-          </View>
-        }
       />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll} contentContainerStyle={styles.filterRow}>
-        {filters.map(f => (
-          <Pressable key={f} onPress={() => setFilter(f)} style={[styles.fChip, filter === f && styles.fChipOn]}>
-            <Text style={[styles.fChipText, filter === f && styles.fChipTextOn]}>{f}</Text>
-          </Pressable>
-        ))}
-        <Pressable onPress={() => setUnreadOnly(!unreadOnly)} style={[styles.fChip, unreadOnly && styles.fChipOn]}>
-          <Text style={[styles.fChipText, unreadOnly && styles.fChipTextOn]}>Unread</Text>
-        </Pressable>
-      </ScrollView>
-
-      <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false) }} tintColor={palette.primary} />}>
-
-        {filtered.length === 0 ? (
-          <View style={styles.empty}><Ionicons name="mail-open-outline" size={36} color="#e2e8f0" /><Text style={styles.emptyText}>No matching messages.</Text></View>
-        ) : (
-          filtered.map((n, idx) => (
-            <Animated.View key={n.id} entering={FadeInDown.delay(idx * 30)} layout={LinearTransition}>
-              <Pressable style={[styles.card, !n.read && styles.cardUnread]} onPress={() => !['invite'].includes(n.type) && markRead(n.id)}>
-                <Text style={styles.typeTag}>{n.type.replace(/_/g, ' ')}</Text>
-                <Text style={[styles.msgText, !n.read && styles.msgTextBold]}>{n.message}</Text>
-                <View style={styles.footer}>
-                  <Ionicons name="time-outline" size={12} color={palette.muted} />
-                  <Text style={styles.footerDate}>{formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}</Text>
+      {loading ? (
+        <ListSkeleton />
+      ) : (
+        <FadeIn>
+          <ScrollView
+            contentContainerStyle={styles.page}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={async () => {
+                  setRefreshing(true)
+                  await load()
+                  setRefreshing(false)
+                }}
+                tintColor={palette.primary}
+              />
+            }
+          >
+            <View style={styles.shell}>
+              {/* Header Area */}
+              <View style={styles.headArea}>
+                <View style={styles.headRow}>
+                  <Text style={styles.headTitle}>INBOX</Text>
                 </View>
-              </Pressable>
-            </Animated.View>
-          ))
-        )}
-      </ScrollView>
+
+                {/* Filter Tabs */}
+                <View style={styles.tabsRow}>
+                  {filterTabs.map(t => {
+                    const active = filter === t.id
+                    return (
+                      <Pressable
+                        key={t.id}
+                        onPress={() => setFilter(prev => (prev === t.id ? 'all' : t.id))}
+                        style={[styles.tabBtn, active && styles.tabBtnOn]}
+                      >
+                        <Text style={[styles.tabText, active && styles.tabTextOn]}>{t.label}</Text>
+                      </Pressable>
+                    )
+                  })}
+
+                  <View style={styles.unreadWrap}>
+                    <Text style={styles.unreadLabel}>Unread Only</Text>
+                    <Pressable
+                      onPress={() => setUnreadOnly(v => !v)}
+                      style={[styles.toggle, unreadOnly && styles.toggleOn]}
+                      accessibilityRole="switch"
+                      accessibilityState={{ checked: unreadOnly }}
+                    >
+                      <View style={[styles.knob, unreadOnly && styles.knobOn]} />
+                    </Pressable>
+                  </View>
+                </View>
+
+                <View style={styles.divider} />
+              </View>
+
+              {/* Content */}
+              <View style={styles.listArea}>
+                {filtered.length === 0 ? (
+                  <View style={styles.emptyWrap}>
+                    <View style={styles.emptyIconBox}>
+                      <Ionicons name="notifications-outline" size={40} color="#e2e8f0" />
+                    </View>
+                    <Text style={styles.emptyKicker}>Inbox is empty</Text>
+                  </View>
+                ) : (
+                  <View>
+                    {filtered.map((n, idx) => (
+                      <Animated.View key={n.id} entering={FadeInDown.delay(idx * 25)} layout={LinearTransition}>
+                        <Pressable
+                          style={[styles.item, !n.read && styles.itemUnread]}
+                          onPress={() => markRead(n.id)}
+                        >
+                          <View style={styles.itemTop}>
+                            <Text style={styles.itemTitle} numberOfLines={2}>
+                              {n.message}
+                            </Text>
+                            <Text style={styles.itemTime}>
+                              {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                            </Text>
+                          </View>
+                          <Text style={styles.itemType}>{n.type.replace(/_/g, ' ')}</Text>
+                        </Pressable>
+                        {idx < filtered.length - 1 ? <View style={styles.itemDivider} /> : null}
+                      </Animated.View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </View>
+          </ScrollView>
+        </FadeIn>
+      )}
 
       <CreateTaskModal visible={taskModal} onClose={() => setTaskModal(false)} onCreated={load} onCreateProject={() => setProjectModal(true)} />
       <CreateProjectModal visible={projectModal} onClose={() => setProjectModal(false)} onCreated={load} />
@@ -174,35 +215,84 @@ export default function InboxScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: palette.bg },
-  filterScroll: { maxHeight: 52, flexGrow: 0, marginTop: 8 },
-  filterRow: { paddingHorizontal: 16, paddingVertical: 10, gap: 8, flexDirection: 'row', alignItems: 'center' },
-  fChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: palette.surface, borderWidth: 1, borderColor: 'rgba(148,163,184,0.1)' },
-  fChipOn: { backgroundColor: palette.primary, borderColor: palette.primary },
-  fChipText: { fontSize: 9, fontWeight: '900', color: palette.muted, textTransform: 'uppercase', letterSpacing: 0.8 },
-  fChipTextOn: { color: '#fff' },
+  page: { paddingHorizontal: 12, paddingBottom: 28, paddingTop: 8 },
+  shell: { width: '100%', maxWidth: 520, alignSelf: 'center' },
+  headArea: { padding: 18, paddingBottom: 12 },
+  headRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
+  headTitle: { fontSize: 24, fontWeight: '900', color: palette.text, letterSpacing: -0.5 },
 
-  content: { paddingHorizontal: 16, paddingBottom: 100, paddingTop: 10 },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  tabsRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 14 },
+  tabBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 16,
+    backgroundColor: 'rgba(148,163,184,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(148,163,184,0.28)',
+  },
+  tabBtnOn: {
+    backgroundColor: palette.accent,
+    borderColor: palette.accent,
+    shadowColor: palette.accent,
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  tabText: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.2, color: '#94a3b8' },
+  tabTextOn: { color: '#fff' },
 
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
-  headerTitle: { fontSize: 32, fontWeight: '900', color: palette.text, letterSpacing: -1 },
-  unreadBadge: { alignSelf: 'flex-start', backgroundColor: palette.primary, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, marginTop: 4 },
-  unreadBadgeText: { fontSize: 9, fontWeight: '900', color: '#fff', letterSpacing: 1 },
+  unreadWrap: {
+    marginLeft: 'auto',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(148,163,184,0.08)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(148,163,184,0.28)',
+  },
+  unreadLabel: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.2, color: '#94a3b8' },
+  toggle: {
+    width: 42,
+    height: 22,
+    borderRadius: 999,
+    backgroundColor: '#e5e7eb',
+    position: 'relative',
+  },
+  toggleOn: { backgroundColor: palette.accent },
+  knob: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    width: 14,
+    height: 14,
+    borderRadius: 999,
+    backgroundColor: '#fff',
+  },
+  knobOn: { left: 24 },
 
-  headerActions: { flexDirection: 'row', gap: 6 },
-  hBtn: { backgroundColor: palette.accentSoft, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12 },
-  hBtnText: { fontSize: 9, fontWeight: '900', textTransform: 'uppercase', color: palette.primary, letterSpacing: 0.5 },
-  clearBtn: { backgroundColor: '#fef2f2' },
-  clearBtnText: { fontSize: 9, fontWeight: '900', textTransform: 'uppercase', color: '#ef4444', letterSpacing: 0.5 },
+  divider: { height: 1, backgroundColor: 'rgba(148,163,184,0.15)' },
+  listArea: { paddingHorizontal: 18, paddingBottom: 20 },
 
-  card: { backgroundColor: palette.surface, borderRadius: 24, padding: 20, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(148,163,184,0.1)', shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 10, elevation: 1 },
-  cardUnread: { borderColor: palette.primary, backgroundColor: '#fdfdff' },
-  typeTag: { fontSize: 9, fontWeight: '900', color: palette.primary, textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 8 },
-  msgText: { fontSize: 16, color: palette.muted, fontWeight: '600', lineHeight: 24 },
-  msgTextBold: { color: palette.text, fontWeight: '800' },
-  footer: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14 },
-  footerDate: { fontSize: 11, fontWeight: '700', color: palette.muted },
+  emptyWrap: { paddingVertical: 90, alignItems: 'center' },
+  emptyIconBox: {
+    width: 96,
+    height: 96,
+    borderRadius: 32,
+    backgroundColor: 'rgba(148,163,184,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+  },
+  emptyKicker: { fontSize: 12, fontWeight: '900', letterSpacing: 2.2, textTransform: 'uppercase', color: '#94a3b8' },
 
-  empty: { alignItems: 'center', paddingVertical: 100, gap: 12 },
-  emptyText: { fontSize: 13, fontWeight: '700', color: '#cbd5e1' },
+  item: { paddingVertical: 18 },
+  itemUnread: {},
+  itemTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
+  itemTitle: { flex: 1, fontSize: 15, fontWeight: '900', color: palette.text, lineHeight: 20 },
+  itemTime: { fontSize: 10, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1.2, paddingTop: 2 },
+  itemType: { marginTop: 8, fontSize: 10, fontWeight: '900', color: palette.muted, textTransform: 'uppercase', letterSpacing: 1.6 },
+  itemDivider: { height: 1, backgroundColor: 'rgba(148,163,184,0.12)' },
 })

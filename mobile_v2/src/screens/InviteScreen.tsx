@@ -12,7 +12,9 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { FadeIn } from '@/src/components/FadeIn'
 import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { CardSkeleton } from '@/src/components/Skeleton'
 import { TaskOLogo } from '@/src/components/TaskOLogo'
 import { supabase } from '@/src/lib/supabase'
 import { palette } from '@/src/theme'
@@ -118,18 +120,14 @@ export default function InviteScreen() {
     Alert.alert('Invitation sent')
   }
 
-  if (loading) {
-    return (
-      <View style={[styles.loader, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
-  }
-
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
       <ScreenHeader title="Invite" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      {loading ? (
+        <CardSkeleton />
+      ) : (
+      <FadeIn>
+        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <View style={styles.brand}>
           <TaskOLogo size={40} rounded={18} />
           <Text style={styles.brandText}>Invite someone to a project they can help with.</Text>
@@ -168,7 +166,9 @@ export default function InviteScreen() {
         <Pressable style={styles.send} onPress={send} disabled={sending}>
           {sending ? <ActivityIndicator color="#fff" /> : <Text style={styles.sendText}>Send invitation</Text>}
         </Pressable>
-      </ScrollView>
+        </ScrollView>
+      </FadeIn>
+      )}
     </View>
   )
 }

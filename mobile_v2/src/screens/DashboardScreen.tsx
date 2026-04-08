@@ -3,7 +3,6 @@ import { format } from 'date-fns'
 import { type Href, useRouter } from 'expo-router'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -17,15 +16,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { CreateProjectModal } from '@/src/components/CreateProjectModal'
 import { CreateTaskModal } from '@/src/components/CreateTaskModal'
 import { CreateTeamModal } from '@/src/components/CreateTeamModal'
+import { FadeIn } from '@/src/components/FadeIn'
 import { InviteMemberModal } from '@/src/components/InviteMemberModal'
+import { UserAvatar } from '@/src/components/UserAvatar'
+import { DashboardSkeleton } from '@/src/components/Skeleton'
 import { StatCard } from '@/src/components/StatCard'
-import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { DrawerScreenHeader } from '@/src/components/ScreenHeader'
 import { supabase } from '@/src/lib/supabase'
 import { NotificationItem, TaskItem, TeamMembership } from '@/src/types'
 import { palette } from '@/src/theme'
-import { useNavigation } from 'expo-router'
-import { DrawerActions } from '@react-navigation/native'
-
 function formatCount(count: number) {
   if (count >= 1000) return `${(count / 1000).toFixed(1)}K`
   return String(count)
@@ -35,7 +34,6 @@ type PriorityTab = 'Pending' | 'Overdue' | 'Resolved'
 
 export default function DashboardScreen() {
   const router = useRouter()
-  const navigation = useNavigation()
   const insets = useSafeAreaInsets()
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -133,14 +131,6 @@ export default function DashboardScreen() {
       .slice(0, 10)
   }, [tasks, prioTab])
 
-  if (loading) {
-    return (
-      <View style={styles.loaderWrap}>
-        <ActivityIndicator size="large" color={palette.primary} />
-      </View>
-    )
-  }
-
   const tabs: { label: PriorityTab; count: number; color: string; hover: string }[] = [
     { label: 'Pending', count: stats.pendingCount, color: palette.pending, hover: '#DA8C45' },
     { label: 'Overdue', count: stats.overdueCount, color: palette.overdue, hover: '#D64543' },
@@ -149,18 +139,23 @@ export default function DashboardScreen() {
 
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
-      <ScreenHeader 
-        onMenu={() => navigation.dispatch(DrawerActions.openDrawer())} 
-        onNotification={() => router.push('/notifications')}
+      <DrawerScreenHeader
         onAddTask={() => setTaskModal(true)}
         onAddProject={() => setProjectModal(true)}
         onAddTeam={() => setTeamModal(true)}
         onAddMember={() => setMemberModal(true)}
       />
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false) }} tintColor={palette.primary} />}
-      >
+      {loading ? (
+        <DashboardSkeleton />
+      ) : (
+      <FadeIn>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false) }} tintColor={palette.primary} />}
+        >
+        <Text style={styles.greetingHeader}>Hello,</Text>
+        <Text style={styles.heroName}>{fullName}</Text>
+        <Text style={styles.heroSub}>Here&apos;s a quick overview of your work.</Text>
         {/* Stats Grid - Cleaner layout */}
         <View style={styles.statRow}>
           <Pressable style={{ flex: 1 }} onPress={() => router.push('/tasks' as Href)}>
@@ -295,10 +290,20 @@ export default function DashboardScreen() {
               teams.filter(m => m.teams).map(m => {
                 const team = m.teams!
                 return (
-                  <Pressable key={team.id} style={styles.teamBox} onPress={() => team.project_id && router.push(`/project/${team.project_id}` as Href)}>
-                    <View style={styles.teamLetterBox}>
-                      <Text style={styles.teamLetter}>{team.name?.[0].toUpperCase()}</Text>
-                    </View>
+                  <Pressable
+                    key={team.id}
+                    style={styles.teamBox}
+                    onPress={() =>
+                      team.project_id &&
+                      router.push(`/project/${team.project_id}/team/${team.id}` as Href)
+                    }
+                  >
+                    <UserAvatar
+                      uri={team.avatar_url}
+                      name={team.name}
+                      size={64}
+                      style={styles.teamLetterBox}
+                    />
                     <Text style={styles.teamBoxName} numberOfLines={1}>{team.name}</Text>
                     <View style={styles.roleChip}>
                       <Text style={styles.roleChipText}>{m.role}</Text>
@@ -309,7 +314,9 @@ export default function DashboardScreen() {
             )}
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </FadeIn>
+      )}
 
       <CreateTaskModal visible={taskModal} onClose={() => setTaskModal(false)} onCreated={load} onCreateProject={() => setProjectModal(true)} />
       <CreateProjectModal visible={projectModal} onClose={() => setProjectModal(false)} onCreated={load} />
@@ -322,8 +329,7 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: palette.bg },
   content: { paddingHorizontal: 16, paddingBottom: 100, paddingTop: 8 },
-  loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  
+
   greetingHeader: { fontSize: 10, fontWeight: '900', color: palette.primary, textTransform: 'uppercase', letterSpacing: 2.5 },
   heroName: { fontSize: 30, fontWeight: '900', color: palette.text, marginTop: 4, letterSpacing: -0.5 },
   heroSub: { fontSize: 14, color: palette.muted, marginTop: 2, marginBottom: 20, fontWeight: '600' },
@@ -415,8 +421,7 @@ const styles = StyleSheet.create({
 
   teamGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 6 },
   teamBox: { width: '48%', backgroundColor: palette.surface, borderRadius: 20, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(148,163,184,0.1)' },
-  teamLetterBox: { width: 64, height: 64, borderRadius: 22, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center', marginBottom: 12, borderWidth: 1, borderColor: palette.border },
-  teamLetter: { fontSize: 24, fontWeight: '900', color: palette.primary },
+  teamLetterBox: { marginBottom: 12 },
   teamBoxName: { fontSize: 14, fontWeight: '900', color: palette.text, textAlign: 'center' },
   roleChip: { marginTop: 6, backgroundColor: palette.accentSoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   roleChipText: { fontSize: 9, fontWeight: '900', color: palette.primary, textTransform: 'uppercase' },

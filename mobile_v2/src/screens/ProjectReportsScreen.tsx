@@ -1,9 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { FadeIn } from '@/src/components/FadeIn'
 import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { CardSkeleton } from '@/src/components/Skeleton'
 import { supabase } from '@/src/lib/supabase'
 import { palette } from '@/src/theme'
 
@@ -44,34 +46,32 @@ export default function ProjectReportsScreen() {
     load()
   }, [load])
 
-  if (loading) {
-    return (
-      <View style={[styles.loader, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
-  }
-
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
       <ScreenHeader title="Reports" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.body}>
-        <View style={styles.hero}>
-          <Text style={styles.heroK}>Completion rate</Text>
-          <Text style={styles.heroV}>{completion}%</Text>
-        </View>
-        <Text style={styles.section}>Velocity by team</Text>
-        {teamVel.map(t => (
-          <View key={t.name} style={styles.row}>
-            <Text style={styles.name}>{t.name}</Text>
-            <View style={styles.barBg}>
-              <View style={[styles.barFill, { width: `${t.v}%` }]} />
-            </View>
-            <Text style={styles.pct}>{t.v}%</Text>
+      {loading ? (
+        <CardSkeleton />
+      ) : (
+      <FadeIn>
+        <ScrollView contentContainerStyle={styles.body}>
+          <View style={styles.hero}>
+            <Text style={styles.heroK}>Completion rate</Text>
+            <Text style={styles.heroV}>{completion}%</Text>
           </View>
-        ))}
-        {teamVel.length === 0 ? <Text style={styles.hint}>Create teams to see per-team velocity.</Text> : null}
-      </ScrollView>
+          <Text style={styles.section}>Velocity by team</Text>
+          {teamVel.map(t => (
+            <View key={t.name} style={styles.row}>
+              <Text style={styles.name}>{t.name}</Text>
+              <View style={styles.barBg}>
+                <View style={[styles.barFill, { width: `${t.v}%` }]} />
+              </View>
+              <Text style={styles.pct}>{t.v}%</Text>
+            </View>
+          ))}
+          {teamVel.length === 0 ? <Text style={styles.hint}>Create teams to see per-team velocity.</Text> : null}
+        </ScrollView>
+      </FadeIn>
+      )}
     </View>
   )
 }

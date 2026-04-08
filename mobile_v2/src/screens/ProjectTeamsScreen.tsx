@@ -1,18 +1,11 @@
 import { type Href, useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native'
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { FadeIn } from '@/src/components/FadeIn'
 import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { CardSkeleton } from '@/src/components/Skeleton'
 import { supabase } from '@/src/lib/supabase'
 import { palette } from '@/src/theme'
 
@@ -81,18 +74,14 @@ export default function ProjectTeamsScreen() {
     }
   }
 
-  if (loading) {
-    return (
-      <View style={[styles.loader, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
-  }
-
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
       <ScreenHeader title="Teams" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.body}>
+      {loading ? (
+        <CardSkeleton />
+      ) : (
+      <FadeIn>
+        <ScrollView contentContainerStyle={styles.body}>
         {canAdmin ? (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Create team</Text>
@@ -122,7 +111,9 @@ export default function ProjectTeamsScreen() {
           </Pressable>
         ))}
         {teams.length === 0 ? <Text style={styles.empty}>No teams yet.</Text> : null}
-      </ScrollView>
+        </ScrollView>
+      </FadeIn>
+      )}
     </View>
   )
 }

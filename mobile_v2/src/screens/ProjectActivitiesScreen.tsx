@@ -1,9 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { FadeIn } from '@/src/components/FadeIn'
 import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { ListSkeleton } from '@/src/components/Skeleton'
 import { supabase } from '@/src/lib/supabase'
 import { palette } from '@/src/theme'
 
@@ -40,27 +42,25 @@ export default function ProjectActivitiesScreen() {
     load()
   }, [load])
 
-  if (loading) {
-    return (
-      <View style={[styles.loader, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
-  }
-
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
       <ScreenHeader title="Activity" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.body}>
-        {rows.length === 0 ? <Text style={styles.empty}>No activity yet.</Text> : null}
-        {rows.map(a => (
-          <View key={a.id} style={styles.card}>
-            <Text style={styles.type}>{a.type.replace(/_/g, ' ')}</Text>
-            <Text style={styles.msg}>{a.message}</Text>
-            <Text style={styles.time}>{new Date(a.created_at).toLocaleString()}</Text>
-          </View>
-        ))}
-      </ScrollView>
+      {loading ? (
+        <ListSkeleton />
+      ) : (
+      <FadeIn>
+        <ScrollView contentContainerStyle={styles.body}>
+          {rows.length === 0 ? <Text style={styles.empty}>No activity yet.</Text> : null}
+          {rows.map(a => (
+            <View key={a.id} style={styles.card}>
+              <Text style={styles.type}>{a.type.replace(/_/g, ' ')}</Text>
+              <Text style={styles.msg}>{a.message}</Text>
+              <Text style={styles.time}>{new Date(a.created_at).toLocaleString()}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      </FadeIn>
+      )}
     </View>
   )
 }

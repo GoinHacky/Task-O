@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
 import { useCallback, useEffect, useState } from 'react'
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -9,16 +8,17 @@ import {
   Text,
   View,
 } from 'react-native'
-import { type Href, useRouter, useNavigation } from 'expo-router'
-import { DrawerActions } from '@react-navigation/native'
+import { type Href, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated'
 
 import { CreateTaskModal } from '@/src/components/CreateTaskModal'
 import { CreateProjectModal } from '@/src/components/CreateProjectModal'
 import { CreateTeamModal } from '@/src/components/CreateTeamModal'
+import { FadeIn } from '@/src/components/FadeIn'
 import { InviteMemberModal } from '@/src/components/InviteMemberModal'
-import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { DrawerScreenHeader } from '@/src/components/ScreenHeader'
+import { CardSkeleton } from '@/src/components/Skeleton'
 import { supabase } from '@/src/lib/supabase'
 import { TaskItem } from '@/src/types'
 import { palette } from '@/src/theme'
@@ -52,7 +52,6 @@ function getStatusStyle(status: string) {
 
 export default function TasksScreen() {
   const router = useRouter()
-  const navigation = useNavigation()
   const insets = useSafeAreaInsets()
   const [tasks, setTasks] = useState<TaskItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -87,21 +86,19 @@ export default function TasksScreen() {
   const completed = tasks.filter(t => t.status === 'completed').length
   const overdue = tasks.filter(t => t.due_date && new Date(t.due_date) < new Date() && t.status !== 'completed').length
 
-  if (loading) {
-    return <View style={styles.loader}><ActivityIndicator color={palette.primary} /></View>
-  }
-
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
-      <ScreenHeader
-        onMenu={() => navigation.dispatch(DrawerActions.openDrawer())}
-        onNotification={() => router.push('/notifications')}
+      <DrawerScreenHeader
         onAddTask={() => setShowCreate(true)}
         onAddProject={() => setShowProjectCreate(true)}
         onAddTeam={() => setShowTeamCreate(true)}
         onAddMember={() => setShowMemberInvite(true)}
       />
-      <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await loadTasks(); setRefreshing(false) }} tintColor={palette.primary} />}>
+      {loading ? (
+        <CardSkeleton count={4} />
+      ) : (
+      <FadeIn>
+        <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await loadTasks(); setRefreshing(false) }} tintColor={palette.primary} />}>
 
         <View style={styles.statsRow}>
           <View style={styles.statBox}><Text style={styles.statVal}>{total}</Text><Text style={styles.statLab}>Total</Text></View>
@@ -152,7 +149,9 @@ export default function TasksScreen() {
             )
           })
         )}
-      </ScrollView>
+        </ScrollView>
+      </FadeIn>
+      )}
 
       <CreateTaskModal visible={showCreate} onClose={() => setShowCreate(false)} onCreated={loadTasks} onCreateProject={() => setShowProjectCreate(true)} />
       <CreateProjectModal visible={showProjectCreate} onClose={() => setShowProjectCreate(false)} onCreated={loadTasks} />
@@ -165,7 +164,6 @@ export default function TasksScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: palette.bg },
   content: { paddingHorizontal: 16, paddingBottom: 100, paddingTop: 12 },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
   headerTitle: { fontSize: 32, fontWeight: '900', color: palette.text, letterSpacing: -1 },

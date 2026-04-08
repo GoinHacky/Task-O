@@ -12,7 +12,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SessionProvider>
         <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false }}>
+        <Stack screenOptions={{ headerShown: false, gestureEnabled: false }}>
           <Stack.Screen name="index" options={authScreenOptions} />
           <Stack.Screen name="landing" options={authScreenOptions} />
           <Stack.Screen name="loading" options={authScreenOptions} />

@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons'
 import { format, formatDistanceToNow } from 'date-fns'
 import { useCallback, useEffect, useState } from 'react'
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   RefreshControl,
@@ -15,6 +14,8 @@ import { type Href, useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated'
 
+import { FadeIn } from '@/src/components/FadeIn'
+import { ListSkeleton } from '@/src/components/Skeleton'
 import { supabase } from '@/src/lib/supabase'
 import { NotificationItem } from '@/src/types'
 import { palette } from '@/src/theme'
@@ -111,17 +112,22 @@ export default function NotificationsScreen() {
 
   const unread = items.filter(n => !n.read).length
 
-  if (loading) {
-    return <View style={styles.loader}><ActivityIndicator color={palette.primary} /></View>
-  }
-
   function isInviteType(type: string) {
     return ['workspace_invite', 'project_invite', 'invite', 'team_invitation'].includes(type)
   }
 
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
-      <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false) }} tintColor={palette.primary} />}>
+      {loading ? (
+        <>
+          <View style={[styles.header, { paddingHorizontal: 16, paddingTop: 12 }]}>
+            <Text style={styles.headerTitle}>Inbox</Text>
+          </View>
+          <ListSkeleton />
+        </>
+      ) : (
+      <FadeIn>
+        <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await load(); setRefreshing(false) }} tintColor={palette.primary} />}>
         <View style={styles.header}>
           <View>
             <Text style={styles.headerTitle}>Inbox</Text>
@@ -187,7 +193,9 @@ export default function NotificationsScreen() {
             </Animated.View>
           ))
         )}
-      </ScrollView>
+        </ScrollView>
+      </FadeIn>
+      )}
     </View>
   )
 }
@@ -195,7 +203,6 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: palette.bg },
   content: { paddingHorizontal: 16, paddingBottom: 100, paddingTop: 12 },
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
   headerTitle: { fontSize: 32, fontWeight: '900', color: palette.text, letterSpacing: -1 },

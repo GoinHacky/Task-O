@@ -1,14 +1,13 @@
 import { Ionicons } from '@expo/vector-icons'
-import { Redirect, useRouter, useNavigation } from 'expo-router'
-import { DrawerActions } from '@react-navigation/native'
+import { Redirect, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  RefreshControl,
   ScrollView,
   StyleSheet,
   Switch,
@@ -16,14 +15,16 @@ import {
   TextInput,
   View,
 } from 'react-native'
+import * as ImagePicker from 'expo-image-picker'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
-import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { FadeIn } from '@/src/components/FadeIn'
+import { DrawerScreenHeader } from '@/src/components/ScreenHeader'
 import { CreateTaskModal } from '@/src/components/CreateTaskModal'
 import { CreateProjectModal } from '@/src/components/CreateProjectModal'
 import { CreateTeamModal } from '@/src/components/CreateTeamModal'
 import { InviteMemberModal } from '@/src/components/InviteMemberModal'
-import { TaskOLogo } from '@/src/components/TaskOLogo'
+import { FormSkeleton } from '@/src/components/Skeleton'
 import { useSession } from '@/src/context/SessionContext'
 import { supabase } from '@/src/lib/supabase'
 import { palette } from '@/src/theme'
@@ -38,11 +39,11 @@ type Tab = 'general' | 'password' | 'notifications' | 'deletion'
 
 export default function SettingsScreen() {
   const router = useRouter()
-  const navigation = useNavigation()
   const { session } = useSession()
   const insets = useSafeAreaInsets()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>('general')
   const [error, setError] = useState('')
@@ -53,10 +54,9 @@ export default function SettingsScreen() {
   const [teamModal, setTeamModal] = useState(false)
   const [memberModal, setMemberModal] = useState(false)
 
-  // General
   const [fullName, setFullName] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')
 
-  // Password
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -64,7 +64,6 @@ export default function SettingsScreen() {
   const [showNew, setShowNew] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
 
-  // Notifications
   const [notifPrefs, setNotifPrefs] = useState({
     email: true,
     push: false,
@@ -80,6 +79,7 @@ export default function SettingsScreen() {
       const p = (data as Profile) || null
       setProfile(p)
       setFullName(p?.full_name || '')
+      setAvatarUrl(p?.avatar_url || '')
       setLoading(false)
     }
     loadProfile()
@@ -87,12 +87,41 @@ export default function SettingsScreen() {
 
   if (!session) return <Redirect href="/(auth)/login" />
 
-  if (loading) {
-    return (
-      <View style={styles.loaderWrap}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
+  async function pickAndUploadAvatar() {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      })
+      if (result.canceled || !result.assets?.[0]) return
+
+      setUploading(true)
+      setError('')
+      const asset = result.assets[0]
+      const ext = asset.uri.split('.').pop()?.toLowerCase() || 'jpg'
+      const filePath = `${session!.user.id}-${Math.random()}.${ext}`
+
+      const response = await fetch(asset.uri)
+      const blob = await response.blob()
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, blob, { contentType: `image/${ext}` })
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      setAvatarUrl(publicUrl)
+      setSuccess("Avatar uploaded! Don't forget to save changes.")
+    } catch (err: any) {
+      setError(err.message || 'Failed to upload avatar')
+    } finally {
+      setUploading(false)
+    }
   }
 
   async function handleSave() {
@@ -104,7 +133,7 @@ export default function SettingsScreen() {
       if (activeTab === 'general') {
         const { error: updateError } = await supabase
           .from('users')
-          .update({ full_name: fullName.trim(), updated_at: new Date().toISOString() })
+          .update({ full_name: fullName.trim(), avatar_url: avatarUrl || null, updated_at: new Date().toISOString() })
           .eq('id', session!.user.id)
         if (updateError) throw updateError
         setSuccess('Profile updated successfully!')
@@ -140,51 +169,54 @@ export default function SettingsScreen() {
     { id: 'deletion', label: 'Delete Account', icon: 'trash-outline', danger: true },
   ]
 
+  const avatarInitial = fullName?.[0]?.toUpperCase() || session.user.email?.[0]?.toUpperCase() || 'U'
+
   return (
     <KeyboardAvoidingView
       style={[styles.safe, { paddingTop: insets.top }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScreenHeader
-        onMenu={() => navigation.dispatch(DrawerActions.openDrawer())}
-        onNotification={() => router.push('/notifications')}
+      <DrawerScreenHeader
         onAddTask={() => setTaskModal(true)}
         onAddProject={() => setProjectModal(true)}
         onAddTeam={() => setTeamModal(true)}
         onAddMember={() => setMemberModal(true)}
       />
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      {loading ? (
+        <FormSkeleton />
+      ) : (
+      <FadeIn>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
 
         {/* Tab Selector */}
         <View style={styles.tabsCard}>
-          {tabs.map(tab => (
-            <Pressable
-              key={tab.id}
-              onPress={() => { setActiveTab(tab.id); setError(''); setSuccess('') }}
-              style={[
-                styles.tabItem,
-                activeTab === tab.id && (tab.danger ? styles.tabItemDanger : styles.tabItemActive),
-              ]}
-            >
-              <Ionicons
-                name={tab.icon}
-                size={20}
-                color={
-                  activeTab === tab.id
-                    ? tab.danger ? '#fff' : palette.accent
-                    : palette.muted
-                }
-              />
-              <Text
+          {tabs.map(tab => {
+            const active = activeTab === tab.id
+            return (
+              <Pressable
+                key={tab.id}
+                onPress={() => { setActiveTab(tab.id); setError(''); setSuccess('') }}
                 style={[
-                  styles.tabLabel,
-                  activeTab === tab.id && (tab.danger ? styles.tabLabelDanger : styles.tabLabelActive),
+                  styles.tabItem,
+                  active && (tab.danger ? styles.tabItemDanger : styles.tabItemActive),
                 ]}
               >
-                {tab.label}
-              </Text>
-            </Pressable>
-          ))}
+                <Ionicons
+                  name={tab.icon}
+                  size={20}
+                  color={active ? (tab.danger ? '#fff' : palette.accent) : palette.muted}
+                />
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    active && (tab.danger ? styles.tabLabelDanger : styles.tabLabelActive),
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+              </Pressable>
+            )
+          })}
         </View>
 
         {/* Status banners */}
@@ -199,24 +231,47 @@ export default function SettingsScreen() {
           </View>
         ) : null}
 
-        {/* General Tab */}
+        {/* ─── General Tab ─── */}
         {activeTab === 'general' && (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>General Settings</Text>
             <Text style={styles.sectionHint}>Update your identification and presence</Text>
 
-            {/* Avatar placeholder */}
+            {/* Avatar Section */}
             <View style={styles.avatarSection}>
-              <View style={styles.avatarCircle}>
-                <Text style={styles.avatarLetter}>
-                  {fullName?.[0]?.toUpperCase() || session.user.email?.[0]?.toUpperCase() || 'U'}
-                </Text>
+              <View style={styles.avatarWrap}>
+                <View style={styles.avatarBox}>
+                  {avatarUrl ? (
+                    <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                  ) : (
+                    <Text style={styles.avatarLetter}>{avatarInitial}</Text>
+                  )}
+                </View>
+                <Pressable style={styles.cameraBtn} onPress={pickAndUploadAvatar} disabled={uploading}>
+                  {uploading ? (
+                    <ActivityIndicator size={16} color="#fff" />
+                  ) : (
+                    <Ionicons name="camera" size={18} color="#fff" />
+                  )}
+                </Pressable>
               </View>
+
               <View style={{ flex: 1 }}>
                 <Text style={styles.avatarLabel}>Workspace Avatar</Text>
                 <Text style={styles.avatarHint}>
                   This image will be shown alongside your tasks and messages.
                 </Text>
+                <View style={styles.avatarActions}>
+                  <Pressable style={styles.uploadBtn} onPress={pickAndUploadAvatar} disabled={uploading}>
+                    <Ionicons name="cloud-upload-outline" size={14} color={palette.accent} />
+                    <Text style={styles.uploadBtnText}>{uploading ? 'Uploading...' : 'Upload New'}</Text>
+                  </Pressable>
+                  {avatarUrl ? (
+                    <Pressable onPress={() => { setAvatarUrl(''); setSuccess('Avatar removed. Save to apply.') }}>
+                      <Text style={styles.resetText}>Reset</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
               </View>
             </View>
 
@@ -245,7 +300,7 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* Password Tab */}
+        {/* ─── Password Tab ─── */}
         {activeTab === 'password' && (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Update Password</Text>
@@ -301,18 +356,18 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* Notifications Tab */}
+        {/* ─── Notifications Tab ─── */}
         {activeTab === 'notifications' && (
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Notifications</Text>
             <Text style={styles.sectionHint}>Control how Task-O reaches out to you</Text>
 
-            {[
+            {([
               { id: 'email' as const, label: 'Email Notifications', desc: 'Receive project updates via email' },
               { id: 'push' as const, label: 'Push Notifications', desc: 'Receive real-time alerts on device' },
               { id: 'mentions' as const, label: 'Mentions Only', desc: 'Only notify when someone mentions you' },
               { id: 'taskUpdates' as const, label: 'Task Activity', desc: 'Notify when tasks are moved or updated' },
-            ].map(item => (
+            ]).map(item => (
               <View key={item.id} style={styles.notifRow}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.notifLabel}>{item.label}</Text>
@@ -329,7 +384,7 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* Delete Account Tab */}
+        {/* ─── Delete Account Tab ─── */}
         {activeTab === 'deletion' && (
           <View style={styles.dangerCard}>
             <Text style={styles.dangerTitle}>Delete Account</Text>
@@ -353,7 +408,7 @@ export default function SettingsScreen() {
           </View>
         )}
 
-        {/* Save button (except on delete tab) */}
+        {/* Save button */}
         {activeTab !== 'deletion' && (
           <Pressable style={styles.saveBtn} onPress={handleSave} disabled={saving}>
             {saving ? (
@@ -379,7 +434,9 @@ export default function SettingsScreen() {
           <Ionicons name="log-out-outline" size={20} color="#fff" />
           <Text style={styles.signOutText}>Sign Out</Text>
         </Pressable>
-      </ScrollView>
+        </ScrollView>
+      </FadeIn>
+      )}
 
       <CreateTaskModal visible={taskModal} onClose={() => setTaskModal(false)} onCreateProject={() => setProjectModal(true)} />
       <CreateProjectModal visible={projectModal} onClose={() => setProjectModal(false)} />
@@ -392,12 +449,8 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: palette.bg },
   content: { paddingHorizontal: 16, paddingBottom: 120 },
-  loaderWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.bg },
-  hero: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20, marginTop: 8 },
-  backBtn: { padding: 6 },
-  heroTitle: { fontSize: 24, fontWeight: '900', color: palette.text },
-  heroSub: { fontSize: 12, color: palette.muted, marginTop: 2, fontWeight: '600' },
 
+  /* ── Tabs ── */
   tabsCard: {
     borderRadius: 28,
     backgroundColor: '#f8fafc',
@@ -430,6 +483,7 @@ const styles = StyleSheet.create({
   tabLabelActive: { color: palette.accent },
   tabLabelDanger: { color: '#fff' },
 
+  /* ── Status banners ── */
   errorBanner: {
     backgroundColor: '#fef2f2',
     borderWidth: 1,
@@ -449,6 +503,7 @@ const styles = StyleSheet.create({
   },
   successText: { color: '#16a34a', fontSize: 12, fontWeight: '700' },
 
+  /* ── Card ── */
   card: {
     borderRadius: 24,
     borderWidth: 1,
@@ -467,31 +522,111 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
+  /* ── Avatar ── */
   avatarSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    padding: 14,
-    borderRadius: 24,
+    gap: 16,
+    padding: 16,
+    borderRadius: 28,
     backgroundColor: '#f8fafc',
     borderWidth: 1,
     borderColor: 'rgba(148,163,184,0.3)',
     marginBottom: 20,
   },
-  avatarCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 22,
+  avatarWrap: {
+    position: 'relative',
+  },
+  avatarBox: {
+    width: 80,
+    height: 80,
+    borderRadius: 26,
     backgroundColor: palette.surface,
-    borderWidth: 2,
-    borderColor: palette.accentSoft,
+    borderWidth: 3,
+    borderColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
-  avatarLetter: { fontSize: 26, fontWeight: '900', color: palette.accent },
-  avatarLabel: { fontSize: 12, fontWeight: '900', color: palette.text, textTransform: 'uppercase', letterSpacing: 0.5 },
-  avatarHint: { fontSize: 11, color: palette.muted, marginTop: 4, fontStyle: 'italic', lineHeight: 16 },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 24,
+  },
+  avatarLetter: { fontSize: 32, fontWeight: '900', color: palette.accent },
+  cameraBtn: {
+    position: 'absolute',
+    bottom: -6,
+    right: -6,
+    width: 32,
+    height: 32,
+    borderRadius: 12,
+    backgroundColor: palette.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#f8fafc',
+    shadowColor: palette.accent,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  avatarLabel: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: palette.text,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
+  avatarHint: {
+    fontSize: 11,
+    color: palette.muted,
+    fontStyle: 'italic',
+    lineHeight: 16,
+    marginBottom: 10,
+  },
+  avatarActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  uploadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(148,163,184,0.25)',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  uploadBtnText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: palette.text,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  resetText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: palette.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
 
+  /* ── Inputs ── */
   label: {
     fontSize: 10,
     fontWeight: '800',
@@ -516,6 +651,7 @@ const styles = StyleSheet.create({
   input: { flex: 1, paddingVertical: 13, fontSize: 15, color: palette.text, fontWeight: '600' },
   inputHint: { fontSize: 10, color: palette.muted, marginTop: 4, fontStyle: 'italic', marginLeft: 2 },
 
+  /* ── Notifications ── */
   notifRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -530,6 +666,7 @@ const styles = StyleSheet.create({
   notifLabel: { fontSize: 14, fontWeight: '700', color: palette.text },
   notifDesc: { fontSize: 10, color: palette.muted, fontWeight: '500', fontStyle: 'italic', marginTop: 2 },
 
+  /* ── Danger / Delete ── */
   dangerCard: {
     borderRadius: 24,
     backgroundColor: '#fef2f2',
@@ -551,6 +688,7 @@ const styles = StyleSheet.create({
   },
   dangerBtnText: { color: '#fff', fontWeight: '900', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
 
+  /* ── Save ── */
   saveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -568,6 +706,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: { color: '#fff', fontWeight: '900', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 },
 
+  /* ── Sign Out ── */
   signOutBtn: {
     flexDirection: 'row',
     alignItems: 'center',

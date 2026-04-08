@@ -12,7 +12,9 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
+import { FadeIn } from '@/src/components/FadeIn'
 import { ScreenHeader } from '@/src/components/ScreenHeader'
+import { FormSkeleton } from '@/src/components/Skeleton'
 import { supabase } from '@/src/lib/supabase'
 import { palette } from '@/src/theme'
 
@@ -64,40 +66,31 @@ export default function ProjectEditScreen() {
     else router.back()
   }
 
-  if (loading) {
-    return (
-      <View style={[styles.loader, { paddingTop: insets.top }]}>
-        <ActivityIndicator size="large" color={palette.primaryMid} />
-      </View>
-    )
-  }
-
-  if (!isOwner) {
-    return (
-      <View style={[styles.safe, { paddingTop: insets.top }]}>
-        <ScreenHeader title="Edit project" onBack={() => router.back()} />
-        <Text style={styles.denied}>Only the project owner can edit details.</Text>
-      </View>
-    )
-  }
-
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
       <ScreenHeader title="Edit project" onBack={() => router.back()} />
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>Name</Text>
-        <TextInput value={name} onChangeText={setName} style={styles.input} />
-        <Text style={styles.label}>Description</Text>
-        <TextInput
-          value={description}
-          onChangeText={setDescription}
-          style={[styles.input, styles.multiline]}
-          multiline
-        />
-        <Pressable style={styles.save} onPress={save} disabled={saving}>
-          {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Save</Text>}
-        </Pressable>
-      </ScrollView>
+      {loading ? (
+        <FormSkeleton />
+      ) : !isOwner ? (
+        <Text style={styles.denied}>Only the project owner can edit details.</Text>
+      ) : (
+        <FadeIn>
+          <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+            <Text style={styles.label}>Name</Text>
+            <TextInput value={name} onChangeText={setName} style={styles.input} />
+            <Text style={styles.label}>Description</Text>
+            <TextInput
+              value={description}
+              onChangeText={setDescription}
+              style={[styles.input, styles.multiline]}
+              multiline
+            />
+            <Pressable style={styles.save} onPress={save} disabled={saving}>
+              {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Save</Text>}
+            </Pressable>
+          </ScrollView>
+        </FadeIn>
+      )}
     </View>
   )
 }
