@@ -17,8 +17,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { AuthBackdrop } from '@/src/components/AuthBackdrop'
 import { TaskOLogo } from '@/src/components/TaskOLogo'
+import { GoogleIcon } from '@/src/components/icons/GoogleIcon'
 import { useSession } from '@/src/context/SessionContext'
 import { devError, devLog } from '@/src/lib/devLog'
+import { signInWithGoogle } from '@/src/lib/googleOAuth'
 import { supabase } from '@/src/lib/supabase'
 import { palette } from '@/src/theme'
 
@@ -29,6 +31,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
 
   if (session) {
@@ -49,6 +52,15 @@ export default function LoginScreen() {
       setError(err.message)
     }
     setLoading(false)
+  }
+
+  async function onGoogle() {
+    if (googleLoading) return
+    setError('')
+    setGoogleLoading(true)
+    const res = await signInWithGoogle()
+    if (!res.ok) setError(res.error || 'Google sign-in failed.')
+    setGoogleLoading(false)
   }
 
   return (
@@ -139,6 +151,26 @@ export default function LoginScreen() {
                 )}
               </LinearGradient>
             </Pressable>
+
+            <View style={styles.orRow}>
+              <View style={styles.orLine} />
+              <Text style={styles.orText}>or</Text>
+              <View style={styles.orLine} />
+            </View>
+
+            <Pressable
+              disabled={googleLoading}
+              onPress={onGoogle}
+              style={({ pressed }) => [
+                styles.googleBtn,
+                (pressed || googleLoading) && { transform: [{ scale: 0.99 }], opacity: 0.92 },
+              ]}
+            >
+              <View style={styles.googleInner}>
+                <GoogleIcon size={18} />
+                <Text style={styles.googleText}>{googleLoading ? 'Please wait…' : 'Continue with Google'}</Text>
+              </View>
+            </Pressable>
           </View>
 
           <View style={styles.footerRow}>
@@ -207,6 +239,24 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   submitText: { color: '#fff', fontSize: 16, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1 },
+  orRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 18 },
+  orLine: { flex: 1, height: 1, backgroundColor: 'rgba(148,163,184,0.35)' },
+  orText: { fontSize: 12, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 },
+  googleBtn: {
+    marginTop: 16,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(148,163,184,0.22)',
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  googleInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  googleText: { fontSize: 14, fontWeight: '800', color: '#1f2937' },
   footerRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 40, alignItems: 'center' },
   footer: { fontSize: 15, color: palette.muted, fontWeight: '600' },
   footerLink: { color: palette.primary, fontWeight: '800', fontSize: 15 },

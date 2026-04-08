@@ -4,6 +4,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import 'react-native-reanimated'
 
 import { SessionProvider } from '@/src/context/SessionContext'
+import { NotificationProvider } from '@/src/context/NotificationContext'
 
 const authScreenOptions = { animation: 'fade' as const, animationDuration: 150, gestureEnabled: false }
 
@@ -11,6 +12,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SessionProvider>
+        <NotificationProvider>
         <StatusBar style="dark" />
         <Stack screenOptions={{ headerShown: false, gestureEnabled: false }}>
           <Stack.Screen name="index" options={authScreenOptions} />
@@ -24,6 +26,7 @@ export default function RootLayout() {
           <Stack.Screen name="invite" />
           <Stack.Screen name="admin-support" />
         </Stack>
+        </NotificationProvider>
       </SessionProvider>
     </GestureHandlerRootView>
   )

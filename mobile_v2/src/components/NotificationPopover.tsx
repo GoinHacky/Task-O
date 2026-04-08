@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
 import { formatDistanceToNow } from 'date-fns'
 import { type Href, useRouter } from 'expo-router'
-import { useCallback, useEffect, useState } from 'react'
 import {
   Modal,
   Pressable,
@@ -10,11 +9,10 @@ import {
   View,
 } from 'react-native'
 
-import { supabase } from '@/src/lib/supabase'
-import { NotificationItem } from '@/src/types'
+import { useNotifications } from '@/src/context/NotificationContext'
 import { palette } from '@/src/theme'
 
-const PREVIEW_LIMIT = 4
+const PREVIEW_LIMIT = 5
 
 type Props = {
   visible: boolean
@@ -25,52 +23,20 @@ type Props = {
 
 export function NotificationPopover({ visible, onClose, anchorRight = 70, anchorTop = 100 }: Props) {
   const router = useRouter()
-  const [items, setItems] = useState<NotificationItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const { items, unreadCount, markRead, markAllRead } = useNotifications()
 
-  const load = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { setLoading(false); return }
-    const { data } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(PREVIEW_LIMIT)
-    setItems((data || []) as NotificationItem[])
-    setLoading(false)
-  }, [])
-
-  useEffect(() => {
-    if (visible) { setLoading(true); load() }
-  }, [visible, load])
-
-  useEffect(() => {
-    if (!visible) return
-    let channel: any
-    async function setup() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      channel = supabase
-        .channel('notif-popover')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => load())
-        .subscribe()
-    }
-    setup()
-    return () => { if (channel) supabase.removeChannel(channel) }
-  }, [visible, load])
-
-  const unread = items.filter(n => !n.read).length
+  const preview = items.slice(0, PREVIEW_LIMIT)
 
   function goToAll() {
     onClose()
-    router.push('/inbox' as Href)
+    router.push('/notifications' as Href)
   }
 
-  function handlePress(n: NotificationItem) {
+  async function handlePress(n: typeof items[0]) {
+    await markRead(n.id)
     onClose()
     if (n.related_id) router.push(`/task/${n.related_id}` as Href)
-    else router.push('/inbox' as Href)
+    else router.push('/notifications' as Href)
   }
 
   if (!visible) return null
@@ -81,26 +47,29 @@ export function NotificationPopover({ visible, onClose, anchorRight = 70, anchor
         <Pressable style={[s.popover, { top: anchorTop, right: anchorRight }]} onPress={() => {}}>
           <View style={s.header}>
             <Text style={s.title}>NOTIFICATIONS</Text>
+            {unreadCount > 0 && (
+              <Pressable onPress={markAllRead} hitSlop={8}>
+                <Text style={s.markAllText}>Mark all read</Text>
+              </Pressable>
+            )}
           </View>
 
-          <View style={s.countRow}>
-            <View style={s.countPill}>
-              <Text style={s.countText}>{unread}</Text>
+          {unreadCount > 0 && (
+            <View style={s.countRow}>
+              <View style={s.countPill}>
+                <Text style={s.countText}>{unreadCount} unread</Text>
+              </View>
             </View>
-          </View>
+          )}
 
-          {loading ? (
-            <View style={s.empty}>
-              <Text style={s.emptyText}>Loading...</Text>
-            </View>
-          ) : items.length === 0 ? (
+          {preview.length === 0 ? (
             <View style={s.empty}>
               <Ionicons name="notifications-off-outline" size={32} color="#e2e8f0" />
               <Text style={s.emptyText}>No notifications yet</Text>
             </View>
           ) : (
             <View style={s.list}>
-              {items.map(n => (
+              {preview.map(n => (
                 <Pressable key={n.id} style={[s.item, !n.read && s.itemUnread]} onPress={() => handlePress(n)}>
                   <View style={s.itemDot}>
                     {!n.read && <View style={s.dot} />}
@@ -144,12 +113,22 @@ const s = StyleSheet.create({
     paddingHorizontal: 18,
     paddingTop: 18,
     paddingBottom: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   title: {
     fontSize: 13,
     fontWeight: '900',
     color: palette.text,
     letterSpacing: 1,
+  },
+  markAllText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: palette.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   countRow: {
     paddingHorizontal: 18,

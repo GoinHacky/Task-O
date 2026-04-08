@@ -6,6 +6,7 @@ import { DrawerActions } from '@react-navigation/native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { palette } from '@/src/theme'
+import { useNotifications } from '@/src/context/NotificationContext'
 import { NotificationPopover } from './NotificationPopover'
 import { QuickActionsModal } from './QuickActionsModal'
 
@@ -27,6 +28,7 @@ export function ScreenHeader({
   right 
 }: Props) {
   const insets = useSafeAreaInsets()
+  const { unreadCount } = useNotifications()
   const [menuVisible, setMenuVisible] = useState(false)
   const [notifVisible, setNotifVisible] = useState(false)
   const [notifAnchorTop, setNotifAnchorTop] = useState<number | undefined>(undefined)
@@ -88,6 +90,11 @@ export function ScreenHeader({
             hitSlop={12}
           >
             <Ionicons name="notifications-outline" size={22} color={palette.textMuted} />
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+              </View>
+            )}
           </Pressable>
         )}
         {hasAddActions && (
@@ -150,6 +157,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 4,
+  },
+  badge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#ef4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    color: '#fff',
   },
 })
 

@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from 'react-native'
-import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated'
+import Animated, { FadeInDown, LinearTransition, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { CreateProjectModal } from '@/src/components/CreateProjectModal'
@@ -137,6 +137,20 @@ export default function DashboardScreen() {
     { label: 'Resolved', count: stats.completed, color: palette.resolved, hover: '#26B889' },
   ]
 
+  function AnimatedStatBox({ children }: { children: React.ReactNode }) {
+    const scale = useSharedValue(1)
+    const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }))
+    return (
+      <Pressable
+        style={{ flex: 1 }}
+        onPressIn={() => { scale.value = withSpring(0.95, { damping: 15, stiffness: 200 }) }}
+        onPressOut={() => { scale.value = withSpring(1, { damping: 12, stiffness: 180 }) }}
+      >
+        <Animated.View style={animStyle}>{children}</Animated.View>
+      </Pressable>
+    )
+  }
+
   return (
     <View style={[styles.safe, { paddingTop: insets.top }]}>
       <DrawerScreenHeader
@@ -158,20 +172,20 @@ export default function DashboardScreen() {
         <Text style={styles.heroSub}>Here&apos;s a quick overview of your work.</Text>
         {/* Stats Grid - Cleaner layout */}
         <View style={styles.statRow}>
-          <Pressable style={{ flex: 1 }} onPress={() => router.push('/tasks' as Href)}>
+          <AnimatedStatBox>
             <StatCard label="Completed Tasks" value={formatCount(stats.completed)} color="#0096C7" icon={<Ionicons name="checkmark-done" size={24} color="#0096C7" />} />
-          </Pressable>
-          <Pressable style={{ flex: 1 }} onPress={() => router.push('/tasks' as Href)}>
+          </AnimatedStatBox>
+          <AnimatedStatBox>
             <StatCard label="Assigned Tasks" value={formatCount(stats.assigned)} color="#0077B6" icon={<Ionicons name="person" size={24} color="#0077B6" />} />
-          </Pressable>
+          </AnimatedStatBox>
         </View>
         <View style={styles.statRow}>
-          <Pressable style={{ flex: 1 }} onPress={() => router.push('/projects' as Href)}>
+          <AnimatedStatBox>
             <StatCard label="Active Boards" value={formatCount(projectCount)} color="#023E8A" icon={<Ionicons name="grid" size={24} color="#023E8A" />} />
-          </Pressable>
-          <Pressable style={{ flex: 1 }} onPress={() => router.push('/calendar' as Href)}>
+          </AnimatedStatBox>
+          <AnimatedStatBox>
             <StatCard label="Scheduled Tasks" value={formatCount(stats.scheduled)} color="#03045E" icon={<Ionicons name="calendar" size={24} color="#03045E" />} />
-          </Pressable>
+          </AnimatedStatBox>
         </View>
 
         {/* Priority Tabs - WEB STYLE */}

@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 import { TaskOLogo } from './TaskOLogo'
 import { useSession } from '../context/SessionContext'
+import { useNotifications } from '../context/NotificationContext'
 import { fetchProjectsForCurrentUser } from '../lib/fetchUserProjects'
 import { supabase } from '../lib/supabase'
 import { ProjectItem } from '../types'
@@ -31,6 +32,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
   const pathname = usePathname()
   const segments = useSegments()
   const { session } = useSession()
+  const { unreadCount } = useNotifications()
 
   const activeProjectIdFromRoute = useMemo(() => {
     const i = segments.findIndex(s => s === 'project')
@@ -57,54 +59,18 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
     }
   }, [session, loadProjects])
 
-  // Keep project names in the drawer in sync when a project is renamed (or updated) elsewhere.
+  const drawerState = props.state
+  const isDrawerOpen = drawerState?.history?.some((h: any) => h.type === 'drawer' && h.status === 'open')
+
   useEffect(() => {
-    if (!session?.user) return
-
-    const sortNameAsc = (list: ProjectItem[]) =>
-      [...list].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-
-    const channel = supabase
-      .channel('drawer-projects')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'projects' },
-        payload => {
-          const row = payload.new as ProjectItem | null
-          if (!row?.id) return
-          setProjects(prev => {
-            if (!prev.some(p => p.id === row.id)) return prev
-            const next = prev.map(p => (p.id === row.id ? { ...p, ...row } : p))
-            return sortNameAsc(next)
-          })
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'projects' },
-        payload => {
-          const id = (payload.old as { id?: string })?.id
-          if (!id) return
-          setProjects(prev => prev.filter(p => p.id !== id))
-        },
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'projects' },
-        () => {
-          loadProjects()
-        },
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
+    if (isDrawerOpen && session?.user) {
+      loadProjects()
     }
-  }, [session?.user, loadProjects])
+  }, [isDrawerOpen, session?.user, loadProjects])
 
   async function handleLogout() {
     await supabase.auth.signOut()
-    router.replace('/landing')
+    router.replace('/(auth)/login')
   }
 
   const navigate = (path: string) => {
@@ -211,6 +177,7 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
 
           {MENU_ITEMS.slice(1).map(item => {
             const isActive = pathname === item.path || pathname.startsWith(`${item.path}/`)
+            const showBadge = item.label === 'INBOX' && unreadCount > 0
             return (
               <Pressable
                 key={item.label}
@@ -224,6 +191,11 @@ export function CustomDrawerContent(props: DrawerContentComponentProps) {
                   style={styles.menuIcon}
                 />
                 <Text style={[styles.menuText, isActive && styles.activeMenuText]}>{item.label}</Text>
+                {showBadge && (
+                  <View style={styles.inboxBadge}>
+                    <Text style={styles.inboxBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                  </View>
+                )}
                 {item.hasDot && <View style={styles.redDot} />}
               </Pressable>
             )
@@ -282,6 +254,22 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: '#ef4444',
+  },
+  inboxBadge: {
+    position: 'absolute',
+    right: 12,
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: palette.primaryMid,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  inboxBadgeText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#fff',
   },
   projectsSection: {
     marginBottom: 4,

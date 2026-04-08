@@ -104,11 +104,11 @@ export default function SettingsScreen() {
       const filePath = `${session!.user.id}-${Math.random()}.${ext}`
 
       const response = await fetch(asset.uri)
-      const blob = await response.blob()
+      const arrayBuf = await response.arrayBuffer()
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, blob, { contentType: `image/${ext}` })
+        .upload(filePath, arrayBuf, { contentType: `image/${ext}`, upsert: true })
       if (uploadError) throw uploadError
 
       const { data: { publicUrl } } = supabase.storage
@@ -428,7 +428,7 @@ export default function SettingsScreen() {
           onPress={async () => {
             const { error: e } = await supabase.auth.signOut()
             if (e) Alert.alert('Unable to sign out', e.message)
-            else router.replace('/landing')
+            else router.replace('/(auth)/login')
           }}
         >
           <Ionicons name="log-out-outline" size={20} color="#fff" />
